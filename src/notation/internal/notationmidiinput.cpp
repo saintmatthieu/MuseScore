@@ -141,11 +141,14 @@ void NotationMidiInput::doProcessEvents()
 
     std::vector<const Note*> notes;
 
+    auto gain = 0.0;
     for (size_t i = 0; i < m_eventsQueue.size(); ++i) {
         const muse::midi::Event& event = m_eventsQueue.at(i);
 
         if (event.opcode() != midi::Event::Opcode::NoteOn || event.velocity() == 0)
             continue;
+
+        gain = std::max(event.velocity() / 128., gain);
 
         if (m_first) {
           m_currentMeasure = score()->firstMeasure();
@@ -188,7 +191,7 @@ void NotationMidiInput::doProcessEvents()
             notesItems.push_back(note);
         }
 
-        playbackController()->playElements(notesItems);
+        playbackController()->playElements(notesItems, gain);
         m_notesReceivedChannel.send(notes);
     }
 

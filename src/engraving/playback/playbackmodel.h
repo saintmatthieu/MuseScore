@@ -72,7 +72,7 @@ public:
 
     const muse::mpe::PlaybackData& resolveTrackPlaybackData(const InstrumentTrackId& trackId);
     const muse::mpe::PlaybackData& resolveTrackPlaybackData(const ID& partId, const String& instrumentId);
-    void triggerEventsForItems(const std::vector<const EngravingItem*>& items);
+    void triggerEventsForItems(const std::vector<const EngravingItem*>& items, double gain = 1.0);
 
     void triggerMetronome(int tick);
 

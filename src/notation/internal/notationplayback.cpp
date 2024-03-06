@@ -123,9 +123,9 @@ const muse::mpe::PlaybackData& NotationPlayback::trackPlaybackData(const engravi
     return m_playbackModel.resolveTrackPlaybackData(trackId);
 }
 
-void NotationPlayback::triggerEventsForItems(const std::vector<const EngravingItem*>& items)
+void NotationPlayback::triggerEventsForItems(const std::vector<const EngravingItem*>& items, double gain)
 {
-    m_playbackModel.triggerEventsForItems(items);
+    m_playbackModel.triggerEventsForItems(items, gain);
 }
 
 void NotationPlayback::triggerMetronome(int tick)

@@ -94,7 +94,9 @@ public:
     void setTrackSoloMuteState(const engraving::InstrumentTrackId& trackId,
                                const notation::INotationSoloMuteState::SoloMuteState& state) const override;
 
-    void playElements(const std::vector<const notation::EngravingItem*>& elements) override;
+    void
+    playElements(const std::vector<const notation::EngravingItem *> &elements,
+                 double gain) override;
     void playMetronome(int tick) override;
     void seekElement(const notation::EngravingItem* element) override;
 
