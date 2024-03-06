@@ -108,6 +108,30 @@ mu::engraving::Score* NotationMidiInput::score() const
     return m_getScore->score();
 }
 
+namespace {
+std::vector<Chord *> getChords(Segment &segment,
+                               const mu::engraving::Score &score) {
+  std::vector<Chord *> chords;
+  auto trackId = 0;
+  while (trackId < score.ntracks()) {
+      auto element = segment.element(trackId);
+      if (auto chord = dynamic_cast<Chord *>(element))
+          chords.push_back(chord);
+      ++trackId;
+  }
+  return chords;
+}
+
+Segment *nextChordRest(Segment *segment, bool inclusive) {
+  if (!segment)
+    return nullptr;
+  auto next = inclusive ? segment : segment->next();
+  while (next && next->segmentType() != mu::engraving::SegmentType::ChordRest)
+    next = next->next();
+  return next;
+}
+} // namespace
+
 void NotationMidiInput::doProcessEvents()
 {
     if (m_eventsQueue.empty()) {
@@ -119,9 +143,34 @@ void NotationMidiInput::doProcessEvents()
 
     for (size_t i = 0; i < m_eventsQueue.size(); ++i) {
         const muse::midi::Event& event = m_eventsQueue.at(i);
-        Note* note = isNoteInputMode() ? addNoteToScore(event) : makeNote(event);
-        if (note) {
-            notes.push_back(note);
+
+        if (event.opcode() != midi::Event::Opcode::NoteOn || event.velocity() == 0)
+            continue;
+
+        if (m_first) {
+          m_currentMeasure = score()->firstMeasure();
+          m_currentChordRestSegment =
+              nextChordRest(m_currentMeasure->first(), true);
+          m_first = false;
+        }
+
+        while (m_currentMeasure && !m_currentChordRestSegment) {
+          // End of measure was reached.
+          m_currentMeasure = m_currentMeasure->nextMeasure();
+          if (!m_currentMeasure) {
+            break;
+          }
+          m_currentChordRestSegment =
+              nextChordRest(m_currentMeasure->first(), true);
+        }
+        if (m_currentChordRestSegment) {
+          const auto chords = getChords(*m_currentChordRestSegment, *score());
+          m_currentChordRestSegment =
+              nextChordRest(m_currentChordRestSegment, false);
+          std::for_each(chords.begin(), chords.end(), [&](Chord *chord) {
+            const auto chordNotes = chord->notes();
+            notes.insert(notes.end(), chordNotes.begin(), chordNotes.end());
+          });
         }
 
         bool chord = i != 0;
