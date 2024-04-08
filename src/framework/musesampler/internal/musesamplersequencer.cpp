@@ -155,10 +155,10 @@ void MuseSamplerSequencer::updateOffStreamEvents(const PlaybackEventsMap& events
             noteOn.msTrack = track;
             m_offStreamEvents[timestampFrom].emplace(std::move(noteOn));
 
-            AuditionStopNoteEvent noteOff;
-            noteOff.msEvent = { pitch };
-            noteOff.msTrack = track;
-            m_offStreamEvents[timestampTo].emplace(std::move(noteOff));
+            // AuditionStopNoteEvent noteOff;
+            // noteOff.msEvent = { pitch };
+            // noteOff.msTrack = track;
+            // m_offStreamEvents[timestampTo].emplace(std::move(noteOff));
         }
     }
 

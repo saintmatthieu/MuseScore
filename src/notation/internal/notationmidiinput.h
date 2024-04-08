@@ -27,6 +27,7 @@
 #include "modularity/ioc.h"
 #include "playback/iplaybackcontroller.h"
 #include "inotationconfiguration.h"
+#include "engraving/types/fraction.h"
 #include "actions/iactionsdispatcher.h"
 
 #include "../inotationmidiinput.h"
@@ -93,6 +94,7 @@ private:
     bool m_first = true;
     Measure* m_currentMeasure = nullptr;
     Segment* m_currentChordRestSegment = nullptr;
+    std::map<Fraction, std::vector<Chord *>> m_ringingChords;
 };
 }
 
