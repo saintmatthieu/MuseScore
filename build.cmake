@@ -59,7 +59,7 @@ function(build_folder
     string(REGEX REPLACE ".*Visual Studio ([0-9]+).*" "VS\\1" GEN_SHORT "${GEN_SHORT}")
     string(REGEX REPLACE ".*MinGW.*" "MinGW" GEN_SHORT "${GEN_SHORT}")
     string(REGEX REPLACE ".*Makefile.*" "Make" GEN_SHORT "${GEN_SHORT}")
-    set(BUILD_FOLDER "${PLATFORM}-Qt${QT_VERSION}-${QT_COMPILER}-${GEN_SHORT}-${BUILD_TYPE}")
+    set(BUILD_FOLDER "${BUILD_TYPE}")
     string(REGEX REPLACE "[ /\\]" "" BUILD_FOLDER "${BUILD_FOLDER}") # remove spaces and slashes
     set("${VAR_NAME}" "${BUILD_FOLDER}" PARENT_SCOPE)
 endfunction()
