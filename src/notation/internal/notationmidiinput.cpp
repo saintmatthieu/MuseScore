@@ -147,7 +147,7 @@ void NotationMidiInput::doProcessEvents()
     for (size_t i = 0; i < m_eventsQueue.size(); ++i) {
         const muse::midi::Event& event = m_eventsQueue.at(i);
 
-        if (event.opcode() != midi::Event::Opcode::NoteOn || event.velocity() == 0)
+        if (event.opcode() != muse::midi::Event::Opcode::NoteOn || event.velocity() == 0)
             continue;
 
         gain = std::max(event.velocity() / 128., gain);
