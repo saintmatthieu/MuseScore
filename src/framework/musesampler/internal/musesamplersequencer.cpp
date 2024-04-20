@@ -133,6 +133,8 @@ void MuseSamplerSequencer::updateOffStreamEvents(const PlaybackEventsMap& events
         }
 
         const mpe::NoteEvent &noteEvent = std::get<mpe::NoteEvent>(event);
+        const auto velocity = 1. * noteEvent.expressionCtx().nominalDynamicLevel /
+                              muse::mpe::MAX_DYNAMIC_LEVEL;
 
         ms_Track track =
             resolveTrack(noteEvent.arrangementCtx().staffLayerIndex);
@@ -151,8 +153,9 @@ void MuseSamplerSequencer::updateOffStreamEvents(const PlaybackEventsMap& events
                            articulationFlag, notehead);
 
         AuditionStartNoteEvent noteOn;
-        noteOn.msEvent = {pitch, centsOffset,  articulationFlag,     notehead,
-                          0.5,   presets_cstr, textArticulation_cstr};
+        noteOn.msEvent = {
+            pitch,    centsOffset,  articulationFlag,     notehead,
+            velocity, presets_cstr, textArticulation_cstr};
         noteOn.msTrack = track;
         m_offStreamEvents[timestampFrom].emplace(std::move(noteOn));
 
