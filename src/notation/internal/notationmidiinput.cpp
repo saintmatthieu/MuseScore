@@ -104,7 +104,6 @@ void NotationMidiInput::rewind() {
   m_first = true;
   m_currentMeasure = nullptr;
   m_currentChordRestSegment = nullptr;
-  m_ringingChords.clear();
 }
 
 mu::engraving::Score* NotationMidiInput::score() const
@@ -150,7 +149,6 @@ void NotationMidiInput::doProcessEvents()
     std::vector<const Note*> notes;
 
     auto gain = 0.0;
-    Fraction latestTick;
     for (size_t i = 0; i < m_eventsQueue.size(); ++i) {
         const muse::midi::Event& event = m_eventsQueue.at(i);
 
@@ -179,19 +177,8 @@ void NotationMidiInput::doProcessEvents()
           const auto chords = getChords(*m_currentChordRestSegment, *score());
           m_currentChordRestSegment =
               nextChordRest(m_currentChordRestSegment, false);
-          if (!chords.empty())
-            latestTick =
-                std::max(latestTick,
-                         (*std::max_element(chords.begin(), chords.end(),
-                                          [](const Chord *a, const Chord *b) {
-                                            return a->tick() < b->tick();
-                                          }))
-                             ->tick());
           std::for_each(chords.begin(), chords.end(), [&](Chord *chord) {
             const auto chordNotes = chord->notes();
-            const auto duration = chord->ticks();
-            const auto killTime = chord->tick() + duration;
-            m_ringingChords[killTime].push_back(chord);
             notes.insert(notes.end(), chordNotes.begin(), chordNotes.end());
           });
         }
@@ -205,30 +192,13 @@ void NotationMidiInput::doProcessEvents()
         }
     }
 
-    auto it = m_ringingChords.begin();
-    std::vector<Rest *> rests;
-    while (it != m_ringingChords.end() && latestTick >= it->first) {
-      const auto chords = it->second;
-      std::for_each(chords.begin(), chords.end(), [&](Chord *chord) {
-        const auto chordNotes = chord->notes();
-        std::for_each(chordNotes.begin(), chordNotes.end(), [&](Note *note) {
-          Rest *rest = engraving::Factory::createRest(chord->segment());
-          rests.push_back(rest);
-        });
-      });
-      it = m_ringingChords.erase(it);
-    }
-
-    std::vector<const EngravingItem *> notesItems;
-    for (const Rest *rest : rests) {
-      notesItems.push_back(rest);
-    }
-    for (const Note *note : notes) {
-      notesItems.push_back(note);
-    }
-
     if (!notes.empty()) {
-        playbackController()->playElements(notesItems, gain);
+        std::vector<const EngravingItem*> notesItems;
+        for (const Note* note : notes) {
+            notesItems.push_back(note);
+        }
+
+        playbackController()->playElements(notesItems);
         m_notesReceivedChannel.send(notes);
     }
 
