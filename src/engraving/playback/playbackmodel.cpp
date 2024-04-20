@@ -252,7 +252,12 @@ void PlaybackModel::triggerEventsForItems(const std::vector<const EngravingItem*
         int utick = repeats.tick2utick(item->tick().ticks());
         minTick = std::min(utick, minTick);
 
-        m_renderer.render(item, actualTimestamp, actualDuration, dynamicLevel, ctx.persistentArticulationType(utick), profile,
+        auto duration = actualDuration;
+        if (const auto *note = dynamic_cast<const Note *>(item)) {
+          duration = note->playTicks();
+        }
+
+        m_renderer.render(item, actualTimestamp, duration, dynamicLevel, ctx.persistentArticulationType(utick), profile,
                           result);
     }
 
@@ -867,7 +872,7 @@ std::vector<const EngravingItem*> PlaybackModel::filterPlayableItems(const std::
             continue;
         }
 
-        if (!item->isPlayable()) {
+        if (!item->isPlayable() && !item->isRest()) {
             continue;
         }
 
