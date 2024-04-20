@@ -104,6 +104,7 @@ void NotationMidiInput::rewind() {
   m_first = true;
   m_currentMeasure = nullptr;
   m_currentChordRestSegment = nullptr;
+  playbackController()->seek(int64_t{0});
 }
 
 mu::engraving::Score* NotationMidiInput::score() const

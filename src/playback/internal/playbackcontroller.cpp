@@ -222,9 +222,9 @@ void PlaybackController::seek(const audio::msecs_t msecs)
         return;
     }
 
-    if (m_currentPlaybackTimeMsecs == msecs) {
-        return;
-    }
+    // if (m_currentPlaybackTimeMsecs == msecs) {
+    //     return;
+    // }
 
     playback()->player()->seek(m_currentSequenceId, msecs);
 }

@@ -70,6 +70,8 @@ public:
     void updateMainStreamEvents(const mpe::PlaybackEventsMap& events, const mpe::DynamicLevelMap& dynamics,
                                 const mpe::PlaybackParamMap& params) override;
 
+    void revokePlayingNotes();
+
 private:
     void clearAllTracks();
     void finalizeAllTracks();

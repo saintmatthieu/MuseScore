@@ -380,4 +380,5 @@ void MuseSamplerWrapper::revokePlayingNotes()
     if (m_samplerLib) {
         m_samplerLib->allNotesOff(m_sampler);
     }
+    m_sequencer.revokePlayingNotes();
 }

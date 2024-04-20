@@ -199,6 +199,8 @@ void MuseSamplerSequencer::updateMainStreamEvents(const PlaybackEventsMap& event
     finalizeAllTracks();
 }
 
+void MuseSamplerSequencer::revokePlayingNotes() { m_ringingChords.clear(); }
+
 void MuseSamplerSequencer::clearAllTracks()
 {
     m_layerIdxToTrackIdx.clear();
