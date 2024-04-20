@@ -28,6 +28,7 @@
 
 #include "internal/apitypes.h"
 #include "internal/libhandler.h"
+#include <unordered_map>
 
 typedef typename std::variant<muse::mpe::NoteEvent, muse::musesampler::AuditionStartNoteEvent,
                               muse::musesampler::AuditionStopNoteEvent> MuseSamplerEvent;
@@ -118,7 +119,7 @@ private:
     } m_offStreamCache;
 
     std::string m_defaultPresetCode;
-    std::map<mpe::timestamp_t, std::vector<int>> m_ringingChords;
+    std::unordered_map<ms_Track, std::map<mpe::timestamp_t, std::vector<int>>> m_ringingChords;
 };
 }
 
