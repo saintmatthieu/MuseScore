@@ -68,7 +68,7 @@ MasterNotation::MasterNotation()
     : Notation()
 {
     m_parts = std::make_shared<MasterNotationParts>(this, interaction(), undoStack());
-    m_notationPlayback = std::make_shared<NotationPlayback>(this, m_notationChanged);
+    m_notationPlayback = std::make_shared<NotationPlayback>(this, this, m_notationChanged);
 
     m_parts->partsChanged().onNotify(this, [this]() {
         notifyAboutNotationChanged();

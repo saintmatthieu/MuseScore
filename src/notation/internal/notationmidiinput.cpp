@@ -100,6 +100,13 @@ void NotationMidiInput::onRealtimeAdvance()
     }
 }
 
+void NotationMidiInput::rewind() {
+  m_first = true;
+  m_currentMeasure = nullptr;
+  m_currentChordRestSegment = nullptr;
+  m_ringingChords.clear();
+}
+
 mu::engraving::Score* NotationMidiInput::score() const
 {
     IF_ASSERT_FAILED(m_getScore) {

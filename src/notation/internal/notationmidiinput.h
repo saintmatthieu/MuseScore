@@ -55,6 +55,7 @@ public:
     void onRealtimeAdvance() override;
 
 private:
+    void rewind() override;
     mu::engraving::Score* score() const;
 
     void doProcessEvents();

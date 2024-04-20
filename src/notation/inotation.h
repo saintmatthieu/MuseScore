@@ -50,6 +50,8 @@ class INotation
 public:
     virtual ~INotation() = default;
 
+    virtual void rewind() = 0;
+
     /// For MasterScores: the filename without extension
     /// For Scores: the excerpt name
     virtual QString name() const = 0;

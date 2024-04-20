@@ -116,6 +116,11 @@ Notation::~Notation()
     m_score = nullptr;
 }
 
+void Notation::rewind()
+{
+    m_midiInput->rewind();
+}
+
 void Notation::init()
 {
     bool isVertical = configuration()->canvasOrientation().val == mu::Orientation::Vertical;

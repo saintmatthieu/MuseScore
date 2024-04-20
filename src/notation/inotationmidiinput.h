@@ -35,7 +35,7 @@ public:
 
     virtual void onMidiEventReceived(const muse::midi::Event& event) = 0;
     virtual async::Channel<std::vector<const Note*> > notesReceived() const = 0;
-
+    virtual void rewind() = 0;
     virtual void onRealtimeAdvance() = 0;
 };
 

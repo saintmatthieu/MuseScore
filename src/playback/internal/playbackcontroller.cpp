@@ -582,6 +582,8 @@ void PlaybackController::play()
 
 void PlaybackController::rewind(const ActionData& args)
 {
+    notationPlayback()->rewind();
+
     msecs_t startMsecs = playbackStartMsecs();
     msecs_t endMsecs = playbackEndMsecs();
     msecs_t newPosition = !args.empty() ? args.arg<msecs_t>(0) : 0;

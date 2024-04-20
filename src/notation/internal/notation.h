@@ -48,6 +48,8 @@ public:
 
     static void init();
 
+    void rewind() override;
+
     QString name() const override;
     QString projectName() const override;
     QString projectNameAndPartName() const override;
