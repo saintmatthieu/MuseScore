@@ -85,9 +85,12 @@ const ChannelMap& FluidSequencer::channels() const
     return m_channels;
 }
 
+void FluidSequencer::revokePlayingNotes() { m_ringingChords.clear(); }
+
 void FluidSequencer::updatePlaybackEvents(EventSequenceMap& destination, const mpe::PlaybackEventsMap& changes)
 {
     for (const auto& pair : changes) {
+        const auto tick = pair.first;
         for (const mpe::PlaybackEvent& event : pair.second) {
             if (!std::holds_alternative<mpe::NoteEvent>(event)) {
                 continue;
@@ -96,11 +99,12 @@ void FluidSequencer::updatePlaybackEvents(EventSequenceMap& destination, const m
             const mpe::NoteEvent& noteEvent = std::get<mpe::NoteEvent>(event);
 
             timestamp_t timestampFrom = noteEvent.arrangementCtx().actualTimestamp;
-            timestamp_t timestampTo = timestampFrom + noteEvent.arrangementCtx().actualDuration;
 
             channel_t channelIdx = channel(noteEvent);
             note_idx_t noteIdx = noteIndex(noteEvent.pitchCtx().nominalPitchLevel);
-            velocity_t velocity = noteVelocity(noteEvent);
+            velocity_t velocity =
+                128. * noteEvent.expressionCtx().nominalDynamicLevel /
+                MAX_DYNAMIC_LEVEL;
             tuning_t tuning = noteTuning(noteEvent, noteIdx);
 
             midi::Event noteOn(Event::Opcode::NoteOn, Event::MessageType::ChannelVoice20);
@@ -111,15 +115,53 @@ void FluidSequencer::updatePlaybackEvents(EventSequenceMap& destination, const m
 
             destination[timestampFrom].emplace(std::move(noteOn));
 
-            midi::Event noteOff(Event::Opcode::NoteOff, Event::MessageType::ChannelVoice20);
-            noteOff.setChannel(channelIdx);
-            noteOff.setNote(noteIdx);
-            noteOff.setPitchNote(noteIdx, tuning);
-
-            destination[timestampTo].emplace(std::move(noteOff));
+            const auto duration = noteEvent.arrangementCtx().actualDuration;
+            const auto killTime = tick + duration;
+            m_ringingChords[channelIdx][killTime].push_back(noteIdx);
 
             appendControlSwitch(destination, noteEvent, PEDAL_CC_SUPPORTED_TYPES, 64);
             appendPitchBend(destination, noteEvent, BEND_SUPPORTED_TYPES, channelIdx);
+        }
+
+        for (auto& [channelIdx, ringingChords] : m_ringingChords) {
+          auto it = ringingChords.begin();
+          while (it != ringingChords.end() && tick >= it->first) {
+            const auto timestampFrom = it->first;
+            const auto &pitches = it->second;
+            std::for_each(
+                pitches.begin(), pitches.end(), [&](note_idx_t pitch) {
+                  // If there is a noteon event at m_offStreamEvents[tick] with
+                  // the same pitch, don't add a noteoff event.
+                  if (destination.count(tick)) {
+                    const auto &set = destination.at(tick);
+                    if (std::any_of(
+                            set.begin(), set.end(), [&](const std::variant<midi::Event>& evt) {
+                              const auto& event = std::get<midi::Event>(evt);
+                              const channel_t ch = event.channel();
+                              const note_idx_t noteIdx = event.note();
+                              return ch == channelIdx && noteIdx == pitch;
+                            }))
+                      return;
+                  }
+                  midi::Event noteOff(Event::Opcode::NoteOff,
+                                      Event::MessageType::ChannelVoice20);
+                
+                  noteOff.setChannel(channelIdx);
+                  noteOff.setNote(pitch);
+                  noteOff.setPitchNote(pitch, 0.f);
+                  destination[timestampFrom].emplace(std::move(noteOff));
+                });
+            it = ringingChords.erase(it);
+          }
+        }
+
+        for (auto &[_, ringingChords] : m_ringingChords) {
+          const auto firstTimestamp = ringingChords.begin()->first;
+          decltype(ringingChords) newRingingChords;
+          for (const auto &[timestamp, pitches] : ringingChords) {
+            newRingingChords[timestamp - firstTimestamp] = pitches;
+          }
+          ringingChords = newRingingChords;
         }
     }
 }

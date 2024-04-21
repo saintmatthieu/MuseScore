@@ -129,9 +129,9 @@ Ret FluidSynth::init()
 
     createFluidInstance();
 
-    m_sequencer.setOnOffStreamFlushed([this]() {
-        revokePlayingNotes();
-    });
+    // m_sequencer.setOnOffStreamFlushed([this]() {
+    //     revokePlayingNotes();
+    // });
 
     LOGD() << "synth inited\n";
     return true;
@@ -282,6 +282,7 @@ void FluidSynth::revokePlayingNotes()
     }
 
     fluid_synth_all_notes_off(m_fluid->synth, -1);
+    m_sequencer.revokePlayingNotes();
 }
 
 void FluidSynth::flushSound()
