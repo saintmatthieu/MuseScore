@@ -103,7 +103,7 @@ void FluidSequencer::updatePlaybackEvents(EventSequenceMap& destination, const m
             channel_t channelIdx = channel(noteEvent);
             note_idx_t noteIdx = noteIndex(noteEvent.pitchCtx().nominalPitchLevel);
             velocity_t velocity =
-                128. * noteEvent.expressionCtx().nominalDynamicLevel /
+                65535. * noteEvent.expressionCtx().nominalDynamicLevel /
                 MAX_DYNAMIC_LEVEL;
             tuning_t tuning = noteTuning(noteEvent, noteIdx);
 
