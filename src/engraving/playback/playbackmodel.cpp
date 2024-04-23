@@ -235,7 +235,7 @@ void PlaybackModel::triggerEventsForItems(const std::vector<const EngravingItem*
     const RepeatList& repeats = repeatList();
 
     constexpr timestamp_t actualTimestamp = 0;
-    constexpr dynamic_level_t actualDynamicLevel = dynamicLevelFromType(muse::mpe::DynamicType::Natural);
+    constexpr dynamic_level_t actualDynamicLevel = dynamicLevelFromType(static_cast<muse::mpe::DynamicType>(MAX_DYNAMIC_LEVEL));
     const dynamic_level_t dynamicLevel = actualDynamicLevel * gain;
     duration_t actualDuration = MScore::defaultPlayDuration * 1000;
 
