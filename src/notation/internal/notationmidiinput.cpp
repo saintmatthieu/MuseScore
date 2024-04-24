@@ -225,6 +225,7 @@ void NotationMidiInput::doProcessEvents()
         auto pScore = score();
         pScore->deselectAll();
         pScore->select(notesItems, engraving::SelectType::ADD);
+        m_notationInteraction->showItem(notesItems[0]);
     }
 
     m_eventsQueue.clear();
