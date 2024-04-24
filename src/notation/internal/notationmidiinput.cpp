@@ -165,20 +165,38 @@ void NotationMidiInput::doProcessEvents()
           m_first = false;
         }
 
-        while (m_currentMeasure && !m_currentChordRestSegment) {
-          // End of measure was reached.
-          m_currentMeasure = m_currentMeasure->nextMeasure();
-          if (!m_currentMeasure) {
-            break;
+        while (true) {
+          while (m_currentMeasure && !m_currentChordRestSegment) {
+            // End of measure was reached.
+            m_currentMeasure = m_currentMeasure->nextMeasure();
+            if (!m_currentMeasure) {
+              break;
+            }
+            m_currentChordRestSegment =
+                nextChordRest(m_currentMeasure->first(), true);
           }
-          m_currentChordRestSegment =
-              nextChordRest(m_currentMeasure->first(), true);
+
+          if (m_currentChordRestSegment) {
+            const auto chords = getChords(*m_currentChordRestSegment, *score());
+            if (std::all_of(chords.begin(), chords.end(), [](Chord *chord) {
+                  return chord->containsTieEnd();
+                })) {
+              // Tied chord ; skip it.
+              m_currentChordRestSegment =
+                  nextChordRest(m_currentChordRestSegment, false);
+              continue;
+            }
+          }
+          break;
         }
+
         if (m_currentChordRestSegment) {
           const auto chords = getChords(*m_currentChordRestSegment, *score());
           m_currentChordRestSegment =
               nextChordRest(m_currentChordRestSegment, false);
           std::for_each(chords.begin(), chords.end(), [&](Chord *chord) {
+            if (chord->containsTieEnd())
+              return;
             const auto chordNotes = chord->notes();
             notes.insert(notes.end(), chordNotes.begin(), chordNotes.end());
           });
