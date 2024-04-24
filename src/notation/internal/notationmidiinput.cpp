@@ -107,6 +107,7 @@ void NotationMidiInput::rewind() {
   m_currentMeasure = nullptr;
   m_currentChordRestSegment = nullptr;
   playbackController()->seekBeat(0, 0);
+  score()->deselectAll();
 }
 
 mu::engraving::Score* NotationMidiInput::score() const
@@ -149,7 +150,7 @@ void NotationMidiInput::doProcessEvents()
         return;
     }
 
-    std::vector<const Note*> notes;
+    std::vector<Note*> notes;
 
     auto gain = 0.0;
     for (size_t i = 0; i < m_eventsQueue.size(); ++i) {
@@ -214,13 +215,18 @@ void NotationMidiInput::doProcessEvents()
     }
 
     if (!notes.empty()) {
-        std::vector<const EngravingItem*> notesItems;
-        for (const Note* note : notes) {
+        std::vector<EngravingItem*> notesItems;
+        for (Note* note : notes) {
             notesItems.push_back(note);
         }
 
-        playbackController()->playElements(notesItems, gain);
-        m_notesReceivedChannel.send(notes);
+        playbackController()->playElements(
+            {notesItems.begin(), notesItems.end()}, gain);
+        m_notesReceivedChannel.send({notes.begin(), notes.end()});
+
+        auto pScore = score();
+        pScore->deselectAll();
+        pScore->select(notesItems, engraving::SelectType::ADD);
     }
 
     m_eventsQueue.clear();
