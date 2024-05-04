@@ -74,6 +74,7 @@ public:
     // Hit
     EngravingItem* hitElement(const PointF& pos, float width) const override;
     Staff* hitStaff(const PointF& pos) const override;
+    void goToElement(EngravingItem* element) override;
     const HitElementContext& hitElementContext() const override;
     void setHitElementContext(const HitElementContext& context) override;
 

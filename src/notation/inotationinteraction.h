@@ -55,6 +55,8 @@ public:
     virtual EngravingItem* hitElement(const PointF& pos, float width) const = 0;
     virtual Staff* hitStaff(const PointF& pos) const = 0;
 
+    virtual void goToElement(EngravingItem* element) = 0;
+
     struct HitElementContext
     {
         notation::EngravingItem* element = nullptr;

@@ -108,6 +108,19 @@ void NotationMidiInput::rewind() {
   score()->deselectAll();
 }
 
+void NotationMidiInput::goToElement(EngravingItem *el) {
+  auto note = dynamic_cast<Note*>(el);
+  if (!note) {
+    return;
+  }
+  rewind();
+  m_currentChordRestSegment = note->chord()->segment();
+  m_currentMeasure = m_currentChordRestSegment
+                         ? m_currentChordRestSegment->measure()
+                         : nullptr;
+  m_first = false;
+}
+
 mu::engraving::Score* NotationMidiInput::score() const
 {
     IF_ASSERT_FAILED(m_getScore) {

@@ -54,6 +54,8 @@ public:
     void onRealtimeAdvance() override;
 
 private:
+    void goToElement(EngravingItem *el) override;
+
     void rewind() override;
     mu::engraving::Score* score() const;
 

@@ -460,6 +460,10 @@ Staff* NotationInteraction::hitStaff(const PointF& pos) const
     return hitMeasure(pos).staff;
 }
 
+void NotationInteraction::goToElement(EngravingItem *element) {
+  m_notation->midiInput()->goToElement(element);
+}
+
 mu::engraving::Page* NotationInteraction::point2page(const PointF& p) const
 {
     if (score()->linearMode()) {
