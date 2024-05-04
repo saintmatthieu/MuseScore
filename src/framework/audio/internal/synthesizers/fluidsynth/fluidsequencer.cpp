@@ -115,7 +115,7 @@ void FluidSequencer::updatePlaybackEvents(EventSequenceMap& destination, const m
 
             destination[timestampFrom].emplace(std::move(noteOn));
 
-            const auto duration = noteEvent.arrangementCtx().actualDuration;
+            const auto duration = noteEvent.arrangementCtx().nominalDuration;
             const auto killTime = tick + duration;
             m_ringingChords[channelIdx][killTime].push_back(noteIdx);
 
