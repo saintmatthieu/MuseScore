@@ -738,7 +738,7 @@ void NotationViewInputController::handleLeftClick(const ClickContext& ctx)
     }
 
     if (ctx.hitElement->isPlayable()) {
-        playbackController()->playElements({ ctx.hitElement });
+        // playbackController()->playElements({ ctx.hitElement });
         viewInteraction()->goToElement(ctx.hitElement);
     }
 
