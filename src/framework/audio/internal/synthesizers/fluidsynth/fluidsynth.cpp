@@ -283,6 +283,17 @@ void FluidSynth::revokePlayingNotes()
 
     fluid_synth_all_notes_off(m_fluid->synth, -1);
     m_sequencer.revokePlayingNotes();
+
+    // Make an all-notes-off MIDI event for each channel
+    for (midi::channel_t i = 0; i < 16; ++i) {
+      midi::Event event;
+      event.setMessageType(midi::Event::MessageType::ChannelVoice10);
+      event.setChannel(i);
+      event.setOpcode(midi::Event::Opcode::ControlChange);
+      event.setIndex(123);
+      event.setData(0);
+      midiOutPort()->sendEvent(event);
+    }
 }
 
 void FluidSynth::flushSound()
