@@ -152,6 +152,16 @@ Segment *nextChordRest(Segment *segment, bool inclusive) {
     next = next->next();
   return next;
 }
+
+std::vector<Note *> getUntiedNotes(const Chord &chord) {
+  std::vector<Note *> notes;
+  for (Note *note : chord.notes()) {
+    if (!note->tieBack()) {
+      notes.push_back(note);
+    }
+  }
+  return notes;
+}
 } // namespace
 
 void NotationMidiInput::doProcessEvents()
@@ -192,10 +202,11 @@ void NotationMidiInput::doProcessEvents()
 
           if (m_currentChordRestSegment) {
             const auto chords = getChords(*m_currentChordRestSegment, *score());
-            if (std::all_of(chords.begin(), chords.end(), [](Chord *chord) {
-                  return chord->containsTieEnd();
-                })) {
-              // Tied chord ; skip it.
+            if (std::all_of(chords.begin(), chords.end(),
+                            [](const Chord *chord) {
+                              return getUntiedNotes(*chord).empty();
+                            })) {
+              // Only tied chords ; skip segment.
               m_currentChordRestSegment =
                   nextChordRest(m_currentChordRestSegment, false);
               continue;
@@ -209,9 +220,7 @@ void NotationMidiInput::doProcessEvents()
           m_currentChordRestSegment =
               nextChordRest(m_currentChordRestSegment, false);
           std::for_each(chords.begin(), chords.end(), [&](Chord *chord) {
-            if (chord->containsTieEnd())
-              return;
-            const auto chordNotes = chord->notes();
+            const auto chordNotes = getUntiedNotes(*chord);
             notes.insert(notes.end(), chordNotes.begin(), chordNotes.end());
           });
         }

@@ -137,9 +137,10 @@ void FluidSequencer::updatePlaybackEvents(EventSequenceMap& destination, const m
                     if (std::any_of(
                             set.begin(), set.end(), [&](const std::variant<midi::Event>& evt) {
                               const auto& event = std::get<midi::Event>(evt);
+                              const auto isNoteon = event.isOpcodeIn({ midi::Event::Opcode::NoteOn });
                               const channel_t ch = event.channel();
                               const note_idx_t noteIdx = event.note();
-                              return ch == channelIdx && noteIdx == pitch;
+                              return isNoteon && ch == channelIdx && noteIdx == pitch;
                             }))
                       return;
                   }
