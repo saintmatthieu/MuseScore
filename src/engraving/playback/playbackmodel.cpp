@@ -257,7 +257,7 @@ void PlaybackModel::triggerEventsForItems(const std::vector<const EngravingItem*
           duration = note->playTicks();
         }
 
-        m_renderer.render(item, actualTimestamp, duration, dynamicLevel, ctx.persistentArticulationType(utick), profile,
+        m_renderer.render(item, item->tick().ticks(), duration, dynamicLevel, ctx.persistentArticulationType(utick), profile,
                           result);
     }
 

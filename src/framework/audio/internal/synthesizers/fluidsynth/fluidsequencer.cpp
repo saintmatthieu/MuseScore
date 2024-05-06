@@ -155,28 +155,6 @@ void FluidSequencer::updatePlaybackEvents(EventSequenceMap& destination, const m
             it = ringingChords.erase(it);
           }
         }
-
-        // Advance to the next timestamp by finding the least timestamp across
-        // the channels and subtracting it from all timestamps.
-        constexpr auto max = std::numeric_limits<timestamp_t>::max();
-        const auto minTimestamp = std::accumulate(
-            m_ringingChords.begin(), m_ringingChords.end(), max,
-            [](timestamp_t min, const auto &ringingChords) {
-              return std::min<timestamp_t>(
-                  min, std::accumulate(ringingChords.second.begin(),
-                                       ringingChords.second.end(), max,
-                                       [](timestamp_t min, const auto &pair) {
-                                         return std::min<timestamp_t>(
-                                             min, pair.first);
-                                       }));
-            });
-        for (auto &[_, ringingChords] : m_ringingChords) {
-          decltype(ringingChords) newRingingChords;
-          for (const auto &[timestamp, pitches] : ringingChords) {
-            newRingingChords[timestamp - minTimestamp] = pitches;
-          }
-          ringingChords = newRingingChords;
-        }
     }
 }
 
