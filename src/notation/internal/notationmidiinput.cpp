@@ -40,6 +40,112 @@ using namespace mu::notation;
 
 static constexpr int PROCESS_INTERVAL = 20;
 
+
+namespace {
+  std::vector<Chord*> getChords(const Segment& segment,
+    const mu::engraving::Score& score) {
+    std::vector<Chord*> chords;
+    auto trackId = 0;
+    while (trackId < score.ntracks()) {
+      auto element = segment.element(trackId);
+      if (auto chord = dynamic_cast<Chord*>(element))
+        chords.push_back(chord);
+      ++trackId;
+    }
+    return chords;
+  }
+
+  std::vector<Note*> getUntiedNotes(const Chord& chord) {
+    std::vector<Note*> notes;
+    for (Note* note : chord.notes()) {
+      if (!note->tieBack()) {
+        notes.push_back(note);
+      }
+    }
+    return notes;
+  }
+} // namespace
+
+SegmentIterator::SegmentIterator(const engraving::Score &score,
+                                 const RepeatSegmentVector &repeatList)
+    : m_score{score}, m_repeatList{repeatList} {
+  goToStart();
+}
+
+Segment *SegmentIterator::next() {
+  while (m_repeatSegmentIt != m_repeatList.end()) {
+    if (auto segment = nextRepeatSegment())
+      return segment;
+    m_repeatSegmentIt++;
+    if (m_repeatSegmentIt == m_repeatList.end()) {
+      // Finished !
+      goToStart();
+      return nullptr;
+    }
+    m_measureIt = (*m_repeatSegmentIt)->measureList().begin();
+    m_pSegment = (*m_measureIt)->first();
+  }
+  return nullptr;
+}
+
+void SegmentIterator::goTo(Segment *segment) {
+  if (m_repeatSegmentIt == m_repeatList.end()) {
+    m_repeatSegmentIt = m_repeatList.begin();
+  }
+  // Go to beginning of repeat and start search from there.
+  m_measureIt = (*m_repeatSegmentIt)->measureList().begin();
+  while (m_repeatSegmentIt != m_repeatList.end()) {
+    m_measureIt = (*m_repeatSegmentIt)->measureList().begin();
+    while (m_measureIt != (*m_repeatSegmentIt)->measureList().end()) {
+      const auto &segments = (*m_measureIt)->segments();
+      if (std::find_if(segments.begin(), segments.end(),
+                       [segment](const Segment &candidate) {
+                         return segment == &candidate;
+                       }) != segments.end()) {
+        m_pSegment = segment;
+        return;
+      }
+      ++m_measureIt;
+    }
+    ++m_repeatSegmentIt;
+  }
+}
+
+bool SegmentIterator::skipSegment(const Segment& segment, const engraving::Score& score) {
+  const auto chords = getChords(segment, score);
+  return std::all_of(chords.begin(), chords.end(), [](const Chord *chord) {
+    return getUntiedNotes(*chord).empty();
+  });
+}
+
+void SegmentIterator::goToStart() {
+  m_repeatSegmentIt = m_repeatList.begin();
+  m_measureIt = (*m_repeatSegmentIt)->measureList().begin();
+  m_pSegment = (*m_measureIt)->first();
+}
+
+Segment *SegmentIterator::nextRepeatSegment() {
+  assert(m_repeatSegmentIt != m_repeatList.end());
+  while (m_measureIt != (*m_repeatSegmentIt)->measureList().end()) {
+    if (auto segment = nextMeasureSegment())
+      return segment;
+    m_measureIt++;
+    if (m_measureIt != (*m_repeatSegmentIt)->measureList().end())
+      m_pSegment = (*m_measureIt)->first();
+  }
+  return nullptr;
+}
+
+Segment *SegmentIterator::nextMeasureSegment() {
+  assert(m_pSegment);
+  while (m_pSegment && SegmentIterator::skipSegment(*m_pSegment, m_score))
+    m_pSegment = m_pSegment->next();
+  auto segment = m_pSegment;
+  if (m_pSegment)
+    m_pSegment = m_pSegment->next();
+  return segment;
+}
+
 NotationMidiInput::NotationMidiInput(IGetScore* getScore, INotationInteractionPtr notationInteraction, INotationUndoStackPtr undoStack)
     : m_getScore(getScore), m_notationInteraction(notationInteraction), m_undoStack(undoStack)
 {
@@ -101,9 +207,7 @@ void NotationMidiInput::onRealtimeAdvance()
 }
 
 void NotationMidiInput::rewind() {
-  m_first = true;
-  m_currentMeasure = nullptr;
-  m_currentChordRestSegment = nullptr;
+  m_segmentIterator.reset();
   playbackController()->seek(int64_t{0});
   score()->deselectAll();
 }
@@ -114,11 +218,10 @@ void NotationMidiInput::goToElement(EngravingItem *el) {
     return;
   }
   rewind();
-  m_currentChordRestSegment = note->chord()->segment();
-  m_currentMeasure = m_currentChordRestSegment
-                         ? m_currentChordRestSegment->measure()
-                         : nullptr;
-  m_first = false;
+  if (!m_segmentIterator)
+    m_segmentIterator.reset(
+        new SegmentIterator(*score(), score()->repeatList()));
+  m_segmentIterator->goTo(note->chord()->segment());
 }
 
 mu::engraving::Score* NotationMidiInput::score() const
@@ -129,40 +232,6 @@ mu::engraving::Score* NotationMidiInput::score() const
 
     return m_getScore->score();
 }
-
-namespace {
-std::vector<Chord *> getChords(Segment &segment,
-                               const mu::engraving::Score &score) {
-  std::vector<Chord *> chords;
-  auto trackId = 0;
-  while (trackId < score.ntracks()) {
-      auto element = segment.element(trackId);
-      if (auto chord = dynamic_cast<Chord *>(element))
-          chords.push_back(chord);
-      ++trackId;
-  }
-  return chords;
-}
-
-Segment *nextChordRest(Segment *segment, bool inclusive) {
-  if (!segment)
-    return nullptr;
-  auto next = inclusive ? segment : segment->next();
-  while (next && next->segmentType() != mu::engraving::SegmentType::ChordRest)
-    next = next->next();
-  return next;
-}
-
-std::vector<Note *> getUntiedNotes(const Chord &chord) {
-  std::vector<Note *> notes;
-  for (Note *note : chord.notes()) {
-    if (!note->tieBack()) {
-      notes.push_back(note);
-    }
-  }
-  return notes;
-}
-} // namespace
 
 void NotationMidiInput::doProcessEvents()
 {
@@ -182,43 +251,11 @@ void NotationMidiInput::doProcessEvents()
 
         gain = std::max(event.velocity() / 128., gain);
 
-        if (m_first) {
-          m_currentMeasure = score()->firstMeasure();
-          m_currentChordRestSegment =
-              nextChordRest(m_currentMeasure->first(), true);
-          m_first = false;
-        }
+        if (!m_segmentIterator)
+          m_segmentIterator.reset(new SegmentIterator(*score(), score()->repeatList()));
 
-        while (true) {
-          while (m_currentMeasure && !m_currentChordRestSegment) {
-            // End of measure was reached.
-            m_currentMeasure = m_currentMeasure->nextMeasure();
-            if (!m_currentMeasure) {
-              break;
-            }
-            m_currentChordRestSegment =
-                nextChordRest(m_currentMeasure->first(), true);
-          }
-
-          if (m_currentChordRestSegment) {
-            const auto chords = getChords(*m_currentChordRestSegment, *score());
-            if (std::all_of(chords.begin(), chords.end(),
-                            [](const Chord *chord) {
-                              return getUntiedNotes(*chord).empty();
-                            })) {
-              // Only tied chords ; skip segment.
-              m_currentChordRestSegment =
-                  nextChordRest(m_currentChordRestSegment, false);
-              continue;
-            }
-          }
-          break;
-        }
-
-        if (m_currentChordRestSegment) {
-          const auto chords = getChords(*m_currentChordRestSegment, *score());
-          m_currentChordRestSegment =
-              nextChordRest(m_currentChordRestSegment, false);
+        if (auto segment = m_segmentIterator->next()) {
+          const auto chords = getChords(*segment, *score());
           std::for_each(chords.begin(), chords.end(), [&](Chord *chord) {
             const auto chordNotes = getUntiedNotes(*chord);
             notes.insert(notes.end(), chordNotes.begin(), chordNotes.end());

@@ -249,7 +249,8 @@ void PlaybackModel::triggerEventsForItems(const std::vector<const EngravingItem*
             continue;
         }
 
-        int utick = repeats.tick2utick(item->tick().ticks());
+        const auto tick = item->tick().ticks();
+        int utick = repeats.tick2utick(tick);
         minTick = std::min(utick, minTick);
 
         auto duration = actualDuration;
@@ -257,7 +258,8 @@ void PlaybackModel::triggerEventsForItems(const std::vector<const EngravingItem*
           duration = note->playTicks();
         }
 
-        m_renderer.render(item, item->tick().ticks(), duration, dynamicLevel, ctx.persistentArticulationType(utick), profile,
+        m_renderer.render(item, tick, duration, dynamicLevel,
+                          ctx.persistentArticulationType(utick), profile,
                           result);
     }
 

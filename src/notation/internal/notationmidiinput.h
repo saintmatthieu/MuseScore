@@ -33,12 +33,40 @@
 #include "igetscore.h"
 #include "inotationinteraction.h"
 #include "inotationundostack.h"
+#include "dom/repeatList.h"
 
 namespace mu::engraving {
 class Score;
 }
 
 namespace mu::notation {
+
+class SegmentIterator {
+public:
+  using RepeatSegmentVector = std::vector<engraving::RepeatSegment *>;
+
+  SegmentIterator(const engraving::Score &score,
+                  const RepeatSegmentVector &repeatList);
+
+  Segment *next();
+  //! If there are repeats, goes to the first iteration of that repeat.
+  void goTo(Segment *segment);
+
+private:
+  static bool skipSegment(const Segment &segment,
+                          const engraving::Score &score);
+
+  void goToStart();
+  Segment *nextRepeatSegment();
+  Segment *nextMeasureSegment();
+
+  const engraving::Score &m_score;
+  const RepeatSegmentVector &m_repeatList;
+  RepeatSegmentVector::const_iterator m_repeatSegmentIt;
+  std::vector<const Measure *>::const_iterator m_measureIt;
+  Segment *m_pSegment;
+};
+
 class NotationMidiInput : public INotationMidiInput
 {
     INJECT(playback::IPlaybackController, playbackController)
@@ -93,9 +121,7 @@ private:
 
     bool m_shouldDisableMetronome = false;
 
-    bool m_first = true;
-    Measure* m_currentMeasure = nullptr;
-    Segment* m_currentChordRestSegment = nullptr;
+    std::unique_ptr<SegmentIterator> m_segmentIterator;
 };
 }
 
