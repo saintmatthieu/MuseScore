@@ -159,6 +159,7 @@ bool StaffType::operator==(const StaffType& st) const
     equal &= (m_userMag == st.m_userMag);
     equal &= (m_yoffset == st.m_yoffset);
     equal &= (m_small == st.m_small);
+    equal &= (m_muted == st.m_muted);
     equal &= (m_invisible == st.m_invisible);
     equal &= (m_color == st.m_color);
     equal &= (m_lines == st.m_lines);
