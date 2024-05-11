@@ -24,6 +24,7 @@
 
 #include <QPixmap>
 #include <QDate>
+#include <unordered_map>
 #include <unordered_set>
 
 #include "translation.h"
@@ -241,6 +242,21 @@ enum class PastingType {
     Double,
     Special
 };
+
+struct PerformanceAttributes
+{
+    double gain = 0.5;
+    bool rightHand = true;
+};
+
+using NotePerformanceAttributeMap = std::unordered_map<const EngravingItem*, const std::shared_ptr<notation::PerformanceAttributes>>;
+
+inline bool isRightHandChord(const Chord &chord) {
+  const auto part = chord.part();
+  const auto staves = part->staves();
+  const auto staff = chord.staff();
+  return staves.size() > 1 && staff->idx() < staves[1]->idx();
+}
 
 struct NoteInputState
 {

@@ -39,6 +39,7 @@
 #include "playbackeventsrenderer.h"
 #include "playbacksetupdataresolver.h"
 #include "playbackcontext.h"
+#include "notation/inotationmidiinput.h"
 
 namespace mu::engraving {
 class Score;
@@ -72,7 +73,8 @@ public:
 
     const muse::mpe::PlaybackData& resolveTrackPlaybackData(const InstrumentTrackId& trackId);
     const muse::mpe::PlaybackData& resolveTrackPlaybackData(const ID& partId, const String& instrumentId);
-    void triggerEventsForItems(const std::vector<const EngravingItem*>& items, double gain = 1.0);
+    void triggerEventsForItems(const std::vector<const EngravingItem *> &items,
+      notation::NotePerformanceAttributeMap performanceAttributes = {});
 
     void triggerMetronome(int tick);
 

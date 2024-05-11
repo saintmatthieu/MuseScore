@@ -67,8 +67,11 @@ private:
     int pitchBendLevel(const mpe::pitch_level_t pitchLevel) const;
 
     mutable ChannelMap m_channels;
-    std::unordered_map<midi::channel_t,
-                       std::map<mpe::timestamp_t, std::vector<midi::note_idx_t>>>
+    std::unordered_map<
+        bool /*right hand*/,
+        std::unordered_map<
+            midi::channel_t,
+            std::map<mpe::timestamp_t, std::vector<midi::note_idx_t>>>>
         m_ringingChords;
 };
 }

@@ -206,7 +206,7 @@ const PlaybackData& PlaybackModel::resolveTrackPlaybackData(const ID& partId, co
     return resolveTrackPlaybackData(idKey(partId, instrumentId));
 }
 
-void PlaybackModel::triggerEventsForItems(const std::vector<const EngravingItem*>& items, double gain)
+void PlaybackModel::triggerEventsForItems(const std::vector<const EngravingItem*>& items, notation::NotePerformanceAttributeMap performanceAttributes)
 {
     std::vector<const EngravingItem*> playableItems = filterPlayableItems(items);
     if (playableItems.empty()) {
@@ -236,7 +236,6 @@ void PlaybackModel::triggerEventsForItems(const std::vector<const EngravingItem*
 
     constexpr timestamp_t actualTimestamp = 0;
     constexpr dynamic_level_t actualDynamicLevel = dynamicLevelFromType(static_cast<muse::mpe::DynamicType>(MAX_DYNAMIC_LEVEL));
-    const dynamic_level_t dynamicLevel = actualDynamicLevel * gain;
     duration_t actualDuration = MScore::defaultPlayDuration * 1000;
 
     const PlaybackContext& ctx = m_playbackCtxMap[trackId];
@@ -258,6 +257,10 @@ void PlaybackModel::triggerEventsForItems(const std::vector<const EngravingItem*
           duration = note->playTicks();
         }
 
+        const dynamic_level_t dynamicLevel =
+            actualDynamicLevel * (performanceAttributes.count(item)
+                                      ? performanceAttributes.at(item)->gain
+                                      : 1.0);
         m_renderer.render(item, tick, duration, dynamicLevel,
                           ctx.persistentArticulationType(utick), profile,
                           result);

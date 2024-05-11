@@ -96,7 +96,7 @@ public:
 
     void
     playElements(const std::vector<const notation::EngravingItem *> &elements,
-                 double gain) override;
+      notation::NotePerformanceAttributeMap = {}) override;
     void playMetronome(int tick) override;
     void seekElement(const notation::EngravingItem* element) override;
 

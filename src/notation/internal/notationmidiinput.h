@@ -35,6 +35,8 @@
 #include "inotationundostack.h"
 #include "dom/repeatList.h"
 
+#include <array>
+
 namespace mu::engraving {
 class Score;
 }
@@ -46,15 +48,18 @@ public:
   using RepeatSegmentVector = std::vector<engraving::RepeatSegment *>;
 
   SegmentIterator(const engraving::Score &score,
-                  const RepeatSegmentVector &repeatList);
+                  const RepeatSegmentVector &repeatList,
+                  std::optional<bool> leftHand);
 
-  Segment *next();
+  Segment *next(uint8_t midiPitch);
   //! If there are repeats, goes to the first iteration of that repeat.
   void goTo(Segment *segment);
+  const std::optional<bool> &isRightHand() const { return m_rightHand; }
 
 private:
   static bool skipSegment(const Segment &segment,
-                          const engraving::Score &score);
+                          const engraving::Score &score,
+                          const std::optional<bool>& leftHand);
 
   void goToStart();
   Segment *nextRepeatSegment();
@@ -62,6 +67,7 @@ private:
 
   const engraving::Score &m_score;
   const RepeatSegmentVector &m_repeatList;
+  const std::optional<bool> m_rightHand;
   RepeatSegmentVector::const_iterator m_repeatSegmentIt;
   std::vector<const Measure *>::const_iterator m_measureIt;
   Segment *m_pSegment;
@@ -121,7 +127,7 @@ private:
 
     bool m_shouldDisableMetronome = false;
 
-    std::unique_ptr<SegmentIterator> m_segmentIterator;
+    std::array<std::unique_ptr<SegmentIterator>, 2> m_segmentIterators;
 };
 }
 

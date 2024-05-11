@@ -55,7 +55,7 @@ public:
     bool isChordSymbolsTrack(const engraving::InstrumentTrackId& trackId) const override;
 
     const muse::mpe::PlaybackData& trackPlaybackData(const engraving::InstrumentTrackId& trackId) const override;
-    void triggerEventsForItems(const std::vector<const EngravingItem*>& items, double gain) override;
+    void triggerEventsForItems(const std::vector<const EngravingItem*>& items, NotePerformanceAttributeMap) override;
     void triggerMetronome(int tick) override;
 
     engraving::InstrumentTrackIdSet existingTrackIdSet() const override;

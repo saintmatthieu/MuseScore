@@ -91,6 +91,8 @@ void FluidSequencer::updatePlaybackEvents(EventSequenceMap& destination, const m
 {
     for (const auto& pair : changes) {
         const auto tick = pair.first;
+        auto hasRightHand = false;
+        auto hasLeftHand = false;
         for (const mpe::PlaybackEvent& event : pair.second) {
             if (!std::holds_alternative<mpe::NoteEvent>(event)) {
                 continue;
@@ -117,42 +119,52 @@ void FluidSequencer::updatePlaybackEvents(EventSequenceMap& destination, const m
 
             const auto duration = noteEvent.arrangementCtx().nominalDuration;
             const auto killTime = tick + duration;
-            m_ringingChords[channelIdx][killTime].push_back(noteIdx);
+            const auto isRightHand = noteEvent.arrangementCtx().isRightHand;
+            hasRightHand |= isRightHand;
+            hasLeftHand |= !isRightHand;
+            m_ringingChords[isRightHand][channelIdx][killTime].push_back(noteIdx);
 
             appendControlSwitch(destination, noteEvent, PEDAL_CC_SUPPORTED_TYPES, 64);
             appendPitchBend(destination, noteEvent, BEND_SUPPORTED_TYPES, channelIdx);
         }
 
-        for (auto& [channelIdx, ringingChords] : m_ringingChords) {
-          auto it = ringingChords.begin();
-          while (it != ringingChords.end() && tick >= it->first) {
-            const auto timestampFrom = it->first;
-            const auto &pitches = it->second;
-            std::for_each(
-                pitches.begin(), pitches.end(), [&](note_idx_t pitch) {
-                  // If there is a noteon event at m_offStreamEvents[tick] with
-                  // the same pitch, don't add a noteoff event.
-                  if (destination.count(tick)) {
-                    const auto &set = destination.at(tick);
-                    if (std::any_of(
-                            set.begin(), set.end(), [&](const std::variant<midi::Event>& evt) {
-                              const auto& event = std::get<midi::Event>(evt);
-                              const auto isNoteon = event.isOpcodeIn({ midi::Event::Opcode::NoteOn });
-                              const channel_t ch = event.channel();
-                              const note_idx_t noteIdx = event.note();
-                              return isNoteon && ch == channelIdx && noteIdx == pitch;
-                            }))
-                      return;
-                  }
-                  midi::Event noteOff(Event::Opcode::NoteOff,
-                                      Event::MessageType::ChannelVoice20);
-                
-                  noteOff.setChannel(channelIdx);
-                  noteOff.setNote(pitch);
-                  noteOff.setPitchNote(pitch, 0.f);
-                  destination[timestampFrom].emplace(std::move(noteOff));
-                });
-            it = ringingChords.erase(it);
+        for (auto &[isRightHand, handRingingChords] : m_ringingChords) {
+          if (isRightHand && !hasRightHand || !isRightHand && !hasLeftHand)
+            continue;
+          for (auto &[channelIdx, ringingChords] : handRingingChords) {
+            auto it = ringingChords.begin();
+            while (it != ringingChords.end() && tick >= it->first) {
+              const auto timestampFrom = it->first;
+              const auto &pitches = it->second;
+              std::for_each(
+                  pitches.begin(), pitches.end(), [&](note_idx_t pitch) {
+                    // If there is a noteon event at m_offStreamEvents[tick]
+                    // with the same pitch, don't add a noteoff event.
+                    if (destination.count(tick)) {
+                      const auto &set = destination.at(tick);
+                      if (std::any_of(
+                              set.begin(), set.end(),
+                              [&](const std::variant<midi::Event> &evt) {
+                                const auto &event = std::get<midi::Event>(evt);
+                                const auto isNoteon = event.isOpcodeIn(
+                                    {midi::Event::Opcode::NoteOn});
+                                const channel_t ch = event.channel();
+                                const note_idx_t noteIdx = event.note();
+                                return isNoteon && ch == channelIdx &&
+                                       noteIdx == pitch;
+                              }))
+                        return;
+                    }
+                    midi::Event noteOff(Event::Opcode::NoteOff,
+                                        Event::MessageType::ChannelVoice20);
+
+                    noteOff.setChannel(channelIdx);
+                    noteOff.setNote(pitch);
+                    noteOff.setPitchNote(pitch, 0.f);
+                    destination[timestampFrom].emplace(std::move(noteOff));
+                  });
+              it = ringingChords.erase(it);
+            }
           }
         }
     }

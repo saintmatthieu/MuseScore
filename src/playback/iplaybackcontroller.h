@@ -80,7 +80,7 @@ public:
 
     virtual void
     playElements(const std::vector<const notation::EngravingItem *> &elements,
-                 double gain = 1.) = 0;
+      notation::NotePerformanceAttributeMap = {}) = 0;
     virtual void playMetronome(int tick) = 0;
     virtual void seekElement(const notation::EngravingItem* element) = 0;
 

@@ -37,20 +37,28 @@
 #include "defer.h"
 #include "log.h"
 
+#include <unordered_map>
+
 using namespace mu::notation;
 
 static constexpr int PROCESS_INTERVAL = 20;
 
 namespace {
 std::vector<Chord *> getChords(const Segment &segment,
-                               const mu::engraving::Score &score) {
+                               const mu::engraving::Score &score,
+                               const std::optional<bool> &rightHand) {
   std::vector<Chord *> chords;
   auto trackId = 0;
   while (trackId < score.ntracks()) {
     if (const auto chord = dynamic_cast<Chord *>(segment.element(trackId))) {
+      const auto part = chord->part();
+      const auto staves = part->staves();
       const auto staff = chord->staff();
+      const auto isCorrectHand =
+          !rightHand.has_value() || *rightHand == isRightHandChord(*chord);
       if (staff->visible() &&
-          !staff->staffType(mu::engraving::Fraction(0, 1))->isMuted())
+          !staff->staffType(mu::engraving::Fraction(0, 1))->isMuted() &&
+          isCorrectHand)
         chords.push_back(chord);
     }
     ++trackId;
@@ -69,13 +77,21 @@ std::vector<Chord *> getChords(const Segment &segment,
   }
   } // namespace
 
-SegmentIterator::SegmentIterator(const engraving::Score &score,
-                                 const RepeatSegmentVector &repeatList)
-    : m_score{score}, m_repeatList{repeatList} {
-  goToStart();
-}
+  SegmentIterator::SegmentIterator(const engraving::Score &score,
+                                   const RepeatSegmentVector &repeatList,
+                                   std::optional<bool> rightHand)
+      : m_score{score}, m_repeatList{repeatList}, m_rightHand{
+                                                      std::move(rightHand)} {
+    goToStart();
+  }
 
-Segment *SegmentIterator::next() {
+Segment *SegmentIterator::next(uint8_t midiPitch) {
+  // If left-hand isn't set, accept any note. Else, if left-hand, accept notes
+  // below C4, and if right-hand, accept notes above C4.
+  if (m_rightHand.has_value() && (*m_rightHand != (midiPitch >= 60))) {
+    return nullptr;
+  }
+
   while (m_repeatSegmentIt != m_repeatList.end()) {
     if (auto segment = nextRepeatSegment())
       return segment;
@@ -115,10 +131,11 @@ void SegmentIterator::goTo(Segment *segment) {
 }
 
 bool SegmentIterator::skipSegment(const Segment &segment,
-                                  const engraving::Score &score) {
+                                  const engraving::Score &score,
+                                  const std::optional<bool> &rightHand) {
   if (segment.segmentType() != mu::engraving::SegmentType::ChordRest)
     return true;
-  const auto chords = getChords(segment, score);
+  const auto chords = getChords(segment, score, rightHand);
   if (chords.empty())
     return true;
   return std::all_of(chords.begin(), chords.end(), [](const Chord *chord) {
@@ -146,7 +163,8 @@ Segment *SegmentIterator::nextRepeatSegment() {
 
 Segment *SegmentIterator::nextMeasureSegment() {
   assert(m_pSegment);
-  while (m_pSegment && SegmentIterator::skipSegment(*m_pSegment, m_score))
+  while (m_pSegment &&
+         SegmentIterator::skipSegment(*m_pSegment, m_score, m_rightHand))
     m_pSegment = m_pSegment->next();
   auto segment = m_pSegment;
   if (m_pSegment)
@@ -215,7 +233,8 @@ void NotationMidiInput::onRealtimeAdvance()
 }
 
 void NotationMidiInput::rewind() {
-  m_segmentIterator.reset();
+  for (auto &it : m_segmentIterators)
+    it.reset();
   playbackController()->seek(int64_t{0});
   score()->deselectAll();
 }
@@ -226,10 +245,14 @@ void NotationMidiInput::goToElement(EngravingItem *el) {
     return;
   }
   rewind();
-  if (!m_segmentIterator)
-    m_segmentIterator.reset(
-        new SegmentIterator(*score(), score()->repeatList()));
-  m_segmentIterator->goTo(note->chord()->segment());
+  if (!m_segmentIterators[0]) {
+    auto rightHand = true;
+    for (auto &it : m_segmentIterators) {
+      it.reset(new SegmentIterator(*score(), score()->repeatList(), rightHand));
+      it->goTo(note->chord()->segment());
+      rightHand = false;
+    }
+  }
 }
 
 mu::engraving::Score* NotationMidiInput::score() const
@@ -250,25 +273,37 @@ void NotationMidiInput::doProcessEvents()
 
     std::vector<Note*> notes;
 
-    auto gain = 0.0;
+    NotePerformanceAttributeMap attributeMap;
+
     for (size_t i = 0; i < m_eventsQueue.size(); ++i) {
         const muse::midi::Event& event = m_eventsQueue.at(i);
 
         if (event.opcode() != muse::midi::Event::Opcode::NoteOn || event.velocity() == 0)
             continue;
 
-        gain = std::max(event.velocity() / 128., gain);
+        auto attributes = std::make_shared<PerformanceAttributes>(PerformanceAttributes{ event.velocity() / 128., event.pitchNote() >= 60 });
 
-        if (!m_segmentIterator)
-          m_segmentIterator.reset(new SegmentIterator(*score(), score()->repeatList()));
-
-        if (auto segment = m_segmentIterator->next()) {
-          const auto chords = getChords(*segment, *score());
-          std::for_each(chords.begin(), chords.end(), [&](Chord *chord) {
-            const auto chordNotes = getUntiedNotes(*chord);
-            notes.insert(notes.end(), chordNotes.begin(), chordNotes.end());
-          });
+        if (!m_segmentIterators[0]) {
+          auto rightHand = true;
+          for (auto &it : m_segmentIterators) {
+            it.reset(new SegmentIterator(*score(), score()->repeatList(),
+                                         rightHand));
+            rightHand = false;
+          }
         }
+
+        for (auto &it : m_segmentIterators)
+          if (auto segment = it->next(event.pitchNote())) {
+            const auto chords =
+                getChords(*segment, *score(), it->isRightHand());
+            std::for_each(chords.begin(), chords.end(), [&](Chord *chord) {
+              const auto chordNotes = getUntiedNotes(*chord);
+              std::for_each(
+                  chordNotes.begin(), chordNotes.end(),
+                [&](Note* note) { attributeMap.insert({ note, attributes }); });
+              notes.insert(notes.end(), chordNotes.begin(), chordNotes.end());
+            });
+          }
 
         bool chord = i != 0;
         bool noteOn = event.opcode() == muse::midi::Event::Opcode::NoteOn;
@@ -286,7 +321,7 @@ void NotationMidiInput::doProcessEvents()
         }
 
         playbackController()->playElements(
-            {notesItems.begin(), notesItems.end()}, gain);
+            {notesItems.begin(), notesItems.end()}, std::move(attributeMap));
         m_notesReceivedChannel.send({notes.begin(), notes.end()});
 
         auto pScore = score();
