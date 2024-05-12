@@ -37,42 +37,15 @@
 
 #include <array>
 
+namespace mu {
+class ChordRestIterator;
+}
+
 namespace mu::engraving {
 class Score;
 }
 
 namespace mu::notation {
-
-class SegmentIterator {
-public:
-  using RepeatSegmentVector = std::vector<engraving::RepeatSegment *>;
-
-  SegmentIterator(const engraving::Score &score,
-                  const RepeatSegmentVector &repeatList,
-                  std::optional<bool> leftHand);
-
-  Segment *next(uint8_t midiPitch);
-  //! If there are repeats, goes to the first iteration of that repeat.
-  void goTo(Segment *segment);
-  const std::optional<bool> &isRightHand() const { return m_rightHand; }
-
-private:
-  static bool skipSegment(const Segment &segment,
-                          const engraving::Score &score,
-                          const std::optional<bool>& leftHand);
-
-  void goToStart();
-  Segment *nextRepeatSegment();
-  Segment *nextMeasureSegment();
-
-  const engraving::Score &m_score;
-  const RepeatSegmentVector &m_repeatList;
-  const std::optional<bool> m_rightHand;
-  RepeatSegmentVector::const_iterator m_repeatSegmentIt;
-  std::vector<const Measure *>::const_iterator m_measureIt;
-  Segment *m_pSegment;
-};
-
 class NotationMidiInput : public INotationMidiInput
 {
     INJECT(playback::IPlaybackController, playbackController)
@@ -127,7 +100,7 @@ private:
 
     bool m_shouldDisableMetronome = false;
 
-    std::array<std::unique_ptr<SegmentIterator>, 2> m_segmentIterators;
+    std::array<std::unique_ptr<ChordRestIterator>, 2> m_chordRestIterators;
 };
 }
 
