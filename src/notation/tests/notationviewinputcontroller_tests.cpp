@@ -266,7 +266,7 @@ TEST_F(NotationViewInputControllerTests, Mouse_Press_Range_Start_Drag_From_Selec
     .Times(1);
 
     std::vector<const EngravingItem*> elements = { newContext.element };
-    EXPECT_CALL(*m_playbackController, playElements(elements, 1.))
+    EXPECT_CALL(*m_playbackController, playElements(elements, notation::NotePerformanceAttributeMap()))
     .Times(1);
 
     std::vector<EngravingItem*> selectElements = { newContext.element };
@@ -322,7 +322,7 @@ TEST_F(NotationViewInputControllerTests, Mouse_Press_Range_Start_Play_From_First
     .Times(1);
 
     std::vector<const EngravingItem*> playElements = { newContext.element };
-    EXPECT_CALL(*m_playbackController, playElements(playElements, 1.))
+    EXPECT_CALL(*m_playbackController, playElements(playElements, notation::NotePerformanceAttributeMap()))
     .Times(1);
 
     EXPECT_CALL(*m_playbackController, seekElement(newContext.element))
@@ -388,7 +388,7 @@ TEST_F(NotationViewInputControllerTests, Mouse_Press_On_Already_Selected_Element
     .Times(0);
 
     std::vector<const EngravingItem*> playElements = { newContext.element };
-    EXPECT_CALL(*m_playbackController, playElements(playElements, 1.))
+    EXPECT_CALL(*m_playbackController, playElements(playElements, notation::NotePerformanceAttributeMap()))
     .Times(1);
 
     EXPECT_CALL(*m_playbackController, seekElement(newContext.element))

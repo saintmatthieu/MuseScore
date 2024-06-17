@@ -41,6 +41,9 @@ public:
     MOCK_METHOD(EngravingItem*, hitElement, (const PointF&, float), (const, override));
     MOCK_METHOD(Staff*, hitStaff, (const PointF&), (const, override));
 
+    MOCK_METHOD(void, goToElement, (EngravingItem* element), (override));
+
+
     MOCK_METHOD(const HitElementContext&, hitElementContext, (), (const, override));
     MOCK_METHOD(void, setHitElementContext, (const HitElementContext&), (override));
 

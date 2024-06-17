@@ -55,6 +55,6 @@ void PlaybackModule::registerUiTypes()
 {
     std::shared_ptr<muse::ui::IUiEngine> ui = ioc()->resolve<muse::ui::IUiEngine>(moduleName());
     if (ui) {
-        ui->addSourceImportPath(playback_QML_IMPORT);
+        ui->addSourceImportPath(playbackstub_QML_IMPORT);
     }
 }

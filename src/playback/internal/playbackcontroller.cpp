@@ -1560,9 +1560,11 @@ void PlaybackController::setNotation(notation::INotationPtr notation)
         updateLoop();
     });
 
-    m_notation->interaction()->selectionChanged().onNotify(this, [this]() {
-        onSelectionChanged();
-    });
+    // We want to highlight the notes that are currently being played, and this
+    // callback sends an all-noteoff event :/
+    // m_notation->interaction()->selectionChanged().onNotify(this, [this]() {
+    //     onSelectionChanged();
+    // });
 
     m_notation->interaction()->textEditingEnded().onReceive(this, [this](engraving::TextBase* text) {
         if (text->isHarmony()) {

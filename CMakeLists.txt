@@ -80,6 +80,15 @@ option(MUE_BUILD_PLAYBACK_TESTS "Build playback tests" ON)
 option(MUE_BUILD_PROJECT_MODULE "Build project module" ON)
 option(MUE_BUILD_PROJECT_TESTS "Build project tests" ON)
 
+# Function to configure the target-specific setting for playback module
+function(configure_target_playback_module target_name)
+    if (target_name STREQUAL "notation_tests")
+        set(MUE_BUILD_PLAYBACK_MODULE OFF PARENT_SCOPE)
+    else()
+        set(MUE_BUILD_PLAYBACK_MODULE ON PARENT_SCOPE)
+    endif()
+endfunction()
+
 # === Setup ===
 option(MUE_DOWNLOAD_SOUNDFONT "Download the latest soundfont version as part of the build process" ON)
 
@@ -172,14 +181,12 @@ if (MUE_DOWNLOAD_SOUNDFONT)
     include(DownloadSoundFont)
 endif(MUE_DOWNLOAD_SOUNDFONT)
 
-
 ###########################################
 # Add source tree
 ###########################################
 add_subdirectory(share)
 add_subdirectory(src/framework/global) # should be first to work pch
 add_subdirectory(src)
-
 
 ###########################################
 # Setup Packaging

@@ -111,8 +111,10 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/internal/notationcreator.h
     ${CMAKE_CURRENT_LIST_DIR}/internal/mscoreerrorscontroller.cpp
     ${CMAKE_CURRENT_LIST_DIR}/internal/mscoreerrorscontroller.h
-    ${CMAKE_CURRENT_LIST_DIR}/internal/ChordRestIterator.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/internal/ChordRestIterator.h
+    ${CMAKE_CURRENT_LIST_DIR}/internal/orchestrion/OrchestrionSequencerFactory.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/internal/orchestrion/OrchestrionSequencerFactory.h
+    ${CMAKE_CURRENT_LIST_DIR}/internal/orchestrion/MuseChord.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/internal/orchestrion/MuseChord.h
 
     ${CMAKE_CURRENT_LIST_DIR}/view/abstractnotationpaintview.cpp
     ${CMAKE_CURRENT_LIST_DIR}/view/abstractnotationpaintview.h
@@ -185,6 +187,7 @@ set(MODULE_LINK
     commonscene
     uicomponents
     ui
+    orchestrion
     )
 
 if (MUE_BUILD_NOTATION_TESTS)

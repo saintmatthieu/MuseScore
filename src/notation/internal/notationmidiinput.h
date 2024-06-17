@@ -28,18 +28,16 @@
 #include "playback/iplaybackcontroller.h"
 #include "inotationconfiguration.h"
 #include "actions/iactionsdispatcher.h"
+#include "midi/imidioutport.h"
 
 #include "../inotationmidiinput.h"
 #include "igetscore.h"
 #include "inotationinteraction.h"
 #include "inotationundostack.h"
 #include "dom/repeatList.h"
+#include "orchestrion/OrchestrionSequencer.h"
 
 #include <array>
-
-namespace mu {
-class ChordRestIterator;
-}
 
 namespace mu::engraving {
 class Score;
@@ -51,6 +49,7 @@ class NotationMidiInput : public INotationMidiInput
     INJECT(playback::IPlaybackController, playbackController)
     INJECT(muse::actions::IActionsDispatcher, dispatcher)
     INJECT(INotationConfiguration, configuration)
+    INJECT(muse::midi::IMidiOutPort, midiOutPort)
 
 public:
     NotationMidiInput(IGetScore* getScore, INotationInteractionPtr notationInteraction, INotationUndoStackPtr undoStack);
@@ -85,6 +84,7 @@ private:
     bool isRealtimeManual() const;
 
     bool isNoteInputMode() const;
+    dgk::OrchestrionSequencer& getOrchestrion();
 
     IGetScore* m_getScore = nullptr;
     INotationInteractionPtr m_notationInteraction;
@@ -100,7 +100,7 @@ private:
 
     bool m_shouldDisableMetronome = false;
 
-    std::array<std::unique_ptr<ChordRestIterator>, 2> m_chordRestIterators;
+    std::unique_ptr<dgk::OrchestrionSequencer> m_orchestrionSequencer;
 };
 }
 

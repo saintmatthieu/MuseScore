@@ -251,7 +251,7 @@ struct PerformanceAttributes
 
 using NotePerformanceAttributeMap = std::unordered_map<const EngravingItem*, const std::shared_ptr<notation::PerformanceAttributes>>;
 
-inline bool isRightHandChord(const Chord &chord) {
+inline bool isRightHandChord(const ChordRest &chord) {
   const auto part = chord.part();
   const auto staves = part->staves();
   const auto staff = chord.staff();

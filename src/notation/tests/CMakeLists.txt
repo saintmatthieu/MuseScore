@@ -32,11 +32,47 @@ set(MODULE_TEST_SRC
 
     ${CMAKE_CURRENT_LIST_DIR}/environment.cpp
     ${CMAKE_CURRENT_LIST_DIR}/notationviewinputcontroller_tests.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/OrchestrionSequencer_tests.cpp
 )
 
 set(MODULE_TEST_LINK
     engraving
     notation
+    project
+    diagnostics
+    accessibility
+    actions
+    # audio
+    draw
+    midistub
+    mpestub
+    # musesampler
+    network
+    shortcuts
+    ui
+    uicomponents
+    dockwindow
+    vst
+    autobot
+    braille
+    cloud
+    commonscene
+    context
+    engraving
+    inspector
+    instrumentsscene
+    languages
+    learn
+    multiinstances
+    palette
+    playbackstub
+    extensions
+    print
+    project
+    update
+    workspacestub
+    iex_guitarpro
+    orchestrion
 )
 
 set(MODULE_TEST_DATA_ROOT ${CMAKE_CURRENT_LIST_DIR})
@@ -44,5 +80,7 @@ set(MODULE_TEST_DATA_ROOT ${CMAKE_CURRENT_LIST_DIR})
 if (MSVC)
    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
 endif (MSVC)
+
+configure_target_playback_module("notation_tests")
 
 include(${PROJECT_SOURCE_DIR}/src/framework/testing/gtest.cmake)

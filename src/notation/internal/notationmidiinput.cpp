@@ -20,7 +20,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "notationmidiinput.h"
-#include "ChordRestIterator.h"
 
 #include <QGuiApplication>
 
@@ -32,6 +31,7 @@
 #include "engraving/dom/rest.h"
 #include "engraving/dom/factory.h"
 #include "engraving/types/fraction.h"
+#include "orchestrion/OrchestrionSequencerFactory.h"
 
 #include "notationtypes.h"
 
@@ -43,6 +43,15 @@
 using namespace mu::notation;
 
 static constexpr int PROCESS_INTERVAL = 20;
+
+namespace {
+void SendDgkNoteEvents(const std::vector<dgk::NoteEvent> &events,
+                       muse::midi::IMidiOutPort &midiOutPort) {
+  std::for_each(events.begin(), events.end(), [&](const dgk::NoteEvent &event) {
+    midiOutPort.sendEvent(dgk::ToMuseMidiEvent(event));
+  });
+}
+} // namespace
 
 NotationMidiInput::NotationMidiInput(IGetScore* getScore, INotationInteractionPtr notationInteraction, INotationUndoStackPtr undoStack)
     : m_getScore(getScore), m_notationInteraction(notationInteraction), m_undoStack(undoStack)
@@ -68,13 +77,14 @@ void NotationMidiInput::onMidiEventReceived(const muse::midi::Event& event)
         return;
     }
 
-    if (event.opcode() == muse::midi::Event::Opcode::NoteOn) {
-        m_eventsQueue.push_back(event);
+    if (event.opcode() != muse::midi::Event::Opcode::NoteOn &&
+        event.opcode() != muse::midi::Event::Opcode::NoteOff)
+      return;
 
-        if (!m_processTimer.isActive()) {
-            m_processTimer.start(PROCESS_INTERVAL);
-        }
-    }
+    auto& orchestrion = getOrchestrion();
+    const std::vector<dgk::NoteEvent> outputEvents =
+        orchestrion.OnInputEvent(dgk::ToDgkNoteEvent(event));
+    SendDgkNoteEvents(outputEvents, *midiOutPort());
 }
 
 mu::async::Channel<std::vector<const Note*> > NotationMidiInput::notesReceived() const
@@ -105,10 +115,10 @@ void NotationMidiInput::onRealtimeAdvance()
 }
 
 void NotationMidiInput::rewind() {
-  for (auto &it : m_chordRestIterators)
-    it.reset();
   playbackController()->seek(int64_t{0});
   score()->deselectAll();
+  const auto noteOffs = getOrchestrion().GoToTick(0);
+  SendDgkNoteEvents(noteOffs, *midiOutPort());
 }
 
 void NotationMidiInput::goToElement(EngravingItem *el) {
@@ -116,16 +126,8 @@ void NotationMidiInput::goToElement(EngravingItem *el) {
   if (!note) {
     return;
   }
-  rewind();
-  if (!m_chordRestIterators[0]) {
-    auto rightHand = true;
-    for (auto &it : m_chordRestIterators) {
-      it.reset(
-          new ChordRestIterator(*score(), score()->repeatList(), rightHand));
-      it->goTo(note->chord()->segment());
-      rightHand = false;
-    }
-  }
+  const auto noteoffs = getOrchestrion().GoToTick(note->tick().ticks());
+  SendDgkNoteEvents(noteoffs, *midiOutPort());
 }
 
 mu::engraving::Score* NotationMidiInput::score() const
@@ -155,28 +157,6 @@ void NotationMidiInput::doProcessEvents()
             continue;
 
         auto attributes = std::make_shared<PerformanceAttributes>(PerformanceAttributes{ event.velocity() / 128., event.pitchNote() >= 60 });
-
-        if (!m_chordRestIterators[0]) {
-          auto rightHand = true;
-          for (auto &it : m_chordRestIterators) {
-            it.reset(new ChordRestIterator(*score(), score()->repeatList(),
-                                           rightHand));
-            rightHand = false;
-          }
-        }
-
-        for (auto &it : m_chordRestIterators)
-          if (auto segment = it->next(event.pitchNote())) {
-            const auto chords =
-                ChordRestIterator::getChords(*segment, *score(), it->isRightHand());
-            std::for_each(chords.begin(), chords.end(), [&](Chord *chord) {
-              const auto chordNotes = ChordRestIterator::getUntiedNotes(*chord);
-              std::for_each(
-                  chordNotes.begin(), chordNotes.end(),
-                [&](Note* note) { attributeMap.insert({ note, attributes }); });
-              notes.insert(notes.end(), chordNotes.begin(), chordNotes.end());
-            });
-          }
 
         bool chord = i != 0;
         bool noteOn = event.opcode() == muse::midi::Event::Opcode::NoteOn;
@@ -400,4 +380,17 @@ bool NotationMidiInput::isRealtimeManual() const
 bool NotationMidiInput::isNoteInputMode() const
 {
     return m_notationInteraction->noteInput()->isNoteInputMode();
+}
+
+dgk::OrchestrionSequencer& NotationMidiInput::getOrchestrion() {
+  if (!m_orchestrionSequencer) {
+    // Doing this in `init` fails, probably because the master score is not
+    // yet loaded. Doing this now isn't great, though, as it might delay the
+    // first note.
+    // TODO find out when the master score is loaded and do this then
+    const auto score = m_getScore->score();
+    m_orchestrionSequencer = dgk::OrchestrionSequencerFactory::CreateSequencer(
+      *score, *m_notationInteraction);
+  }
+  return *m_orchestrionSequencer;
 }
