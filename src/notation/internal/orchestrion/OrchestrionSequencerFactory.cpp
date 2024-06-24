@@ -60,7 +60,7 @@ auto GetChordSequence(mu::engraving::Score &score,
                       mu::notation::INotationInteraction &interaction,
                       size_t staffIdx, int voice) {
   std::vector<ChordPtr> sequence;
-  auto prevWasRest = false;
+  auto prevWasRest = true;
   auto endTick = 0;
   const auto &repeats = score.repeatList();
   std::for_each(
