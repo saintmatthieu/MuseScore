@@ -20,6 +20,7 @@ public:
             mu::notation::INotationInteraction &interaction,
             const mu::engraving::Segment &segment, size_t staffIdx, int voice);
 
+  bool IsChord() const override;
   int GetTick() const override;
   int GetEndTick() const;
 
