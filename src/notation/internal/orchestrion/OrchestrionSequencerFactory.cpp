@@ -11,6 +11,7 @@
 #include "engraving/dom/rest.h"
 #include "engraving/dom/score.h"
 #include "engraving/dom/staff.h"
+#include <cassert>
 
 namespace dgk {
 namespace {
@@ -62,11 +63,13 @@ auto GetChordSequence(mu::engraving::Score &score,
   std::vector<ChordPtr> sequence;
   auto prevWasRest = true;
   auto endTick = 0;
-  const auto &repeats = score.repeatList();
+  auto &repeats = score.repeatList(true);
+  auto repeatTick = 0;
   std::for_each(
       repeats.begin(), repeats.end(),
       [&](const mu::engraving::RepeatSegment *repeatSegment) {
         const auto &museMeasures = repeatSegment->measureList();
+        repeatTick = repeatSegment->utick;
         std::for_each(
             museMeasures.begin(), museMeasures.end(),
             [&](const mu::engraving::Measure *measure) {
@@ -74,10 +77,11 @@ auto GetChordSequence(mu::engraving::Score &score,
               for (const auto &museSegment : museSegments)
                 if (TakeIt(museSegment, staffIdx, voice, prevWasRest)) {
                   auto chord = std::make_shared<MuseChord>(
-                      score, interaction, museSegment, staffIdx, voice);
+                      score, interaction, museSegment, staffIdx, voice,
+                      repeatTick);
                   if (endTick > 0 // we don't care if the voice doesn't begin at
                                   // the start.
-                      && endTick < chord->GetTick())
+                      && endTick < chord->GetTickWithRepeats())
                     // There is a blank in this voice.
                     sequence.push_back(std::make_shared<VoiceBlank>(endTick));
                   endTick = chord->GetEndTick();
