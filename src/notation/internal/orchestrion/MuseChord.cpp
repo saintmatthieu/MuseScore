@@ -19,7 +19,8 @@ MuseChord::MuseChord(me::Score &score,
     : m_score{score}, m_notationInteraction{interaction}, m_segment{segment},
       m_staffIdx{staffIdx}, m_voice{voice}, m_track{static_cast<int>(
                                                 staffIdx * me::VOICES + voice)},
-      m_isChord{dynamic_cast<const me::Chord *>(m_segment.element(m_track)) != nullptr} {}
+      m_isChord{dynamic_cast<const me::Chord *>(m_segment.element(m_track)) !=
+                nullptr} {}
 
 std::vector<me::Note *> MuseChord::GetNotes() const {
   if (const auto museChord =
@@ -27,6 +28,8 @@ std::vector<me::Note *> MuseChord::GetNotes() const {
     return museChord->notes();
   return {};
 }
+
+bool MuseChord::IsChord() const { return m_isChord; }
 
 std::vector<int> MuseChord::GetPitches() const {
   std::vector<int> chord;
@@ -100,7 +103,7 @@ int MuseChord::GetChordEndTick() const {
 }
 
 int MuseChord::GetRestEndTick() const {
-  const me::Segment* segment = &m_segment;
+  const me::Segment *segment = &m_segment;
   auto endTick = GetTick();
   while (segment) {
     const auto rest = dynamic_cast<const me::Rest *>(segment->element(m_track));

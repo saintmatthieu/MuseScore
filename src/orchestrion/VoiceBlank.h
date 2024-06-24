@@ -8,6 +8,7 @@ public:
   VoiceBlank(int tick);
 
 private:
+  bool IsChord() const override;
   std::vector<int> GetPitches() const override;
   int GetTick() const override;
   void SetHighlight(bool value) override;

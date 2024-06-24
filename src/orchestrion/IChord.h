@@ -6,6 +6,7 @@ namespace dgk {
 class IChord {
 public:
   virtual ~IChord() = default;
+  virtual bool IsChord() const = 0;
   virtual std::vector<int> GetPitches() const = 0;
   virtual int GetTick() const = 0; // Doesn't account for repeats, just the
                                    // visual position in the score.

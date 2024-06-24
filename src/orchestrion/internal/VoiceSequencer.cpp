@@ -64,7 +64,12 @@ void VoiceSequencer::Advance(NoteEvent::Type event, int midiPitch,
   const auto nextBegin = GetNextBegin(event);
 
   if (nextBegin == m_numGestures) {
-    m_active.begin = m_active.end = nextBegin;
+    // `nextBegin` might show the end for this event type, yet don't switch
+    // anything off until the cursor has reached it.
+    if (m_active.end == m_numGestures ||
+        cursorTick >= m_gestures[m_active.end]->GetTick())
+      // Ok then.
+      m_active.begin = m_active.end = nextBegin;
     return;
   }
 
@@ -73,7 +78,11 @@ void VoiceSequencer::Advance(NoteEvent::Type event, int midiPitch,
     return;
 
   m_active.begin = nextBegin;
-  m_active.end = nextBegin + 1;
+  // Do not open up to the next chord if the user is releasing the key.
+  m_active.end =
+      m_gestures[nextBegin]->IsChord() && event == NoteEvent::Type::noteOff
+          ? nextBegin
+          : nextBegin + 1;
 }
 
 std::vector<int> VoiceSequencer::GoToTick(int tick) {
@@ -98,16 +107,15 @@ std::vector<int> VoiceSequencer::GoToTick(int tick) {
 
 int VoiceSequencer::GetNextBegin(NoteEvent::Type event) const {
   auto nextActive = m_active.end;
-  while (nextActive < m_numGestures) {
-    const auto isChord = !m_gestures[nextActive]->GetPitches().empty();
-    if (isChord && event == NoteEvent::Type::noteOff)
-      // The user is releasing a key and hence does not intend to play the next
-      // chord.
-      break;
-    // Activate
-    ++nextActive;
-  }
-  return nextActive;
+
+  if (nextActive == m_numGestures)
+    // The end.
+    return m_numGestures;
+
+  const auto isChord = m_gestures[nextActive]->IsChord();
+  // Skip the next rest if the user is pressing the key.
+  return !isChord && event == NoteEvent::Type::noteOn ? nextActive + 1
+                                                      : nextActive;
 }
 
 std::optional<int> VoiceSequencer::GetNextTick(NoteEvent::Type event) const {
