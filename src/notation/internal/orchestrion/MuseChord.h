@@ -18,11 +18,14 @@ class MuseChord : public IChord {
 public:
   MuseChord(mu::engraving::Score &score,
             mu::notation::INotationInteraction &interaction,
-            const mu::engraving::Segment &segment, size_t staffIdx, int voice);
+            const mu::engraving::Segment &segment, size_t staffIdx, int voice,
+            int repeatTick);
 
   bool IsChord() const override;
-  int GetTick() const override;
+  int GetTickWithRepeats() const override;
+  int GetTickWithoutRepeats() const override;
   int GetEndTick() const;
+  int GetRepeatTick() const;
 
 private:
   std::vector<int> GetPitches() const override;
@@ -33,12 +36,15 @@ private:
 
   std::vector<mu::engraving::Note *> GetNotes() const;
 
+  const int m_tick;
+  const int m_repeatTick;
+  const int m_track;
+  const bool m_isChord;
+  const size_t m_staffIdx;
+  const int m_voice;
+
   mu::engraving::Score &m_score;
   mu::notation::INotationInteraction &m_notationInteraction;
   const mu::engraving::Segment &m_segment;
-  const size_t m_staffIdx;
-  const int m_voice;
-  const int m_track;
-  const bool m_isChord;
 };
 } // namespace dgk

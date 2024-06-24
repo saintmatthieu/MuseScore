@@ -15,12 +15,14 @@ namespace me = mu::engraving;
 
 MuseChord::MuseChord(me::Score &score,
                      mu::notation::INotationInteraction &interaction,
-                     const me::Segment &segment, size_t staffIdx, int voice)
-    : m_score{score}, m_notationInteraction{interaction}, m_segment{segment},
-      m_staffIdx{staffIdx}, m_voice{voice}, m_track{static_cast<int>(
-                                                staffIdx * me::VOICES + voice)},
-      m_isChord{dynamic_cast<const me::Chord *>(m_segment.element(m_track)) !=
-                nullptr} {}
+                     const me::Segment &segment, size_t staffIdx, int voice,
+                     int repeatTick)
+    : m_tick{segment.tick().ticks()}, m_repeatTick{repeatTick},
+      m_track{static_cast<int>(staffIdx * me::VOICES + voice)},
+      m_isChord{dynamic_cast<const me::Chord *>(segment.element(m_track)) !=
+                nullptr},
+      m_staffIdx{staffIdx}, m_voice{voice}, m_score{score},
+      m_notationInteraction{interaction}, m_segment{segment} {}
 
 std::vector<me::Note *> MuseChord::GetNotes() const {
   if (const auto museChord =
@@ -40,7 +42,9 @@ std::vector<int> MuseChord::GetPitches() const {
   return chord;
 }
 
-int MuseChord::GetTick() const { return m_segment.tick().ticks(); }
+int MuseChord::GetTickWithRepeats() const { return m_tick + m_repeatTick; }
+
+int MuseChord::GetTickWithoutRepeats() const { return m_tick; }
 
 int MuseChord::GetEndTick() const {
   if (m_isChord)
@@ -48,6 +52,8 @@ int MuseChord::GetEndTick() const {
   else
     return GetRestEndTick();
 }
+
+int MuseChord::GetRepeatTick() const { return m_repeatTick; }
 
 void MuseChord::SetHighlight(bool value) {
   const auto notes = GetNotes();
@@ -94,7 +100,7 @@ void MuseChord::ScrollToYou() const {
 
 int MuseChord::GetChordEndTick() const {
   auto chord = dynamic_cast<const me::Chord *>(m_segment.element(m_track));
-  auto endTick = GetTick();
+  auto endTick = GetTickWithRepeats();
   while (chord) {
     endTick += chord->actualTicks().ticks();
     chord = chord->nextTiedChord();
@@ -104,7 +110,7 @@ int MuseChord::GetChordEndTick() const {
 
 int MuseChord::GetRestEndTick() const {
   const me::Segment *segment = &m_segment;
-  auto endTick = GetTick();
+  auto endTick = GetTickWithRepeats();
   while (segment) {
     const auto rest = dynamic_cast<const me::Rest *>(segment->element(m_track));
     if (!rest)

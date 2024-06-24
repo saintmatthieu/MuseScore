@@ -30,19 +30,21 @@ OrchestrionSequencer::OnInputEvent(const NoteEvent &input) {
     return {};
 
   std::vector<NoteEvent> output;
-  for (auto &sequencer : hand) {
+  for (auto &voiceSequencer : hand) {
     const auto next =
-        sequencer->OnInputEvent(input.type, input.pitch, *nextNoteonTick);
+        voiceSequencer->OnInputEvent(input.type, input.pitch, *nextNoteonTick);
     output.reserve(output.size() + next.noteOffs.size() + next.noteOns.size());
     std::transform(next.noteOffs.begin(), next.noteOffs.end(),
                    std::back_inserter(output), [&](int note) {
                      return NoteEvent{NoteEvent::Type::noteOff,
-                                      sequencer->voice, note, input.velocity};
+                                      voiceSequencer->voice, note,
+                                      input.velocity};
                    });
     std::transform(next.noteOns.begin(), next.noteOns.end(),
                    std::back_inserter(output), [&](int note) {
-                     return NoteEvent{NoteEvent::Type::noteOn, sequencer->voice,
-                                      note, input.velocity};
+                     return NoteEvent{NoteEvent::Type::noteOn,
+                                      voiceSequencer->voice, note,
+                                      input.velocity};
                    });
   };
 
