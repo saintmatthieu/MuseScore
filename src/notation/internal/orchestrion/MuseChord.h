@@ -19,13 +19,11 @@ public:
   MuseChord(mu::engraving::Score &score,
             mu::notation::INotationInteraction &interaction,
             const mu::engraving::Segment &segment, size_t staffIdx, int voice,
-            int repeatTick);
+            int measurePlaybackTick);
 
   bool IsChord() const override;
   int GetTickWithRepeats() const override;
-  int GetTickWithoutRepeats() const override;
   int GetEndTick() const;
-  int GetRepeatTick() const;
 
 private:
   std::vector<int> GetPitches() const override;
@@ -36,8 +34,8 @@ private:
 
   std::vector<mu::engraving::Note *> GetNotes() const;
 
-  const int m_tick;
-  const int m_repeatTick;
+  const int m_playbackTick;
+  const int m_scoreTick;
   const int m_track;
   const bool m_isChord;
   const size_t m_staffIdx;

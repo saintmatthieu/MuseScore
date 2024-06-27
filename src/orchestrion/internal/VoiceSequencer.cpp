@@ -96,10 +96,9 @@ std::vector<int> VoiceSequencer::GoToTick(int tick) {
   }
 
   m_active.begin = m_active.end = m_numGestures;
-  // Don't use a binary search: the gestures aren't sorted by
-  // GetTickWithoutRepeats().
   for (auto i = 0; i < m_gestures.size(); ++i)
-    if (m_gestures[i]->GetTickWithoutRepeats() >= tick) {
+    if (m_gestures[i]->IsChord() &&
+        m_gestures[i]->GetTickWithRepeats() >= tick) {
       m_active.begin = m_active.end = i;
       break;
     }
