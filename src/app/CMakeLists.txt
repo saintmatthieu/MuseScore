@@ -560,4 +560,9 @@ if (MSVC)
       set_target_properties(${EXECUTABLE_NAME} PROPERTIES VS_DEBUGGER_COMMAND_ARGUMENTS "--debug")
    endif ()
 
+# Copy executable to install directory
+add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${EXECUTABLE_NAME}> ${CMAKE_INSTALL_PREFIX}/bin/$<TARGET_FILE_NAME:${EXECUTABLE_NAME}>
+)
+
 endif (MSVC)
