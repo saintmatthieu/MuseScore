@@ -8,7 +8,6 @@ public:
   virtual ~IChord() = default;
   virtual bool IsChord() const = 0;
   virtual std::vector<int> GetPitches() const = 0;
-  virtual int GetTickWithoutRepeats() const = 0;
   virtual int GetTickWithRepeats() const = 0;
   virtual void SetHighlight(bool value) = 0;
   virtual void ScrollToYou() const = 0;

@@ -64,12 +64,11 @@ auto GetChordSequence(mu::engraving::Score &score,
   auto prevWasRest = true;
   auto endTick = 0;
   auto &repeats = score.repeatList(true);
-  auto repeatTick = 0;
+  auto measureTick = 0;
   std::for_each(
       repeats.begin(), repeats.end(),
       [&](const mu::engraving::RepeatSegment *repeatSegment) {
         const auto &museMeasures = repeatSegment->measureList();
-        repeatTick = repeatSegment->utick;
         std::for_each(
             museMeasures.begin(), museMeasures.end(),
             [&](const mu::engraving::Measure *measure) {
@@ -78,7 +77,7 @@ auto GetChordSequence(mu::engraving::Score &score,
                 if (TakeIt(museSegment, staffIdx, voice, prevWasRest)) {
                   auto chord = std::make_shared<MuseChord>(
                       score, interaction, museSegment, staffIdx, voice,
-                      repeatTick);
+                      measureTick);
                   if (endTick > 0 // we don't care if the voice doesn't begin at
                                   // the start.
                       && endTick < chord->GetTickWithRepeats())
@@ -87,6 +86,7 @@ auto GetChordSequence(mu::engraving::Score &score,
                   endTick = chord->GetEndTick();
                   sequence.push_back(std::move(chord));
                 }
+              measureTick += measure->ticks().ticks();
             });
       });
   sequence.push_back(std::make_shared<VoiceBlank>(endTick));

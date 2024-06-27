@@ -16,9 +16,10 @@ namespace me = mu::engraving;
 MuseChord::MuseChord(me::Score &score,
                      mu::notation::INotationInteraction &interaction,
                      const me::Segment &segment, size_t staffIdx, int voice,
-                     int repeatTick)
-    : m_tick{segment.tick().ticks()}, m_repeatTick{repeatTick},
-      m_track{static_cast<int>(staffIdx * me::VOICES + voice)},
+                     int measurePlaybackTick)
+    : m_playbackTick{measurePlaybackTick + segment.rtick().ticks()},
+      m_scoreTick{segment.tick().ticks()}, m_track{static_cast<int>(
+                                               staffIdx * me::VOICES + voice)},
       m_isChord{dynamic_cast<const me::Chord *>(segment.element(m_track)) !=
                 nullptr},
       m_staffIdx{staffIdx}, m_voice{voice}, m_score{score},
@@ -42,9 +43,9 @@ std::vector<int> MuseChord::GetPitches() const {
   return chord;
 }
 
-int MuseChord::GetTickWithRepeats() const { return m_tick + m_repeatTick; }
-
-int MuseChord::GetTickWithoutRepeats() const { return m_tick; }
+int MuseChord::GetTickWithRepeats() const {
+  return m_playbackTick;
+}
 
 int MuseChord::GetEndTick() const {
   if (m_isChord)
@@ -52,8 +53,6 @@ int MuseChord::GetEndTick() const {
   else
     return GetRestEndTick();
 }
-
-int MuseChord::GetRepeatTick() const { return m_repeatTick; }
 
 void MuseChord::SetHighlight(bool value) {
   const auto notes = GetNotes();

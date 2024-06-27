@@ -10,7 +10,6 @@ public:
 private:
   bool IsChord() const override;
   std::vector<int> GetPitches() const override;
-  int GetTickWithoutRepeats() const override;
   int GetTickWithRepeats() const override;
   void SetHighlight(bool value) override;
   void ScrollToYou() const override;
