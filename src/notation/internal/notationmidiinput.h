@@ -53,7 +53,7 @@ public:
   NotationMidiInput(IGetScore *getScore,
                     INotationInteractionPtr notationInteraction,
                     INotationUndoStackPtr undoStack,
-                    const dgk::OrchestrionGetter &);
+                    const std::unique_ptr<dgk::OrchestrionSequencer> &);
 
     void onMidiEventReceived(const muse::midi::Event& event) override;
     async::Channel<std::vector<const Note*> > notesReceived() const override;
@@ -100,7 +100,7 @@ private:
 
     bool m_shouldDisableMetronome = false;
 
-    const dgk::OrchestrionGetter& m_getOrchestrion;
+    const std::unique_ptr<dgk::OrchestrionSequencer>& m_orchestrion;
 };
 }
 

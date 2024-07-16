@@ -21,8 +21,8 @@ auto letterToMidiPitch(char letter) {
 } // namespace
 
 ComputerKeyboardMidiController::ComputerKeyboardMidiController(
-    const std::function<OrchestrionSequencer &()> &getOrchestrion)
-    : m_getOrchestrion{getOrchestrion} {}
+    const std::unique_ptr<OrchestrionSequencer> &orchestrion)
+    : m_orchestrion{orchestrion} {}
 
 void ComputerKeyboardMidiController::onAltPlusLetter(char letter) {
   if (m_pressedLetters.count(letter) > 0)
@@ -37,7 +37,7 @@ void ComputerKeyboardMidiController::onAltPlusLetter(char letter) {
   if (evt.pitch == 0)
     return;
   m_pressedLetters.insert(letter);
-  m_getOrchestrion().OnInputEvent(evt);
+  m_orchestrion->OnInputEvent(evt);
 }
 
 void ComputerKeyboardMidiController::onReleasedLetter(char letter) {
@@ -47,6 +47,6 @@ void ComputerKeyboardMidiController::onReleasedLetter(char letter) {
   evt.velocity = 0.f;
   evt.pitch = letterToMidiPitch(letter);
   if (evt.pitch != 0)
-    m_getOrchestrion().OnInputEvent(evt);
+    m_orchestrion->OnInputEvent(evt);
 }
 } // namespace dgk
