@@ -171,6 +171,9 @@ public:
     virtual void addBoxes(BoxType boxType, int count, AddBoxesTarget target) = 0;
     virtual void addBoxes(BoxType boxType, int count, int beforeBoxIndex, bool insertAfter) = 0;
 
+    virtual void onAltPlusLetter(char letter) = 0;
+    virtual void onReleasedLetter(char letter) = 0;
+
     virtual void copySelection() = 0;
     virtual mu::Ret repeatSelection() = 0;
     virtual void copyLyrics() = 0;

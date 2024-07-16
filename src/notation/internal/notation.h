@@ -25,10 +25,13 @@
 #include "async/asyncable.h"
 #include "modularity/ioc.h"
 #include "iengravingconfiguration.h"
+#include "midi/imidioutport.h"
 
 #include "../inotation.h"
 #include "igetscore.h"
 #include "../inotationconfiguration.h"
+#include "orchestrion/OrchestrionSequencer.h"
+#include "orchestrion/ComputerKeyboardMidiController.h"
 
 namespace mu::engraving {
 class Score;
@@ -41,6 +44,7 @@ class Notation : virtual public INotation, public IGetScore, public async::Async
 {
     INJECT_STATIC(INotationConfiguration, configuration)
     INJECT(engraving::IEngravingConfiguration, engravingConfiguration)
+    INJECT(muse::midi::IMidiOutPort, midiOutPort)
 
 public:
     explicit Notation(engraving::Score* score = nullptr);
@@ -109,6 +113,10 @@ private:
     INotationMidiInputPtr m_midiInput = nullptr;
     INotationAccessibilityPtr m_accessibility = nullptr;
     INotationElementsPtr m_elements = nullptr;
+
+    const dgk::OrchestrionGetter m_getOrchestrion;
+    std::unique_ptr<dgk::OrchestrionSequencer> m_orchestrionSequencer;
+    dgk::ComputerKeyboardMidiController m_orchestrionKeyboardController;
 };
 }
 

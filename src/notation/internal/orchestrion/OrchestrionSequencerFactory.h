@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Orchestrion/OrchestrionSequencer.h"
 #include "Orchestrion/OrchestrionTypes.h"
 #include "midi/midievent.h"
 #include <memory>
@@ -14,13 +15,12 @@ class INotationInteraction;
 }
 
 namespace dgk {
-class OrchestrionSequencer;
-
 class OrchestrionSequencerFactory {
 public:
   static std::unique_ptr<OrchestrionSequencer>
   CreateSequencer(mu::engraving::Score &score,
-                  mu::notation::INotationInteraction &interaction);
+                  mu::notation::INotationInteraction &interaction,
+                  OrchestrionSequencer::MidiOutCb cb);
 };
 
 NoteEvent ToDgkNoteEvent(const muse::midi::Event &museEvent);

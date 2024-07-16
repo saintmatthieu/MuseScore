@@ -3,6 +3,8 @@ set(MODULE orchestrion)
 set(MODULE_SRC
     internal/VoiceSequencer.cpp
     internal/VoiceSequencer.h
+    ComputerKeyboardMidiController.cpp
+    ComputerKeyboardMidiController.h
     OrchestrionSequencer.cpp
     OrchestrionSequencer.h
     OrchestrionTypes.h

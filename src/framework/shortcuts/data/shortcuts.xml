@@ -512,6 +512,22 @@
     <seq>S</seq>
     </SC>
   <SC>
+    <key>b-flat-3</key>
+    <seq>Alt+Y</seq>
+    </SC>
+  <SC>
+    <key>b-3</key>
+    <seq>Alt+X</seq>
+    </SC>
+  <SC>
+    <key>c-4</key>
+    <seq>Alt+K</seq>
+    </SC>
+  <SC>
+    <key>c-sharp-4</key>
+    <seq>Alt+L</seq>
+    </SC>
+  <SC>
     <key>add-hairpin</key>
     <seq>Shift+,</seq>
     </SC>

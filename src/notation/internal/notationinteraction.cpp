@@ -89,6 +89,8 @@
 #include "notationselection.h"
 #include "scorecallbacks.h"
 
+#include "orchestrion/ComputerKeyboardMidiController.h"
+
 using namespace mu::io;
 using namespace mu::notation;
 using namespace mu::engraving;
@@ -177,9 +179,12 @@ inline QString extractSyllable(const QString& text)
     return _text.mid(textPos, splitPos - textPos);
 }
 
-NotationInteraction::NotationInteraction(Notation* notation, INotationUndoStackPtr undoStack)
-    : m_notation(notation), m_undoStack(undoStack), m_editData(&m_scoreCallbacks)
-{
+NotationInteraction::NotationInteraction(
+    Notation *notation, INotationUndoStackPtr undoStack,
+    dgk::ComputerKeyboardMidiController &controller)
+    : m_notation(notation), m_undoStack(undoStack),
+      m_editData(&m_scoreCallbacks),
+      m_orchestrionKeyboardController(controller) {
     m_noteInput = std::make_shared<NotationNoteInput>(notation, this, m_undoStack);
     m_selection = std::make_shared<NotationSelection>(notation);
 
@@ -3499,6 +3504,14 @@ mu::Ret NotationInteraction::canAddBoxes() const
     }
 
     return make_ret(Err::MeasureIsNotSelected);
+}
+
+void NotationInteraction::onAltPlusLetter(char letter) {
+    m_orchestrionKeyboardController.onAltPlusLetter(letter);
+}
+
+void NotationInteraction::onReleasedLetter(char letter) {
+    m_orchestrionKeyboardController.onReleasedLetter(letter);
 }
 
 void NotationInteraction::addBoxes(BoxType boxType, int count, AddBoxesTarget target)

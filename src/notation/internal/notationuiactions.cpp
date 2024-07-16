@@ -2253,6 +2253,10 @@ const UiActionList NotationUiActions::m_actions = {
              TranslatableString("action", "Add slur"),
              IconCode::Code::NOTE_SLUR
              ),
+    UiAction("b-flat-3", mu::context::UiCtxNotationOpened, mu::context::CTX_ANY),
+    UiAction("b-3", mu::context::UiCtxNotationOpened, mu::context::CTX_ANY),
+    UiAction("c-4", mu::context::UiCtxNotationOpened, mu::context::CTX_ANY),
+    UiAction("c-sharp-4", mu::context::UiCtxNotationOpened, mu::context::CTX_ANY),
     UiAction("add-marcato",
              mu::context::UiCtxNotationOpened,
              mu::context::CTX_ANY,

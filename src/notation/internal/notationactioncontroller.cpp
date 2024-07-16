@@ -218,6 +218,22 @@ void NotationActionController::init()
     registerAction("tie", &Controller::addTie);
     registerAction("chord-tie", &Controller::chordTie);
     registerAction("add-slur", &Controller::addSlur);
+    registerAction("b-flat-3", [this]() {
+      if (const auto interaction = currentNotationInteraction())
+        interaction->onAltPlusLetter('y');
+    });
+    registerAction("b-3", [this]() {
+      if (const auto interaction = currentNotationInteraction())
+        interaction->onAltPlusLetter('x');
+    });
+    registerAction("c-4", [this]() {
+      if (const auto interaction = currentNotationInteraction())
+        interaction->onAltPlusLetter('k');
+    });
+    registerAction("c-sharp-4", [this]() {
+      if (const auto interaction = currentNotationInteraction())
+        interaction->onAltPlusLetter('l');
+    });
 
     registerAction(UNDO_ACTION_CODE, &Interaction::undo, &Controller::canUndo);
     registerAction(REDO_ACTION_CODE, &Interaction::redo, &Controller::canRedo);

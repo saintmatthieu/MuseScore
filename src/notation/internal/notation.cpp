@@ -38,64 +38,82 @@
 #include "notationmidiinput.h"
 #include "notationparts.h"
 #include "notationtypes.h"
+#include "orchestrion/OrchestrionSequencerFactory.h"
 
 #include "log.h"
 
 using namespace mu::notation;
 using namespace mu::engraving;
 
-Notation::Notation(mu::engraving::Score* score)
-{
-    m_painting = std::make_shared<NotationPainting>(this);
-    m_viewState = std::make_shared<NotationViewState>(this);
-    m_soloMuteState = std::make_shared<NotationSoloMuteState>();
-    m_undoStack = std::make_shared<NotationUndoStack>(this, m_notationChanged);
-    m_interaction = std::make_shared<NotationInteraction>(this, m_undoStack);
-    m_midiInput = std::make_shared<NotationMidiInput>(this, m_interaction, m_undoStack);
-    m_accessibility = std::make_shared<NotationAccessibility>(this);
-    m_parts = std::make_shared<NotationParts>(this, m_interaction, m_undoStack);
-    m_style = std::make_shared<NotationStyle>(this, m_undoStack);
-    m_elements = std::make_shared<NotationElements>(this);
-
-    m_interaction->noteInput()->noteAdded().onNotify(this, [this]() {
-        notifyAboutNotationChanged();
-    });
-
-    m_interaction->dragChanged().onNotify(this, [this]() {
-        notifyAboutNotationChanged();
-    });
-
-    m_interaction->textEditingChanged().onNotify(this, [this]() {
-        notifyAboutNotationChanged();
-    });
-
-    m_interaction->dropChanged().onNotify(this, [this]() {
-        notifyAboutNotationChanged();
-    });
-
-    m_midiInput->notesReceived().onReceive(this, [this](const std::vector<const Note*>&){
-        notifyAboutNotationChanged();
-    });
-
-    m_style->styleChanged().onNotify(this, [this]() {
-        notifyAboutNotationChanged();
-    });
-
-    m_parts->partsChanged().onNotify(this, [this]() {
-        notifyAboutNotationChanged();
-    });
-
-    engravingConfiguration()->selectionColorChanged().onReceive(this, [this](int, const muse::draw::Color&) {
-        notifyAboutNotationChanged();
-    });
-
-    configuration()->canvasOrientation().ch.onReceive(this, [this](mu::Orientation) {
-        if (m_score && m_score->autoLayoutEnabled()) {
-            m_score->doLayout();
+Notation::Notation(mu::engraving::Score *score)
+    : m_getOrchestrion{[this]() -> dgk::OrchestrionSequencer & {
+        if (!m_orchestrionSequencer) {
+          // Doing this in `init` fails, probably because the master score is
+          // not yet loaded. Doing this now isn't great, though, as it might
+          // delay the first note.
+          // TODO find out when the master score is loaded and do this then
+          m_orchestrionSequencer =
+              dgk::OrchestrionSequencerFactory::CreateSequencer(
+                  *this->score(), *m_interaction,
+                  [this](const std::vector<dgk::NoteEvent> &events) {
+                    std::for_each(events.begin(), events.end(),
+                                  [&](const dgk::NoteEvent &event) {
+                                    midiOutPort()->sendEvent(
+                                        dgk::ToMuseMidiEvent(event));
+                                  });
+                  });
         }
-    });
+        return *m_orchestrionSequencer;
+      }},
+      m_orchestrionKeyboardController{m_getOrchestrion} {
 
-    setScore(score);
+  m_painting = std::make_shared<NotationPainting>(this);
+  m_viewState = std::make_shared<NotationViewState>(this);
+  m_soloMuteState = std::make_shared<NotationSoloMuteState>();
+  m_undoStack = std::make_shared<NotationUndoStack>(this, m_notationChanged);
+  m_interaction = std::make_shared<NotationInteraction>(this, m_undoStack, m_orchestrionKeyboardController);
+  m_midiInput = std::make_shared<NotationMidiInput>(
+      this, m_interaction, m_undoStack, m_getOrchestrion);
+  m_accessibility = std::make_shared<NotationAccessibility>(this);
+  m_parts = std::make_shared<NotationParts>(this, m_interaction, m_undoStack);
+  m_style = std::make_shared<NotationStyle>(this, m_undoStack);
+  m_elements = std::make_shared<NotationElements>(this);
+
+  m_interaction->noteInput()->noteAdded().onNotify(
+      this, [this]() { notifyAboutNotationChanged(); });
+
+  m_interaction->dragChanged().onNotify(
+      this, [this]() { notifyAboutNotationChanged(); });
+
+  m_interaction->textEditingChanged().onNotify(
+      this, [this]() { notifyAboutNotationChanged(); });
+
+  m_interaction->dropChanged().onNotify(
+      this, [this]() { notifyAboutNotationChanged(); });
+
+  m_midiInput->notesReceived().onReceive(
+      this, [this](const std::vector<const Note *> &) {
+        notifyAboutNotationChanged();
+      });
+
+  m_style->styleChanged().onNotify(this,
+                                   [this]() { notifyAboutNotationChanged(); });
+
+  m_parts->partsChanged().onNotify(this,
+                                   [this]() { notifyAboutNotationChanged(); });
+
+  engravingConfiguration()->selectionColorChanged().onReceive(
+      this,
+      [this](int, const muse::draw::Color &) { notifyAboutNotationChanged(); });
+
+  configuration()->canvasOrientation().ch.onReceive(
+      this, [this](mu::Orientation) {
+        if (m_score && m_score->autoLayoutEnabled()) {
+          m_score->doLayout();
+        }
+      });
+
+  setScore(score);
 }
 
 Notation::~Notation()

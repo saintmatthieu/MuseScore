@@ -98,7 +98,8 @@ auto GetChordSequence(mu::engraving::Score &score,
 std::unique_ptr<OrchestrionSequencer>
 OrchestrionSequencerFactory::CreateSequencer(
     mu::engraving::Score &score,
-    mu::notation::INotationInteraction &interaction) {
+    mu::notation::INotationInteraction &interaction,
+    OrchestrionSequencer::MidiOutCb cb) {
   const auto rightHandStaff =
       GetRightHandStaff(score.repeatList(), score.ntracks());
   if (!rightHandStaff.has_value())
@@ -115,8 +116,8 @@ OrchestrionSequencerFactory::CreateSequencer(
         !sequence.empty())
       leftHand.emplace(v, std::move(sequence));
   }
-  return std::make_unique<OrchestrionSequencer>(std::move(rightHand),
-                                                std::move(leftHand));
+  return std::make_unique<OrchestrionSequencer>(
+      std::move(rightHand), std::move(leftHand), std::move(cb));
 }
 
 NoteEvent ToDgkNoteEvent(const muse::midi::Event &museEvent) {

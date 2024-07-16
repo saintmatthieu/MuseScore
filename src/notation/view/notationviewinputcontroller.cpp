@@ -977,6 +977,21 @@ void NotationViewInputController::keyPressEvent(QKeyEvent* event)
 
 void NotationViewInputController::keyReleaseEvent(QKeyEvent* event)
 {
+    if (!event->isAutoRepeat())
+        switch (event->key()) {
+        case Qt::Key_Y:
+            viewInteraction()->onReleasedLetter('y');
+            break;
+        case Qt::Key_X:
+            viewInteraction()->onReleasedLetter('x');
+            break;
+        case Qt::Key_K:
+            viewInteraction()->onReleasedLetter('k');
+            break;
+        case Qt::Key_L:
+            viewInteraction()->onReleasedLetter('l');
+            break;
+        }
     if (event->key() == Qt::Key_Shift) {
         viewInteraction()->editElement(event);
     }
