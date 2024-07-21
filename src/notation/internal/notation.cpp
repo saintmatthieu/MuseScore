@@ -132,16 +132,17 @@ void Notation::setScore(Score* score)
     }
 
     if (score)
-        m_orchestrionSequencer =
-            dgk::OrchestrionSequencerFactory::CreateSequencer(
-                *score, *m_interaction,
-                [this](const std::vector<dgk::NoteEvent> &events) {
-                  std::for_each(events.begin(), events.end(),
-                                [&](const dgk::NoteEvent &event) {
-                                  midiOutPort()->sendEvent(
-                                      dgk::ToMuseMidiEvent(event));
-                                });
-                });
+      m_orchestrionSequencer =
+          dgk::OrchestrionSequencerFactory::CreateSequencer(
+              *score, *m_interaction,
+              [this](const std::vector<dgk::NoteEvent> &events) {
+                std::for_each(events.begin(), events.end(),
+                              [&](const dgk::NoteEvent &event) {
+                                midiOutPort()->sendEvent(
+                                    dgk::ToMuseMidiEvent(event));
+                              });
+                synthResolver()->postNoteEvents(m_orchestrionSequencer->track, events);
+              });
 
     m_score = score;
     m_scoreInited.notify();

@@ -26,6 +26,7 @@
 #include "modularity/ioc.h"
 #include "iengravingconfiguration.h"
 #include "midi/imidioutport.h"
+#include "audio/isynthresolver.h"
 
 #include "../inotation.h"
 #include "igetscore.h"
@@ -45,6 +46,7 @@ class Notation : virtual public INotation, public IGetScore, public async::Async
     INJECT_STATIC(INotationConfiguration, configuration)
     INJECT(engraving::IEngravingConfiguration, engravingConfiguration)
     INJECT(muse::midi::IMidiOutPort, midiOutPort)
+    INJECT(muse::audio::synth::ISynthResolver, synthResolver)
 
 public:
     explicit Notation(engraving::Score* score = nullptr);

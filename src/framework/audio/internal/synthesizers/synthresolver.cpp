@@ -22,7 +22,10 @@
 
 #include "synthresolver.h"
 
+#include "global/async/async.h"
+#include "internal/audiothread.h"
 #include "internal/audiosanitizer.h"
+#include "orchestrion/OrchestrionTypes.h"
 
 #include "log.h"
 
@@ -41,7 +44,7 @@ void SynthResolver::init(const AudioInputParams& defaultInputParams)
     m_defaultInputParams = defaultInputParams;
 }
 
-ISynthesizerPtr SynthResolver::resolveSynth(const TrackId trackId, const AudioInputParams& params, const PlaybackSetupData& setupData) const
+ISynthesizerPtr SynthResolver::resolveSynth(const TrackId trackId, const AudioInputParams& params, const PlaybackSetupData& setupData)
 {
     ONLY_AUDIO_WORKER_THREAD;
 
@@ -66,10 +69,12 @@ ISynthesizerPtr SynthResolver::resolveSynth(const TrackId trackId, const AudioIn
         return nullptr;
     }
 
-    return resolver->resolveSynth(trackId, params);
+    const auto synth = resolver->resolveSynth(trackId, params);
+    m_resolvedSynths[trackId] = synth;
+    return synth;
 }
 
-ISynthesizerPtr SynthResolver::resolveDefaultSynth(const TrackId trackId) const
+ISynthesizerPtr SynthResolver::resolveDefaultSynth(const TrackId trackId)
 {
     ONLY_AUDIO_WORKER_THREAD;
 
@@ -124,6 +129,20 @@ void SynthResolver::registerResolver(const AudioSourceType type, IResolverPtr re
     std::lock_guard lock(m_mutex);
 
     m_resolvers.insert_or_assign(type, std::move(resolver));
+}
+
+void SynthResolver::postNoteEvents(
+    int track, const std::vector<dgk::NoteEvent> &noteEvents) {
+  Async::call(
+      this,
+      [&, track, noteEvents]() {
+        ONLY_AUDIO_WORKER_THREAD;
+        if (m_resolvedSynths.count(track) == 0)
+          return;
+        if (const auto synth = m_resolvedSynths.at(track).lock())
+          synth->processNoteEvents(noteEvents);
+      },
+      AudioThread::ID);
 }
 
 void SynthResolver::clearSources()

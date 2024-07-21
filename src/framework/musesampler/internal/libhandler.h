@@ -78,6 +78,10 @@ struct MuseSamplerLibHandler
     {
         return ms_MuseSampler_init(ms, sample_rate, block_size, channel_count);
     }
+    ms_Result initSampler2(ms_MuseSampler ms, double sample_rate, int block_size, int channel_count)
+    {
+        return ms_MuseSampler_init_2(ms, sample_rate, block_size, channel_count);
+    }
 
     ms_Result clearScore(ms_MuseSampler ms) { return ms_MuseSampler_clear_score(ms); }
     ms_Track addTrack(ms_MuseSampler ms, int instrument_id) { return ms_MuseSampler_add_track(ms, instrument_id); }
@@ -209,6 +213,7 @@ struct MuseSamplerLibHandler
     ms_MuseSampler_create create = nullptr;
     ms_MuseSampler_destroy destroy = nullptr;
     ms_MuseSampler_init initSampler = nullptr;
+    ms_MuseSampler_init_2 initSampler2 = nullptr;
 
     ms_MuseSampler_clear_score clearScore = nullptr;
     ms_MuseSampler_add_track addTrack = nullptr;
@@ -329,6 +334,7 @@ public:
         create = (ms_MuseSampler_create)mu::getLibFunc(m_lib, "ms_MuseSampler_create");
         destroy = (ms_MuseSampler_destroy)mu::getLibFunc(m_lib, "ms_MuseSampler_destroy");
         initSampler = (ms_MuseSampler_init)mu::getLibFunc(m_lib, "ms_MuseSampler_init");
+        initSampler2 = (ms_MuseSampler_init_2)mu::getLibFunc(m_lib, "ms_MuseSampler_init_2");
 
         clearScore = (ms_MuseSampler_clear_score)mu::getLibFunc(m_lib, "ms_MuseSampler_clear_score");
         addTrack = (ms_MuseSampler_add_track)mu::getLibFunc(m_lib, "ms_MuseSampler_add_track");
@@ -567,6 +573,7 @@ public:
                && create
                && destroy
                && initSampler
+               && initSampler2
                && clearScore
                && addTrack
                && finalizeTrack
@@ -628,6 +635,7 @@ private:
                << "\n ms_MuseSampler_create - " << reinterpret_cast<uint64_t>(create)
                << "\n ms_MuseSampler_destroy - " << reinterpret_cast<uint64_t>(destroy)
                << "\n ms_MuseSampler_init - " << reinterpret_cast<uint64_t>(initSampler)
+               << "\n ms_MuseSampler_init_2 - " << reinterpret_cast<uint64_t>(initSampler2)
                << "\n ms_disable_reverb - " << reinterpret_cast<uint64_t>(disableReverb)
                << "\n ms_MuseSampler_clear_score - " << reinterpret_cast<uint64_t>(clearScore)
                << "\n ms_MuseSampler_add_track - " << reinterpret_cast<uint64_t>(addTrack)

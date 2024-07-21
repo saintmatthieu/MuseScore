@@ -25,6 +25,7 @@
 #include "types/version.h"
 
 #include "musesamplerwrapper.h"
+#include "MuseGestureSynthesizer.h"
 
 #include "log.h"
 
@@ -79,7 +80,10 @@ ISynthesizerPtr MuseSamplerResolver::resolveSynth(const TrackId /*trackId*/, con
 {
     InstrumentInfo instrument = findInstrument(m_libHandler, params.resourceMeta);
     if (instrument.isValid()) {
-        return std::make_shared<MuseSamplerWrapper>(m_libHandler, instrument, params);
+      auto museSampler = std::make_shared<MuseSamplerWrapper>(
+          m_libHandler, instrument, params);
+      return std::make_shared<MuseGestureSynthesizer>(
+          std::move(museSampler), *m_libHandler, instrument.instrumentId);
     }
 
     return nullptr;

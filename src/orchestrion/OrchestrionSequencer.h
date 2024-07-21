@@ -11,10 +11,12 @@ namespace dgk {
 class OrchestrionSequencer {
 public:
   using MidiOutCb = std::function<void(const std::vector<NoteEvent> &events)>;
-  OrchestrionSequencer(Staff rightHand, Staff leftHand, MidiOutCb);
+  OrchestrionSequencer(int track, Staff rightHand, Staff leftHand, MidiOutCb);
   void OnInputEvent(const NoteEvent &inputEvent);
   //! Returns noteoffs that were pending.
   void GoToTick(int tick);
+
+  const int track;
 
 private:
   using Hand = std::vector<std::unique_ptr<VoiceSequencer>>;

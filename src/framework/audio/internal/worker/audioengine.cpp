@@ -62,7 +62,7 @@ mu::Ret AudioEngine::init(AudioBufferPtr bufferPtr)
     m_mixer = std::make_shared<Mixer>();
 
     m_buffer = std::move(bufferPtr);
-    setMode(RenderMode::IdleMode);
+    setMode(RenderMode::RealTimeMode);
 
     m_inited = true;
 

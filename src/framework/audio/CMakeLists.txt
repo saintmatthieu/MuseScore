@@ -76,6 +76,9 @@ endif()
 set(MODULE_SRC
 
     # Common public
+    ${CMAKE_CURRENT_LIST_DIR}/IGestureSynthesizer.h
+    ${CMAKE_CURRENT_LIST_DIR}/GestureSynthesizer.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/GestureSynthesizer.h
     ${CMAKE_CURRENT_LIST_DIR}/audiomodule.cpp
     ${CMAKE_CURRENT_LIST_DIR}/audiomodule.h
     ${CMAKE_CURRENT_LIST_DIR}/audioerrors.h
