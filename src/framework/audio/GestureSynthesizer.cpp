@@ -13,7 +13,7 @@ bool GestureSynthesizer::isValid() const { return m_synth->isValid(); }
 
 void GestureSynthesizer::setup(const mpe::PlaybackData &playbackData) {
   m_synth->setup(playbackData);
-  doSetup();
+  doSetup(playbackData.setupData);
 }
 
 const audio::AudioInputParams &GestureSynthesizer::params() const {

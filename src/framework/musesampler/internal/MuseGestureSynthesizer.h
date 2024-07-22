@@ -7,6 +7,7 @@ namespace muse::musesampler {
 struct MuseSamplerLibHandler;
 }
 
+namespace dgk {
 class MuseGestureSynthesizer : public dgk::GestureSynthesizer {
 public:
   MuseGestureSynthesizer(muse::audio::synth::ISynthesizerPtr synth,
@@ -15,7 +16,7 @@ public:
   ~MuseGestureSynthesizer() override;
   void
   processNoteEvents(const std::vector<dgk::NoteEvent> &noteEvents) override;
-  void doSetup() override;
+  void doSetup(const mpe::PlaybackSetupData& setupData) override;
   void doProcess(float *buffer,
                  muse::audio::samples_t samplesPerChannel) override;
   void doSetSampleRate(unsigned int sampleRate) override;
@@ -35,3 +36,4 @@ private:
   std::array<float *, 2> m_internalBuffer;
   ms_OutputBuffer m_bus;
 };
+} // namespace dgk

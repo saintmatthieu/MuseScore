@@ -2,6 +2,7 @@
 #include "internal/libhandler.h"
 #include "orchestrion/OrchestrionTypes.h"
 
+namespace dgk {
 MuseGestureSynthesizer::MuseGestureSynthesizer(
     muse::audio::synth::ISynthesizerPtr synth,
     muse::musesampler::MuseSamplerLibHandler &samplerLib, int instrumentId)
@@ -36,7 +37,7 @@ void MuseGestureSynthesizer::processNoteEvents(
       m_samplerLib.stopAuditionNote(m_sampler, m_track, {noteEvent.pitch});
 }
 
-void MuseGestureSynthesizer::doSetup() {
+void MuseGestureSynthesizer::doSetup(const mpe::PlaybackSetupData&) {
   m_track = m_samplerLib.addTrack(m_sampler, m_instrumentId);
 }
 
@@ -88,3 +89,4 @@ void MuseGestureSynthesizer::extractOutputSamples(
     }
   }
 }
+} // namespace dgk

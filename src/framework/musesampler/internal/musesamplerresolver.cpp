@@ -82,7 +82,7 @@ ISynthesizerPtr MuseSamplerResolver::resolveSynth(const TrackId /*trackId*/, con
     if (instrument.isValid()) {
       auto museSampler = std::make_shared<MuseSamplerWrapper>(
           m_libHandler, instrument, params);
-      return std::make_shared<MuseGestureSynthesizer>(
+      return std::make_shared<dgk::MuseGestureSynthesizer>(
           std::move(museSampler), *m_libHandler, instrument.instrumentId);
     }
 

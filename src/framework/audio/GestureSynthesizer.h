@@ -12,7 +12,7 @@ public:
 
   GestureSynthesizer(muse::audio::synth::ISynthesizerPtr synth);
 
-  virtual void doSetup() = 0;
+  virtual void doSetup(const muse::audio::PlaybackSetupData&) = 0;
   virtual void doProcess(float *buffer, muse::audio::samples_t samplesPerChannel) = 0;
   virtual void doSetSampleRate(unsigned int sampleRate) = 0;
   virtual void doFlushSound() = 0;

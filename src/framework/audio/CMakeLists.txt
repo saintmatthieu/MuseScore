@@ -215,6 +215,8 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/internal/fx/reverb/reverbprocessor.h
 
     # Synthesizers
+    ${CMAKE_CURRENT_LIST_DIR}/internal/synthesizers/fluidsynth/FluidGestureSynthesizer.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/internal/synthesizers/fluidsynth/FluidGestureSynthesizer.h
     ${CMAKE_CURRENT_LIST_DIR}/internal/synthesizers/fluidsynth/soundmapping.h
     ${CMAKE_CURRENT_LIST_DIR}/internal/synthesizers/fluidsynth/sfcachedloader.h
     ${CMAKE_CURRENT_LIST_DIR}/internal/synthesizers/fluidsynth/fluidsynth.cpp
