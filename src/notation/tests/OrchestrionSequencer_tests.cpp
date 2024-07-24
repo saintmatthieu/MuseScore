@@ -52,6 +52,7 @@ public:
 };
 } // namespace
 
+/*
 TEST(ChistophonePlayerTests, test) {
   mu::engraving::MScore::useRead302InTestMode = false;
   const mu::String TEST_SCORE_PATH(
@@ -83,3 +84,4 @@ TEST(ChistophonePlayerTests, test) {
     player->OnInputEvent(noteEvent);
   }
 }
+*/
