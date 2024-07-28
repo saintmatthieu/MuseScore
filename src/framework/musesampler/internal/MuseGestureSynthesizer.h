@@ -16,7 +16,7 @@ public:
   ~MuseGestureSynthesizer() override;
   void
   processNoteEvents(const std::vector<dgk::NoteEvent> &noteEvents) override;
-  void doSetup(const mpe::PlaybackSetupData& setupData) override;
+  void doSetup(const mpe::PlaybackData &playbackData) override;
   void doProcess(float *buffer,
                  muse::audio::samples_t samplesPerChannel) override;
   void doSetSampleRate(unsigned int sampleRate) override;

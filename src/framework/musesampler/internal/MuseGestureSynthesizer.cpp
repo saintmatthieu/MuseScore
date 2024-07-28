@@ -37,7 +37,7 @@ void MuseGestureSynthesizer::processNoteEvents(
       m_samplerLib.stopAuditionNote(m_sampler, m_track, {noteEvent.pitch});
 }
 
-void MuseGestureSynthesizer::doSetup(const mpe::PlaybackSetupData&) {
+void MuseGestureSynthesizer::doSetup(const mpe::PlaybackData &) {
   m_track = m_samplerLib.addTrack(m_sampler, m_instrumentId);
 }
 
