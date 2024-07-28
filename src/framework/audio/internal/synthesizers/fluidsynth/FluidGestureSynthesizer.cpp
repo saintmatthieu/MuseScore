@@ -38,7 +38,8 @@ void FluidGestureSynthesizer::processNoteEvents(
   for (const auto &evt : noteEvents) {
     switch (evt.type) {
     case NoteEvent::Type::noteOn:
-      fluid_synth_noteon(m_fluidSynth, evt.channel, evt.pitch, evt.velocity);
+      fluid_synth_noteon(m_fluidSynth, evt.channel, evt.pitch,
+                         evt.velocity * 127 + .5f);
       break;
     case NoteEvent::Type::noteOff:
       fluid_synth_noteoff(m_fluidSynth, evt.channel, evt.pitch);
@@ -49,31 +50,44 @@ void FluidGestureSynthesizer::processNoteEvents(
   }
 }
 
-void FluidGestureSynthesizer::doSetup(const mpe::PlaybackSetupData &setupData) {
+void FluidGestureSynthesizer::doSetup(const mpe::PlaybackData &playbackData) {
 
   assert(m_sampleRate != 0);
   if (m_sampleRate == 0)
     return;
 
-  m_channels.init(setupData, m_preset);
+  m_channels.init(playbackData.setupData, m_preset);
   fluid_synth_activate_key_tuning(m_fluidSynth, 0, 0, "standard", NULL, true);
 
-  for (const auto &voice : m_channels.data()) {
+  const auto setupChannel = [this](const midi::channel_t channelIdx,
+                                   const midi::Program &program) {
+    fluid_synth_set_interp_method(m_fluidSynth, channelIdx,
+                                  FLUID_INTERP_DEFAULT);
+    fluid_synth_pitch_wheel_sens(m_fluidSynth, channelIdx, 24);
+    fluid_synth_bank_select(m_fluidSynth, channelIdx, program.bank);
+    fluid_synth_program_change(m_fluidSynth, channelIdx, program.program);
+    fluid_synth_cc(m_fluidSynth, channelIdx, 7, DEFAULT_MIDI_VOLUME);
+    fluid_synth_cc(m_fluidSynth, channelIdx, 74, 0);
+    fluid_synth_set_portamento_mode(m_fluidSynth, channelIdx,
+                                    FLUID_CHANNEL_PORTAMENTO_MODE_EACH_NOTE);
+    fluid_synth_set_legato_mode(m_fluidSynth, channelIdx,
+                                FLUID_CHANNEL_LEGATO_MODE_RETRIGGER);
+    fluid_synth_activate_tuning(m_fluidSynth, channelIdx, 0, 0, 0);
+  };
+
+  for (const auto &voice : m_channels.data())
     for (const auto &pair : voice.second) {
       const auto &[ch, program] = pair.second;
-      fluid_synth_set_interp_method(m_fluidSynth, ch, FLUID_INTERP_DEFAULT);
-      fluid_synth_pitch_wheel_sens(m_fluidSynth, ch, 24);
-      fluid_synth_bank_select(m_fluidSynth, ch, program.bank);
-      fluid_synth_program_change(m_fluidSynth, ch, program.program);
-      fluid_synth_cc(m_fluidSynth, ch, 7, DEFAULT_MIDI_VOLUME);
-      fluid_synth_cc(m_fluidSynth, ch, 74, 0);
-      fluid_synth_set_portamento_mode(m_fluidSynth, ch,
-                                      FLUID_CHANNEL_PORTAMENTO_MODE_EACH_NOTE);
-      fluid_synth_set_legato_mode(m_fluidSynth, ch,
-                                  FLUID_CHANNEL_LEGATO_MODE_RETRIGGER);
-      fluid_synth_activate_tuning(m_fluidSynth, ch, 0, 0, 0);
+      setupChannel(ch, program);
     }
-  }
+
+  m_channels.channelAdded.onReceive(this, setupChannel);
+  for (const auto &[_, eventList] : playbackData.originEvents)
+    for (const auto &event : eventList)
+      if (std::holds_alternative<muse::mpe::NoteEvent>(event))
+        // Will call `setupChannel` for each new channel.
+        m_channels.resolveChannelForEvent(
+            std::get<muse::mpe::NoteEvent>(event));
 }
 
 void FluidGestureSynthesizer::doFlushSound() {}

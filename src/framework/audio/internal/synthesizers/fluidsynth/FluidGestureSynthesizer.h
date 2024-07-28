@@ -3,10 +3,12 @@
 #include <fluidsynth/types.h>
 
 #include "audio/GestureSynthesizer.h"
+#include "global/async/asyncable.h"
 #include "soundmapping.h"
 
 namespace dgk {
-class FluidGestureSynthesizer : public dgk::GestureSynthesizer {
+class FluidGestureSynthesizer : public muse::async::Asyncable,
+                                public dgk::GestureSynthesizer {
 public:
   FluidGestureSynthesizer(muse::audio::synth::ISynthesizerPtr synth,
                           std::vector<mu::io::path_t> soundFonts,
@@ -14,7 +16,7 @@ public:
   ~FluidGestureSynthesizer() override;
   void
   processNoteEvents(const std::vector<dgk::NoteEvent> &noteEvents) override;
-  void doSetup(const mpe::PlaybackSetupData &) override;
+  void doSetup(const mpe::PlaybackData &playbackData) override;
   void doProcess(float *buffer,
                  muse::audio::samples_t samplesPerChannel) override;
   void doSetSampleRate(unsigned int sampleRate) override;
@@ -23,7 +25,6 @@ public:
 
 private:
   void destroySynth();
-  void addSoundFonts();
 
   const std::vector<mu::io::path_t> m_soundFonts;
   const std::optional<midi::Program> m_preset;

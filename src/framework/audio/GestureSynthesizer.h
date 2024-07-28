@@ -12,8 +12,9 @@ public:
 
   GestureSynthesizer(muse::audio::synth::ISynthesizerPtr synth);
 
-  virtual void doSetup(const muse::audio::PlaybackSetupData&) = 0;
-  virtual void doProcess(float *buffer, muse::audio::samples_t samplesPerChannel) = 0;
+  virtual void doSetup(const mpe::PlaybackData &playbackData) = 0;
+  virtual void doProcess(float *buffer,
+                         muse::audio::samples_t samplesPerChannel) = 0;
   virtual void doSetSampleRate(unsigned int sampleRate) = 0;
   virtual void doFlushSound() = 0;
   virtual void doSetIsActive(bool arg) = 0;
@@ -36,9 +37,11 @@ public:
   void setSampleRate(unsigned int sampleRate) override;
   unsigned int audioChannelsCount() const override;
   muse::async::Channel<unsigned int> audioChannelsCountChanged() const override;
-  muse::audio::samples_t process(float *buffer, muse::audio::samples_t samplesPerChannel) override;
+  muse::audio::samples_t
+  process(float *buffer, muse::audio::samples_t samplesPerChannel) override;
 
 private:
   const muse::audio::synth::ISynthesizerPtr m_synth;
+  std::vector<float> m_buffer;
 };
 } // namespace dgk
