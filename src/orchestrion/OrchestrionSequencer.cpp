@@ -17,7 +17,7 @@ OrchestrionSequencer::OrchestrionSequencer(int track, Staff rightHand,
 
 void OrchestrionSequencer::OnInputEvent(const NoteEvent &input) {
 
-  auto &hand = input.pitch >= 60 ? m_rightHand : m_leftHand;
+  auto &hand = input.pitch < 60 && !m_leftHand.empty() ? m_leftHand : m_rightHand;
   const auto nextNoteonTick = std::accumulate(
       hand.begin(), hand.end(), std::optional<int>{},
       [&](const auto &acc, const auto &voice) {

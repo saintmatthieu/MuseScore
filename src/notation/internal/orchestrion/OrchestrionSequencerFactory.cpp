@@ -52,7 +52,7 @@ GetRightHandStaff(const std::vector<mu::engraving::RepeatSegment *> &repeats,
                   segment.element(track))) {
             const auto staves = chord->part()->staves();
             if (staves.size() == 2 && IsVisible(*chord->staff()))
-              return { {track, chord->staff()->idx()} };
+              return {{track, chord->staff()->idx()}};
           }
   return std::nullopt;
 }
@@ -89,7 +89,8 @@ auto GetChordSequence(mu::engraving::Score &score,
               measureTick += measure->ticks().ticks();
             });
       });
-  sequence.push_back(std::make_shared<VoiceBlank>(endTick));
+  if (!sequence.empty())
+    sequence.push_back(std::make_shared<VoiceBlank>(endTick));
   return sequence;
 }
 
@@ -101,7 +102,9 @@ OrchestrionSequencerFactory::CreateSequencer(
     mu::notation::INotationInteraction &interaction,
     OrchestrionSequencer::MidiOutCb cb) {
   const auto rightHandStaff =
-      GetRightHandStaff(score.repeatList(), score.ntracks());
+      score.nstaves() == 1
+          ? std::make_optional(std::make_pair<size_t, size_t>(0, 0))
+          : GetRightHandStaff(score.repeatList(), score.ntracks());
   if (!rightHandStaff.has_value())
     return nullptr;
   Staff rightHand;
@@ -117,8 +120,8 @@ OrchestrionSequencerFactory::CreateSequencer(
       leftHand.emplace(v, std::move(sequence));
   }
   return std::make_unique<OrchestrionSequencer>(
-      static_cast<int>(rightHandStaff->first), std::move(rightHand), std::move(leftHand),
-      std::move(cb));
+      static_cast<int>(rightHandStaff->first), std::move(rightHand),
+      std::move(leftHand), std::move(cb));
 }
 
 NoteEvent ToDgkNoteEvent(const muse::midi::Event &museEvent) {
