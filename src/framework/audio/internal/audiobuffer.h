@@ -60,15 +60,12 @@ public:
 
 private:
     size_t reservedFrames(const size_t writeIdx, const size_t readIdx) const;
-    size_t incrementWriteIndex(const size_t writeIdx, const samples_t samplesPerChannel);
-
-    size_t m_minSamplesToReserve = 0;
 
     alignas(cache_line_size) std::atomic<size_t> m_writeIndex = 0;
     alignas(cache_line_size) std::atomic<size_t> m_readIndex = 0;
     alignas(cache_line_size) std::vector<float> m_data;
 
-    samples_t m_samplesPerChannel = 0;
+    size_t m_targetBufferSize = 0;
     audioch_t m_audioChannelsCount = 0;
 
     samples_t m_renderStep = 0;

@@ -26,10 +26,8 @@
 
 using namespace muse::audio;
 
-static constexpr size_t DEFAULT_SIZE_PER_CHANNEL = 1024 * 8;
-static constexpr size_t DEFAULT_SIZE = DEFAULT_SIZE_PER_CHANNEL * 2;
-
-static const std::vector<float> SILENT_FRAMES(DEFAULT_SIZE, 0.f);
+static constexpr size_t CAPACITY = 8192;
+static constexpr size_t TARGET_BUFFER_SIZE = 1024;
 
 //#define DEBUG_AUDIO
 #ifdef DEBUG_AUDIO
@@ -109,11 +107,11 @@ static BaseBufferProfiler WRITE_PROFILE("WRITE_PROFILE", 0);
 
 void AudioBuffer::init(const audioch_t audioChannelsCount, const samples_t renderStep)
 {
-    m_samplesPerChannel = DEFAULT_SIZE_PER_CHANNEL;
     m_audioChannelsCount = audioChannelsCount;
+    m_targetBufferSize = TARGET_BUFFER_SIZE * audioChannelsCount;
     m_renderStep = renderStep;
 
-    m_data.resize(m_samplesPerChannel * m_audioChannelsCount, 0.f);
+    m_data.resize(CAPACITY, 0.f);
 }
 
 void AudioBuffer::setSource(std::shared_ptr<IAudioSource> source)
@@ -135,16 +133,15 @@ void AudioBuffer::forward()
         return;
     }
 
-    const auto currentWriteIdx = m_writeIndex.load(std::memory_order_relaxed);
+    size_t nextWriteIdx = m_writeIndex.load(std::memory_order_relaxed);
     const auto currentReadIdx = m_readIndex.load(std::memory_order_acquire);
-    size_t nextWriteIdx = currentWriteIdx;
 
-    samples_t framesToReserve = DEFAULT_SIZE / 2;
-
-    while (reservedFrames(nextWriteIdx, currentReadIdx) < framesToReserve) {
+    while (reservedFrames(nextWriteIdx, currentReadIdx) < m_targetBufferSize) {
         m_source->process(m_data.data() + nextWriteIdx, m_renderStep);
-
-        nextWriteIdx = incrementWriteIndex(nextWriteIdx, m_renderStep);
+        nextWriteIdx += m_renderStep * m_audioChannelsCount;
+        if (nextWriteIdx >= CAPACITY) {
+            nextWriteIdx -= CAPACITY;
+        }
     }
 
     m_writeIndex.store(nextWriteIdx, std::memory_order_release);
@@ -155,48 +152,34 @@ void AudioBuffer::pop(float* dest, size_t sampleCount)
     const auto currentReadIdx = m_readIndex.load(std::memory_order_relaxed);
     const auto currentWriteIdx = m_writeIndex.load(std::memory_order_acquire);
     if (currentReadIdx == currentWriteIdx) { // empty queue
-        std::memcpy(dest, SILENT_FRAMES.data(), sampleCount * sizeof(float) * m_audioChannelsCount);
+        std::fill(dest, dest + sampleCount * m_audioChannelsCount, 0.f);
         return;
-    }
-
-    if (reservedFrames(currentWriteIdx, currentReadIdx) < (sampleCount * 2)) {
-        static size_t missingFramesTotal = 0;
-        missingFramesTotal += (sampleCount * 2);
-        LOG_AUDIO() << "\n FRAMES MISSED " << sampleCount * 2 << ", reserve: " <<
-            reservedFrames(currentWriteIdx, currentReadIdx) << ", total: " << missingFramesTotal;
     }
 
     size_t newReadIdx = currentReadIdx;
 
-    size_t from = newReadIdx;
-    auto memStep = sizeof(float);
-    size_t to = from + sampleCount * m_audioChannelsCount;
-    if (to > DEFAULT_SIZE) {
-        to = DEFAULT_SIZE;
-    }
-    auto count = to - from;
-    std::memcpy(dest, m_data.data() + from, count * memStep);
-    newReadIdx += count;
+    const size_t from = newReadIdx;
+    const size_t to = std::min<size_t>(CAPACITY, from + sampleCount * m_audioChannelsCount);
 
-    size_t left = sampleCount * m_audioChannelsCount - count;
+    const auto right = to - from;
+    std::memcpy(dest, m_data.data() + from, right * sizeof(float));
+    newReadIdx += right;
+
+    size_t left = sampleCount * m_audioChannelsCount - right;
     if (left > 0) {
-        std::memcpy(dest + count, m_data.data(), left * memStep);
+        std::memcpy(dest + right, m_data.data(), left * sizeof(float));
         newReadIdx = left;
     }
 
-    if (newReadIdx >= DEFAULT_SIZE) {
-        newReadIdx -= DEFAULT_SIZE;
+    if (newReadIdx >= CAPACITY) {
+        newReadIdx -= CAPACITY;
     }
 
     m_readIndex.store(newReadIdx, std::memory_order_release);
 }
 
-void AudioBuffer::setMinSamplesToReserve(size_t lag)
+void AudioBuffer::setMinSamplesToReserve(size_t /*lag*/)
 {
-    IF_ASSERT_FAILED(lag < DEFAULT_SIZE) {
-        lag = DEFAULT_SIZE;
-    }
-    m_minSamplesToReserve = lag;
 }
 
 void AudioBuffer::reset()
@@ -204,36 +187,11 @@ void AudioBuffer::reset()
     m_readIndex.store(0, std::memory_order_release);
     m_writeIndex.store(0, std::memory_order_release);
 
-    m_data = SILENT_FRAMES;
-}
-
-size_t AudioBuffer::incrementWriteIndex(const size_t writeIdx, const samples_t samplesPerChannel)
-{
-    size_t result = writeIdx;
-    size_t from = writeIdx;
-
-    auto to = writeIdx + samplesPerChannel * m_audioChannelsCount;
-    if (to > DEFAULT_SIZE) {
-        to = DEFAULT_SIZE - 1;
-    }
-    auto count = to - from;
-    result += count;
-
-    if (result >= DEFAULT_SIZE) {
-        result -= DEFAULT_SIZE;
-    }
-
-    return result;
+    m_data.resize(CAPACITY, 0.f);
 }
 
 size_t AudioBuffer::reservedFrames(const size_t writeIdx, const size_t readIdx) const
 {
-    size_t result = 0;
-    if (readIdx <= writeIdx) {
-        result = writeIdx - readIdx;
-    } else {
-        result = writeIdx + DEFAULT_SIZE - readIdx;
-    }
-
-    return result;
+  return readIdx <= writeIdx ? writeIdx - readIdx
+                             : writeIdx + CAPACITY - readIdx;
 }
