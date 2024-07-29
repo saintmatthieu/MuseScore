@@ -49,9 +49,8 @@ bool GestureSynthesizer::isActive() const { return m_synth->isActive(); }
 void GestureSynthesizer::setIsActive(bool arg) { m_synth->setIsActive(arg); }
 
 void GestureSynthesizer::setSampleRate(unsigned int sampleRate) {
-  m_buffer.resize(
-      sampleRate *
-      audioChannelsCount()); // One second - should be more that enough.
+  m_buffer.resize(sampleRate * audioChannelsCount(),
+                  0.f); // One second - should be more that enough.
   doSetSampleRate(sampleRate);
   m_synth->setSampleRate(sampleRate);
 }
