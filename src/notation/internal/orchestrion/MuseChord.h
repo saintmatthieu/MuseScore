@@ -22,20 +22,19 @@ public:
             int measurePlaybackTick);
 
   bool IsChord() const override;
-  int GetTickWithRepeats() const override;
-  int GetEndTick() const;
+  Tick GetTick() const override;
+  Tick GetEndTick() const;
 
 private:
   std::vector<int> GetPitches() const override;
   void SetHighlight(bool value) override;
   void ScrollToYou() const override;
-  int GetChordEndTick() const;
-  int GetRestEndTick() const;
+  Tick GetChordEndTick() const;
+  Tick GetRestEndTick() const;
 
   std::vector<mu::engraving::Note *> GetNotes() const;
 
-  const int m_playbackTick;
-  const int m_scoreTick;
+  const Tick m_tick;
   const int m_track;
   const bool m_isChord;
   const size_t m_staffIdx;

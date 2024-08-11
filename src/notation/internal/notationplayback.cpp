@@ -305,6 +305,9 @@ void NotationPlayback::setLoopBoundariesEnabled(bool enabled)
     }
 
     m_loopBoundaries.enabled = enabled;
+    if (m_notation) {
+      m_notation->setLoopBoundariesEnabled(enabled);
+    }
     m_loopBoundariesChanged.notify();
 }
 

@@ -131,7 +131,7 @@ void Notation::setScore(Score* score)
         return;
     }
 
-    if (score)
+    if (score) {
       m_orchestrionSequencer =
           dgk::OrchestrionSequencerFactory::CreateSequencer(
               *score, *m_interaction,
@@ -143,6 +143,14 @@ void Notation::setScore(Score* score)
                               });
                 synthResolver()->postNoteEvents(m_orchestrionSequencer->track, events);
               });
+      score->loopBoundaryTickChanged().onReceive(
+          this, [this](LoopBoundaryType type, auto tick) {
+            if (type == LoopBoundaryType::LoopIn)
+              m_orchestrionSequencer->loopLeftBoundary = tick;
+            else
+              m_orchestrionSequencer->loopRightBoundary = tick;
+          });
+    }
 
     m_score = score;
     m_scoreInited.notify();
@@ -263,6 +271,12 @@ bool Notation::hasVisibleParts() const
 void Notation::notifyAboutNotationChanged()
 {
     m_notationChanged.notify();
+}
+
+void Notation::setLoopBoundariesEnabled(bool enabled) {
+  if (m_orchestrionSequencer) {
+    m_orchestrionSequencer->loopEnabled = enabled;
+  }
 }
 
 void Notation::setViewMode(const ViewMode& viewMode)

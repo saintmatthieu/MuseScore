@@ -5,15 +5,15 @@
 namespace dgk {
 class VoiceBlank : public IChord {
 public:
-  VoiceBlank(int tick);
+  VoiceBlank(Tick tick);
 
 private:
   bool IsChord() const override;
   std::vector<int> GetPitches() const override;
-  int GetTickWithRepeats() const override;
+  Tick GetTick() const override;
   void SetHighlight(bool value) override;
   void ScrollToYou() const override;
 
-  const int m_tick;
+  const Tick m_tick;
 };
 } // namespace dgk

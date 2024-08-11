@@ -18,14 +18,15 @@ public:
 
   const int voice;
 
-  Next OnInputEvent(NoteEvent::Type, int midiPitch, int cursorTick);
+  Next OnInputEvent(NoteEvent::Type, int midiPitch,
+                    const dgk::Tick &cursorTick);
   //! Returns noteoffs that were pending.
   std::vector<int> GoToTick(int tick);
 
-  std::optional<int> GetNextTick(NoteEvent::Type) const;
+  std::optional<dgk::Tick> GetNextTick(NoteEvent::Type) const;
 
 private:
-  void Advance(NoteEvent::Type, int midiPitch, int cursorTick);
+  void Advance(NoteEvent::Type, int midiPitch, const dgk::Tick &cursorTick);
   int GetNextBegin(NoteEvent::Type) const;
 
   struct Range {

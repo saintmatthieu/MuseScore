@@ -17,9 +17,9 @@ MuseChord::MuseChord(me::Score &score,
                      mu::notation::INotationInteraction &interaction,
                      const me::Segment &segment, size_t staffIdx, int voice,
                      int measurePlaybackTick)
-    : m_playbackTick{measurePlaybackTick + segment.rtick().ticks()},
-      m_scoreTick{segment.tick().ticks()}, m_track{static_cast<int>(
-                                               staffIdx * me::VOICES + voice)},
+    : m_tick{measurePlaybackTick + segment.rtick().ticks(),
+             segment.tick().ticks()},
+      m_track{static_cast<int>(staffIdx * me::VOICES + voice)},
       m_isChord{dynamic_cast<const me::Chord *>(segment.element(m_track)) !=
                 nullptr},
       m_staffIdx{staffIdx}, m_voice{voice}, m_score{score},
@@ -43,11 +43,9 @@ std::vector<int> MuseChord::GetPitches() const {
   return chord;
 }
 
-int MuseChord::GetTickWithRepeats() const {
-  return m_playbackTick;
-}
+dgk::Tick MuseChord::GetTick() const { return m_tick; }
 
-int MuseChord::GetEndTick() const {
+dgk::Tick MuseChord::GetEndTick() const {
   if (m_isChord)
     return GetChordEndTick();
   else
@@ -97,9 +95,9 @@ void MuseChord::ScrollToYou() const {
   m_notationInteraction.selectionChanged().notify();
 }
 
-int MuseChord::GetChordEndTick() const {
+dgk::Tick MuseChord::GetChordEndTick() const {
   auto chord = dynamic_cast<const me::Chord *>(m_segment.element(m_track));
-  auto endTick = GetTickWithRepeats();
+  auto endTick = GetTick();
   while (chord) {
     endTick += chord->actualTicks().ticks();
     chord = chord->nextTiedChord();
@@ -107,9 +105,9 @@ int MuseChord::GetChordEndTick() const {
   return endTick;
 }
 
-int MuseChord::GetRestEndTick() const {
+dgk::Tick MuseChord::GetRestEndTick() const {
   const me::Segment *segment = &m_segment;
-  auto endTick = GetTickWithRepeats();
+  auto endTick = GetTick();
   while (segment) {
     const auto rest = dynamic_cast<const me::Rest *>(segment->element(m_track));
     if (!rest)

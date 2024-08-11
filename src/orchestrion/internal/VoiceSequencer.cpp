@@ -8,9 +8,9 @@ VoiceSequencer::VoiceSequencer(int voice, std::vector<ChordPtr> chords)
     : voice{voice}, m_gestures{std::move(chords)},
       m_numGestures{static_cast<int>(m_gestures.size())} {}
 
-dgk::VoiceSequencer::Next VoiceSequencer::OnInputEvent(NoteEvent::Type event,
-                                                       int midiPitch,
-                                                       int cursorTick) {
+dgk::VoiceSequencer::Next
+VoiceSequencer::OnInputEvent(NoteEvent::Type event, int midiPitch,
+                             const dgk::Tick &cursorTick) {
   const auto before = m_active;
   Advance(event, midiPitch, cursorTick);
 
@@ -46,7 +46,7 @@ dgk::VoiceSequencer::Next VoiceSequencer::OnInputEvent(NoteEvent::Type event,
 }
 
 void VoiceSequencer::Advance(NoteEvent::Type event, int midiPitch,
-                             int cursorTick) {
+                             const dgk::Tick &cursorTick) {
   Finally finally{[&] {
     if (event == NoteEvent::Type::noteOn)
       m_pressedKey = midiPitch;
@@ -67,13 +67,13 @@ void VoiceSequencer::Advance(NoteEvent::Type event, int midiPitch,
     // `nextBegin` might show the end for this event type, yet don't switch
     // anything off until the cursor has reached it.
     if (m_active.end == m_numGestures ||
-        cursorTick >= m_gestures[m_active.end]->GetTickWithRepeats())
+        cursorTick >= m_gestures[m_active.end]->GetTick())
       // Ok then.
       m_active.begin = m_active.end = nextBegin;
     return;
   }
 
-  if (cursorTick < m_gestures[nextBegin]->GetTickWithRepeats())
+  if (cursorTick < m_gestures[nextBegin]->GetTick())
     // We're finished or the cursor hasn't reached our next event yet.
     return;
 
@@ -98,7 +98,7 @@ std::vector<int> VoiceSequencer::GoToTick(int tick) {
   m_active.begin = m_active.end = m_numGestures;
   for (auto i = 0; i < m_gestures.size(); ++i)
     if (m_gestures[i]->IsChord() &&
-        m_gestures[i]->GetTickWithRepeats() >= tick) {
+        m_gestures[i]->GetTick().withoutRepeats >= tick) {
       m_active.begin = m_active.end = i;
       break;
     }
@@ -120,10 +120,10 @@ int VoiceSequencer::GetNextBegin(NoteEvent::Type event) const {
                                                       : nextActive;
 }
 
-std::optional<int> VoiceSequencer::GetNextTick(NoteEvent::Type event) const {
+std::optional<dgk::Tick>
+VoiceSequencer::GetNextTick(NoteEvent::Type event) const {
   const auto i = GetNextBegin(event);
-  return i < m_numGestures
-             ? std::make_optional(m_gestures[i]->GetTickWithRepeats())
-             : std::nullopt;
+  return i < m_numGestures ? std::make_optional(m_gestures[i]->GetTick())
+                           : std::nullopt;
 }
 } // namespace dgk

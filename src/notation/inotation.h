@@ -105,6 +105,8 @@ public:
 
     // notify
     virtual async::Notification notationChanged() const = 0;
+
+    virtual void setLoopBoundariesEnabled(bool enabled) = 0;
 };
 }
 

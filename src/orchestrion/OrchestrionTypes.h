@@ -24,6 +24,29 @@ class IChord;
 using ChordPtr = std::shared_ptr<IChord>;
 using Staff = std::map<int /*voice*/, std::vector<ChordPtr>>;
 
+struct Tick {
+  Tick(int withRepeats, int withoutRepeats)
+      : withRepeats{withRepeats}, withoutRepeats{withoutRepeats} {}
+
+  Tick &operator+=(int tick) {
+    withRepeats += tick;
+    withoutRepeats += tick;
+    return *this;
+  }
+
+  constexpr bool operator<(const Tick &rhs) const {
+    // For a given voice, chords are uniquely positioned when accounting for
+    // repeats. In other words, two or more chords may havye the same
+    // tick-without-repeats value.
+    return withRepeats < rhs.withRepeats;
+  }
+
+  constexpr bool operator>=(const Tick &rhs) const { return !(*this < rhs); }
+
+  int withRepeats;
+  int withoutRepeats;
+};
+
 class Finally {
 public:
   Finally(std::function<void()> f) : m_f{std::move(f)} {}
