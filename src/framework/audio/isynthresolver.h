@@ -67,7 +67,8 @@ public:
     virtual void registerResolver(const AudioSourceType type, IResolverPtr resolver) = 0;
     virtual void clearSources() = 0;
 
-    virtual void postNoteEvents(int track, const std::vector<dgk::NoteEvent>& noteEvents) = 0;
+    virtual void postEventVariant(int track,
+                                  const dgk::EventVariant &event) = 0;
 };
 
 using ISynthResolverPtr = std::shared_ptr<ISynthResolver>;

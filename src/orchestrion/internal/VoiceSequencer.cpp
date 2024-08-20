@@ -126,4 +126,17 @@ VoiceSequencer::GetNextTick(NoteEvent::Type event) const {
   return i < m_numGestures ? std::make_optional(m_gestures[i]->GetTick())
                            : std::nullopt;
 }
+
+std::optional<dgk::Tick> VoiceSequencer::GetTickForPedal() const {
+  // m_active.begin is also the end of the gestures consumed so far.
+  // We add to this the upcoming gesture if this is a rest.
+  if (m_active.begin == m_numGestures)
+    return std::nullopt;
+  else if (m_gestures[m_active.begin]->IsChord() ||
+           m_active.begin + 1 == m_numGestures)
+    return m_gestures[m_active.begin]->GetTick();
+  else
+    return std::nullopt;
+}
+
 } // namespace dgk

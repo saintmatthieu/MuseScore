@@ -14,8 +14,7 @@ public:
                           std::vector<mu::io::path_t> soundFonts,
                           std::optional<midi::Program> preset);
   ~FluidGestureSynthesizer() override;
-  void
-  processNoteEvents(const std::vector<dgk::NoteEvent> &noteEvents) override;
+  void processEventVariant(const dgk::EventVariant &event) override;
   void doSetup(const mpe::PlaybackData &playbackData) override;
   void doProcess(float *buffer,
                  muse::audio::samples_t samplesPerChannel) override;

@@ -29,6 +29,7 @@
 
 #include "async/asyncable.h"
 #include "isynthresolver.h"
+#include "orchestrion/OrchestrionTypes.h"
 
 namespace muse::audio::synth {
 class SynthResolver : public ISynthResolver, public mu::async::Asyncable {
@@ -41,7 +42,7 @@ public:
     AudioResourceMetaList resolveAvailableResources() const override;
     SoundPresetList resolveAvailableSoundPresets(const AudioResourceMeta& resourceMeta) const override;
 
-    void postNoteEvents(int track, const std::vector<dgk::NoteEvent>& noteEvents) override;
+    void postEventVariant(int track, const dgk::EventVariant& variant) override;
     void registerResolver(const AudioSourceType type, IResolverPtr resolver) override;
 
     void clearSources() override;

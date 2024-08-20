@@ -15,26 +15,30 @@ MuseGestureSynthesizer::~MuseGestureSynthesizer() {
   }
 }
 
-void MuseGestureSynthesizer::processNoteEvents(
-    const std::vector<dgk::NoteEvent> &noteEvents) {
-  // Actually there should be one unique velocity for all events. Review this.
-  const auto velocity = noteEvents.empty() ? 0 : noteEvents.front().velocity;
-  constexpr auto timestamp = 0LL;
-  m_samplerLib.addDynamicsEvent(m_sampler, m_track, timestamp, velocity);
-  for (const auto &noteEvent : noteEvents)
-    if (noteEvent.type == dgk::NoteEvent::Type::noteOn) {
-      muse::musesampler::AuditionStartNoteEvent noteOn;
-      constexpr auto centsOffset = 0;
-      constexpr auto presets_cstr = "";
-      constexpr auto textArticulation_cstr = "";
-      noteOn.msEvent = {noteEvent.pitch,          centsOffset,
-                        ms_NoteArticulation_None, ms_NoteHead_Normal,
-                        noteEvent.velocity,       presets_cstr,
-                        textArticulation_cstr};
-      noteOn.msTrack = m_track;
-      m_samplerLib.startAuditionNote(m_sampler, noteOn.msTrack, noteOn.msEvent);
-    } else
-      m_samplerLib.stopAuditionNote(m_sampler, m_track, {noteEvent.pitch});
+void MuseGestureSynthesizer::processEventVariant(
+    const dgk::EventVariant &event) {
+  if (std::holds_alternative<dgk::NoteEvents>(event)) {
+    const auto& noteEvents = std::get<dgk::NoteEvents>(event);
+    // Actually there should be one unique velocity for all events. Review this.
+    const auto velocity = noteEvents.empty() ? 0 : noteEvents.front().velocity;
+    constexpr auto timestamp = 0LL;
+    m_samplerLib.addDynamicsEvent(m_sampler, m_track, timestamp, velocity);
+    for (const auto &noteEvent : noteEvents)
+      if (noteEvent.type == dgk::NoteEvent::Type::noteOn) {
+        muse::musesampler::AuditionStartNoteEvent noteOn;
+        constexpr auto centsOffset = 0;
+        constexpr auto presets_cstr = "";
+        constexpr auto textArticulation_cstr = "";
+        noteOn.msEvent = {noteEvent.pitch,          centsOffset,
+                          ms_NoteArticulation_None, ms_NoteHead_Normal,
+                          noteEvent.velocity,       presets_cstr,
+                          textArticulation_cstr};
+        noteOn.msTrack = m_track;
+        m_samplerLib.startAuditionNote(m_sampler, noteOn.msTrack,
+                                       noteOn.msEvent);
+      } else
+        m_samplerLib.stopAuditionNote(m_sampler, m_track, {noteEvent.pitch});
+  }
 }
 
 void MuseGestureSynthesizer::doSetup(const mpe::PlaybackData &) {

@@ -135,13 +135,21 @@ void Notation::setScore(Score* score)
       m_orchestrionSequencer =
           dgk::OrchestrionSequencerFactory::CreateSequencer(
               *score, *m_interaction,
-              [this](const std::vector<dgk::NoteEvent> &events) {
-                std::for_each(events.begin(), events.end(),
-                              [&](const dgk::NoteEvent &event) {
-                                midiOutPort()->sendEvent(
-                                    dgk::ToMuseMidiEvent(event));
-                              });
-                synthResolver()->postNoteEvents(m_orchestrionSequencer->track, events);
+              [this](
+                  const std::variant<dgk::NoteEvents, dgk::PedalEvent> &event) {
+                if (std::holds_alternative<dgk::NoteEvents>(event)) {
+                  const auto &events = std::get<dgk::NoteEvents>(event);
+                  std::for_each(events.begin(), events.end(),
+                                [&](const dgk::NoteEvent &event) {
+                                  midiOutPort()->sendEvent(
+                                      dgk::ToMuseMidiEvent(event));
+                                });
+                } else if (std::holds_alternative<dgk::PedalEvent>(event)) {
+                  const auto &pedalEvent = std::get<dgk::PedalEvent>(event);
+                  midiOutPort()->sendEvent(dgk::ToMuseMidiEvent(pedalEvent));
+                }
+                synthResolver()->postEventVariant(m_orchestrionSequencer->track,
+                                                  event);
               });
       score->loopBoundaryTickChanged().onReceive(
           this, [this](LoopBoundaryType type, auto tick) {
