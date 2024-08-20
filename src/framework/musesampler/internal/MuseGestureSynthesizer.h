@@ -14,8 +14,7 @@ public:
                          muse::musesampler::MuseSamplerLibHandler &samplerLib,
                          int instrumentId);
   ~MuseGestureSynthesizer() override;
-  void
-  processNoteEvents(const std::vector<dgk::NoteEvent> &noteEvents) override;
+  void processEventVariant(const dgk::EventVariant &noteEvents) override;
   void doSetup(const mpe::PlaybackData &playbackData) override;
   void doProcess(float *buffer,
                  muse::audio::samples_t samplesPerChannel) override;

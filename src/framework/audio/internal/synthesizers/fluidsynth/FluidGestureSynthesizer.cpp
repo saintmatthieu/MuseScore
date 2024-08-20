@@ -33,20 +33,27 @@ void FluidGestureSynthesizer::destroySynth() {
   }
 }
 
-void FluidGestureSynthesizer::processNoteEvents(
-    const std::vector<NoteEvent> &noteEvents) {
-  for (const auto &evt : noteEvents) {
-    switch (evt.type) {
-    case NoteEvent::Type::noteOn:
-      fluid_synth_noteon(m_fluidSynth, evt.channel, evt.pitch,
-                         evt.velocity * 127 + .5f);
-      break;
-    case NoteEvent::Type::noteOff:
-      fluid_synth_noteoff(m_fluidSynth, evt.channel, evt.pitch);
-      break;
-    default:
-      assert(false);
+void FluidGestureSynthesizer::processEventVariant(
+    const dgk::EventVariant &event) {
+  if (std::holds_alternative<dgk::NoteEvents>(event))
+    for (const auto &evt : std::get<dgk::NoteEvents>(event)) {
+      switch (evt.type) {
+      case NoteEvent::Type::noteOn:
+        fluid_synth_noteon(m_fluidSynth, evt.channel, evt.pitch,
+                           evt.velocity * 127 + .5f);
+        break;
+      case NoteEvent::Type::noteOff:
+        fluid_synth_noteoff(m_fluidSynth, evt.channel, evt.pitch);
+        break;
+      default:
+        assert(false);
+      }
     }
+  else if (std::holds_alternative<dgk::PedalEvent>(event))
+  {
+    const auto& pedalEvent = std::get<dgk::PedalEvent>(event);
+    fluid_synth_cc(m_fluidSynth, pedalEvent.channel, 0x40,
+                   pedalEvent.on ? 127 : 0);
   }
 }
 

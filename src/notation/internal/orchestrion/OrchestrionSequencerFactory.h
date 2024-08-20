@@ -25,4 +25,5 @@ public:
 
 NoteEvent ToDgkNoteEvent(const muse::midi::Event &museEvent);
 muse::midi::Event ToMuseMidiEvent(const NoteEvent &noteEvent);
+muse::midi::Event ToMuseMidiEvent(const PedalEvent &pedalEvent);
 } // namespace dgk

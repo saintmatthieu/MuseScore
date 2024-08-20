@@ -131,18 +131,18 @@ void SynthResolver::registerResolver(const AudioSourceType type, IResolverPtr re
     m_resolvers.insert_or_assign(type, std::move(resolver));
 }
 
-void SynthResolver::postNoteEvents(
-    int track, const std::vector<dgk::NoteEvent> &noteEvents) {
-  Async::call(
-      this,
-      [&, track, noteEvents]() {
-        ONLY_AUDIO_WORKER_THREAD;
-        if (m_resolvedSynths.count(track) == 0)
-          return;
-        if (const auto synth = m_resolvedSynths.at(track).lock())
-          synth->processNoteEvents(noteEvents);
-      },
-      AudioThread::ID);
+void SynthResolver::postEventVariant(int track,
+                                     const dgk::EventVariant &event) {
+    Async::call(
+        this,
+        [&, track, event]() {
+          ONLY_AUDIO_WORKER_THREAD;
+          if (m_resolvedSynths.count(track) == 0)
+            return;
+          if (const auto synth = m_resolvedSynths.at(track).lock())
+            synth->processEventVariant(event);
+        },
+        AudioThread::ID);
 }
 
 void SynthResolver::clearSources()

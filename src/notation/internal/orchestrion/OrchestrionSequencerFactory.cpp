@@ -7,9 +7,11 @@
 #include "engraving/dom/mscore.h"
 #include "engraving/dom/note.h"
 #include "engraving/dom/part.h"
+#include "engraving/dom/pedal.h"
 #include "engraving/dom/repeatlist.h"
 #include "engraving/dom/rest.h"
 #include "engraving/dom/score.h"
+#include "engraving/dom/spanner.h"
 #include "engraving/dom/staff.h"
 #include <cassert>
 
@@ -57,40 +59,83 @@ GetRightHandStaff(const std::vector<mu::engraving::RepeatSegment *> &repeats,
   return std::nullopt;
 }
 
+void ForAllSegments(
+    mu::engraving::Score &score,
+    std::function<void(const mu::engraving::Segment &, int measureTick)> cb) {
+  auto &repeats = score.repeatList(true);
+  auto measureTick = 0;
+  std::for_each(repeats.begin(), repeats.end(),
+                [&](const mu::engraving::RepeatSegment *repeatSegment) {
+                  const auto &museMeasures = repeatSegment->measureList();
+                  std::for_each(museMeasures.begin(), museMeasures.end(),
+                                [&](const mu::engraving::Measure *measure) {
+                                  const auto &museSegments =
+                                      measure->segments();
+                                  for (const auto &museSegment : museSegments)
+                                    cb(museSegment, measureTick);
+                                  measureTick += measure->ticks().ticks();
+                                });
+                });
+}
+
 auto GetChordSequence(mu::engraving::Score &score,
                       mu::notation::INotationInteraction &interaction,
                       size_t staffIdx, int voice) {
   std::vector<ChordPtr> sequence;
   auto prevWasRest = true;
   dgk::Tick endTick{0, 0};
-  auto &repeats = score.repeatList(true);
-  auto measureTick = 0;
-  std::for_each(
-      repeats.begin(), repeats.end(),
-      [&](const mu::engraving::RepeatSegment *repeatSegment) {
-        const auto &museMeasures = repeatSegment->measureList();
-        std::for_each(
-            museMeasures.begin(), museMeasures.end(),
-            [&](const mu::engraving::Measure *measure) {
-              const auto &museSegments = measure->segments();
-              for (const auto &museSegment : museSegments)
-                if (TakeIt(museSegment, staffIdx, voice, prevWasRest)) {
-                  auto chord = std::make_shared<MuseChord>(
-                      score, interaction, museSegment, staffIdx, voice,
-                      measureTick);
-                  if (endTick.withRepeats > 0 // we don't care if the voice
-                                              // doesn't begin at the start.
-                      && endTick.withRepeats < chord->GetTick().withRepeats)
-                    // There is a blank in this voice.
-                    sequence.push_back(std::make_shared<VoiceBlank>(endTick));
-                  endTick = chord->GetEndTick();
-                  sequence.push_back(std::move(chord));
-                }
-              measureTick += measure->ticks().ticks();
-            });
-      });
-  if (!sequence.empty())
-    sequence.push_back(std::make_shared<VoiceBlank>(std::move(endTick)));
+  ForAllSegments(score, [&](const mu::engraving::Segment &segment,
+                            int measureTick) {
+    if (TakeIt(segment, staffIdx, voice, prevWasRest)) {
+      auto chord = std::make_shared<MuseChord>(score, interaction, segment,
+                                               staffIdx, voice, measureTick);
+      if (endTick.withRepeats > 0 // we don't care if the voice doesn't begin at
+                                  // the start.
+          && endTick.withRepeats < chord->GetTick().withRepeats)
+        // There is a blank in this voice.
+        sequence.push_back(std::make_shared<VoiceBlank>(endTick));
+      endTick = chord->GetEndTick();
+      sequence.push_back(std::move(chord));
+    }
+  });
+  return sequence;
+}
+
+PedalSequence GetPedalSequence(mu::engraving::Score &score, int beginStaffIdx,
+                               int endStaffIdx) {
+  using namespace mu::engraving;
+  const std::multimap<int, Spanner *> &spanners = score.spanner();
+  std::vector<PedalSequenceItem> sequence;
+  const auto beginTrack = beginStaffIdx * VOICES;
+  const auto endTrack = endStaffIdx * VOICES;
+  ForAllSegments(score, [&](const Segment &segment, int measureTick) {
+    if (segment.segmentType() != SegmentType::ChordRest)
+      return;
+    const auto tick = segment.tick().ticks();
+    const auto jt = spanners.upper_bound(tick);
+    for (auto it = spanners.lower_bound(tick); it != jt; ++it) {
+      if (it->second->type() != ElementType::PEDAL)
+        continue;
+      const Pedal *pedal = toPedal(it->second);
+      if (pedal->track() < beginTrack || pedal->track() >= endTrack)
+        continue;
+      const auto onTick = measureTick + segment.rtick().ticks();
+      const auto offTick = onTick + pedal->ticks().ticks();
+
+      while (!sequence.empty() && sequence.back().tick > onTick)
+        // To be verified, but it looks like there might be some pedals whose
+        // end overlaps with the beginning of the next pedal.
+        sequence.pop_back();
+
+      // Reuse the last item if it coincides in time.
+      if (!sequence.empty() && sequence.back().tick == onTick)
+        sequence.back().down = true;
+      else
+        sequence.emplace_back(PedalSequenceItem{onTick, true});
+
+      sequence.emplace_back(PedalSequenceItem{offTick, false});
+    }
+  });
   return sequence;
 }
 
@@ -119,9 +164,12 @@ OrchestrionSequencerFactory::CreateSequencer(
         !sequence.empty())
       leftHand.emplace(v, std::move(sequence));
   }
+  auto pedalSequence = GetPedalSequence(score, static_cast<int>(rightHandStaff->second),
+    static_cast<int>(rightHandStaff->second) + 2);
+
   return std::make_unique<OrchestrionSequencer>(
       static_cast<int>(rightHandStaff->first), std::move(rightHand),
-      std::move(leftHand), std::move(cb));
+      std::move(leftHand), std::move(pedalSequence), std::move(cb));
 }
 
 NoteEvent ToDgkNoteEvent(const muse::midi::Event &museEvent) {
@@ -144,4 +192,14 @@ muse::midi::Event ToMuseMidiEvent(const NoteEvent &dgkEvent) {
   museEvent.setVelocity(dgkEvent.velocity * 128);
   return museEvent;
 }
+
+muse::midi::Event ToMuseMidiEvent(const PedalEvent &pedalEvent) {
+  muse::midi::Event museEvent(muse::midi::Event::Opcode::ControlChange,
+                              muse::midi::Event::MessageType::ChannelVoice10);
+  museEvent.setChannel(pedalEvent.channel);
+  museEvent.setIndex(0x40);
+  museEvent.setData(pedalEvent.on ? 127 : 0);
+  return museEvent;
+}
+
 } // namespace dgk

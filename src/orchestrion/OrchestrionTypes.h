@@ -4,6 +4,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <variant>
 #include <vector>
 
 namespace dgk {
@@ -18,6 +19,22 @@ struct NoteEvent {
   int pitch = 0;
   float velocity = 0.f;
 };
+
+using NoteEvents = std::vector<NoteEvent>;
+
+struct PedalEvent {
+  int channel = 0;
+  bool on = false;
+};
+
+using EventVariant = std::variant<NoteEvents, PedalEvent>;
+
+struct PedalSequenceItem {
+  int tick = 0;
+  bool down = false;
+};
+
+using PedalSequence = std::vector<PedalSequenceItem>;
 
 class IChord;
 
@@ -42,6 +59,8 @@ struct Tick {
   }
 
   constexpr bool operator>=(const Tick &rhs) const { return !(*this < rhs); }
+
+  constexpr bool operator>(const Tick &rhs) const { return rhs < *this; }
 
   int withRepeats;
   int withoutRepeats;
