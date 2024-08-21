@@ -27,6 +27,33 @@ auto MakeAllVoices(const OrchestrionSequencer::Hand &rightHand,
 }
 } // namespace
 
+template <typename EventType>
+std::thread
+OrchestrionSequencer::MakeThread(OrchestrionSequencer &self,
+                                 ThreadMembers<EventType> &m,
+                                 std::function<void(EventType)> cb) {
+  return std::thread{[&, cb = cb] {
+    while (true) {
+      std::vector<QueueEntry<EventType>> entries;
+      {
+        std::unique_lock lock{m.mutex};
+        m.cv.wait(lock, [&] { return !m.queue.empty() || self.m_finished; });
+        if (self.m_finished)
+          return;
+        while (!m.queue.empty()) {
+          entries.push_back(m.queue.front());
+          m.queue.pop();
+        }
+      }
+      for (auto &entry : entries) {
+        if (entry.time.has_value())
+          std::this_thread::sleep_until(*entry.time);
+        cb(std::move(entry.event));
+      }
+    }
+  }};
+}
+
 OrchestrionSequencer::OrchestrionSequencer(int track, Staff rightHand,
                                            Staff leftHand,
                                            PedalSequence pedalSequence,
@@ -36,28 +63,12 @@ OrchestrionSequencer::OrchestrionSequencer(int track, Staff rightHand,
                                                      m_rightHand, m_leftHand)},
       m_pedalSequence{std::move(pedalSequence)},
       m_pedalSequenceIt{m_pedalSequence.begin()}, m_cb{std::move(cb)},
-      m_callbackThread{[this] {
-        while (true) {
-          std::vector<QueueEntry> entries;
-          {
-            std::unique_lock lock{m_callbackQueueMutex};
-            m_callbackQueueCv.wait(lock, [this] {
-              return !m_callbackQueue.empty() || m_stopCallbackThread;
-            });
-            if (m_stopCallbackThread)
-              return;
-            while (!m_callbackQueue.empty()) {
-              entries.push_back(m_callbackQueue.front());
-              m_callbackQueue.pop();
-            }
-          }
-          for (auto &entry : entries) {
-            if (entry.time.has_value())
-              std::this_thread::sleep_until(*entry.time);
-            m_cb(std::move(entry.event));
-          }
-        }
-      }} {}
+      m_pedalThread{
+          MakeThread<PedalEvent>(*this, m_pedalThreadMembers,
+                                 [this](PedalEvent event) { m_cb(event); })},
+      m_noteThread{MakeThread<NoteEvent>(
+          *this, m_noteThreadMembers,
+          [this](NoteEvent event) { m_cb(NoteEvents{event}); })} {}
 
 OrchestrionSequencer::~OrchestrionSequencer() {
   if (m_pedalDown) {
@@ -65,9 +76,11 @@ OrchestrionSequencer::~OrchestrionSequencer() {
     using namespace std::chrono_literals;
     std::this_thread::sleep_for(100ms);
   }
-  m_stopCallbackThread = true;
-  m_callbackQueueCv.notify_one();
-  m_callbackThread.join();
+  m_finished = true;
+  m_pedalThreadMembers.cv.notify_one();
+  m_noteThreadMembers.cv.notify_one();
+  m_pedalThread.join();
+  m_noteThread.join();
 }
 
 namespace {
@@ -132,7 +145,7 @@ void OrchestrionSequencer::OnInputEventRecursive(const NoteEvent &input,
   };
 
   if (!output.empty())
-    m_cb(output);
+    PostNoteEvents(output);
 
   // For the pedal we wait on the slowest of both hands.
   const auto leastPedalTick = std::accumulate(
@@ -197,16 +210,63 @@ void OrchestrionSequencer::PostPedalEvent(PedalEvent event) {
     actionTime = std::chrono::steady_clock::now() + 100ms;
   }
 
+  auto &m = m_pedalThreadMembers;
   {
-    std::unique_lock lock{m_callbackQueueMutex};
+    std::unique_lock lock{m.mutex};
     if (event.on && m_pedalDown)
       // Always insert a pedal off event between two pedal on events.
-      m_callbackQueue.emplace(
-          QueueEntry{std::nullopt, PedalEvent{track, false}});
-    m_callbackQueue.emplace(QueueEntry{actionTime, std::move(event)});
+      m.queue.emplace(
+          QueueEntry<PedalEvent>{std::nullopt, PedalEvent{track, false}});
+    m.queue.emplace(QueueEntry<PedalEvent>{actionTime, std::move(event)});
   }
 
-  m_callbackQueueCv.notify_one();
+  m.cv.notify_one();
   m_pedalDown = event.on;
 }
+
+void OrchestrionSequencer::PostNoteEvents(NoteEvents events) {
+
+  using namespace std::chrono;
+
+  const auto numNoteons =
+      std::count_if(events.begin(), events.end(), [](const auto &event) {
+        return event.type == NoteEvent::Type::noteOn;
+      });
+  if (numNoteons < 2) {
+    m_cb(events);
+    return;
+  }
+
+  // Randomize the order of the notes and add random delays.
+  std::shuffle(events.begin(), events.end(), m_rng);
+
+  // Do not add unnecessary delay.
+  std::vector<int> delays(events.size());
+  std::generate(delays.begin(), delays.end(),
+                [&] { return m_delayDist(m_rng); });
+  const auto min = *std::min_element(delays.begin(), delays.end());
+  std::transform(delays.begin(), delays.end(), delays.begin(),
+                 [&](int delay) { return delay - min; });
+
+  std::vector<QueueEntry<NoteEvent>> entries;
+  entries.reserve(events.size());
+  const auto now = steady_clock::now();
+  for (auto i = 0u; i < events.size(); ++i) {
+    auto &event = events[i];
+    event.velocity =
+        std::clamp(event.velocity * m_velocityDist(m_rng) / 100, 0.f, 127.f);
+    entries.emplace_back(
+        QueueEntry<NoteEvent>{now + microseconds{delays[i]}, std::move(event)});
+  }
+
+  auto &m = m_noteThreadMembers;
+  {
+    std::unique_lock lock{m.mutex};
+    for (auto &entry : entries)
+      m.queue.push(std::move(entry));
+  }
+
+  m.cv.notify_one();
+}
+
 } // namespace dgk

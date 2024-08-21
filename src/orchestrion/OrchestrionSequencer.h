@@ -8,6 +8,7 @@
 #include <memory>
 #include <mutex>
 #include <queue>
+#include <random>
 #include <thread>
 #include <variant>
 #include <vector>
@@ -32,8 +33,28 @@ public:
   using Hand = std::vector<std::unique_ptr<VoiceSequencer>>;
 
 private:
+  using OptTimePoint =
+      std::optional<std::chrono::time_point<std::chrono::steady_clock>>;
+
+  template <typename EventType> struct QueueEntry {
+    OptTimePoint time;
+    EventType event;
+  };
+
+  template <typename EventType> struct ThreadMembers {
+    std::queue<QueueEntry<EventType>> queue;
+    std::mutex mutex;
+    std::condition_variable cv;
+  };
+
+  template <typename EventType>
+  static std::thread MakeThread(OrchestrionSequencer &self,
+                                ThreadMembers<EventType> &members,
+                                std::function<void(EventType)> cb);
+
   void OnInputEventRecursive(const NoteEvent &inputEvent, bool loop);
   void PostPedalEvent(PedalEvent event);
+  void PostNoteEvents(NoteEvents events);
 
   Hand m_rightHand;
   Hand m_leftHand;
@@ -41,19 +62,16 @@ private:
   const PedalSequence m_pedalSequence;
   PedalSequence::const_iterator m_pedalSequenceIt;
   const MidiOutCb m_cb;
-  std::thread m_callbackThread;
 
-  using OptTimePoint =
-      std::optional<std::chrono::time_point<std::chrono::steady_clock>>;
+  std::thread m_pedalThread;
+  ThreadMembers<PedalEvent> m_pedalThreadMembers;
+  std::thread m_noteThread;
+  ThreadMembers<NoteEvent> m_noteThreadMembers;
 
-  struct QueueEntry {
-    OptTimePoint time;
-    PedalEvent event;
-  };
-  std::queue<QueueEntry> m_callbackQueue;
-  std::mutex m_callbackQueueMutex;
-  std::condition_variable m_callbackQueueCv;
-  bool m_stopCallbackThread = false;
+  bool m_finished = false;
   bool m_pedalDown = false;
+  std::mt19937 m_rng{0};
+  std::uniform_int_distribution<int> m_delayDist{0, 50000};   // microseconds
+  std::uniform_int_distribution<int> m_velocityDist{70, 130}; // percents
 };
 } // namespace dgk
