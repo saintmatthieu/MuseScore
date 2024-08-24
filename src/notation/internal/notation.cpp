@@ -131,10 +131,15 @@ void Notation::setScore(Score* score)
         return;
     }
 
-    if (score) {
+    playbackController()->isPlayAllowedChanged().onNotify(this, [&]() {
+      const auto &map = playbackController()->instrumentTrackIdMap();
+      if (map.empty()) {
+        m_orchestrionSequencer.reset();
+        return;
+      }
       m_orchestrionSequencer =
           dgk::OrchestrionSequencerFactory::CreateSequencer(
-              *score, *m_interaction,
+              *m_score, *m_interaction, map,
               [this](
                   const std::variant<dgk::NoteEvents, dgk::PedalEvent> &event) {
                 if (std::holds_alternative<dgk::NoteEvents>(event)) {
@@ -151,14 +156,14 @@ void Notation::setScore(Score* score)
                 synthResolver()->postEventVariant(m_orchestrionSequencer->track,
                                                   event);
               });
-      score->loopBoundaryTickChanged().onReceive(
+      m_score->loopBoundaryTickChanged().onReceive(
           this, [this](LoopBoundaryType type, auto tick) {
             if (type == LoopBoundaryType::LoopIn)
               m_orchestrionSequencer->loopLeftBoundary = tick;
             else
               m_orchestrionSequencer->loopRightBoundary = tick;
           });
-    }
+    });
 
     m_score = score;
     m_scoreInited.notify();

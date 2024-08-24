@@ -33,6 +33,7 @@
 #include "../inotationconfiguration.h"
 #include "orchestrion/OrchestrionSequencer.h"
 #include "orchestrion/ComputerKeyboardMidiController.h"
+#include "playback/iplaybackcontroller.h"
 
 namespace mu::engraving {
 class Score;
@@ -47,6 +48,7 @@ class Notation : virtual public INotation, public IGetScore, public async::Async
     INJECT(engraving::IEngravingConfiguration, engravingConfiguration)
     INJECT(muse::midi::IMidiOutPort, midiOutPort)
     INJECT(muse::audio::synth::ISynthResolver, synthResolver)
+    INJECT(mu::playback::IPlaybackController, playbackController)
 
 public:
     explicit Notation(engraving::Score* score = nullptr);
