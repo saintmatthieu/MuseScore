@@ -43,8 +43,10 @@ bool IsVisible(const mu::engraving::Staff &staff) {
 
 // At the moment we are not flexible at all: we look for the first part that has
 // two staves and assume this is what we want to play.
-std::optional<std::pair<size_t /*track*/, size_t /*staff*/>>
+std::optional<std::pair<muse::audio::TrackId, size_t /*staff*/>>
 GetRightHandStaff(const std::vector<mu::engraving::RepeatSegment *> &repeats,
+                  const mu::playback::IPlaybackController::InstrumentTrackIdMap
+                      &instrumentTrackIdMap,
                   size_t nScoreTracks) {
   for (const auto &repeat : repeats)
     for (const auto &measure : repeat->measureList())
@@ -53,8 +55,16 @@ GetRightHandStaff(const std::vector<mu::engraving::RepeatSegment *> &repeats,
           if (const auto chord = dynamic_cast<const mu::engraving::Chord *>(
                   segment.element(track))) {
             const auto staves = chord->part()->staves();
-            if (staves.size() == 2 && IsVisible(*chord->staff()))
-              return {{track, chord->staff()->idx()}};
+            if (staves.size() == 2 && IsVisible(*chord->staff())) {
+              const auto instrumentIds = chord->part()->instrumentTrackIdSet();
+              if (instrumentIds.size() != 1)
+                continue;
+              const auto &id = *instrumentIds.begin();
+              if (!instrumentTrackIdMap.count(id))
+                continue;
+              const auto trackId = instrumentTrackIdMap.at(id);
+              return {{trackId, chord->staff()->idx()}};
+            }
           }
   return std::nullopt;
 }
@@ -145,11 +155,15 @@ std::unique_ptr<OrchestrionSequencer>
 OrchestrionSequencerFactory::CreateSequencer(
     mu::engraving::Score &score,
     mu::notation::INotationInteraction &interaction,
+    const mu::playback::IPlaybackController::InstrumentTrackIdMap
+        &instrumentTrackIdMap,
     OrchestrionSequencer::MidiOutCb cb) {
   const auto rightHandStaff =
       score.nstaves() == 1
-          ? std::make_optional(std::make_pair<size_t, size_t>(0, 0))
-          : GetRightHandStaff(score.repeatList(), score.ntracks());
+          ? std::make_optional(
+                std::make_pair<muse::audio::TrackId, size_t>(0, 0))
+          : GetRightHandStaff(score.repeatList(), instrumentTrackIdMap,
+                              score.ntracks());
   if (!rightHandStaff.has_value())
     return nullptr;
   Staff rightHand;
@@ -164,8 +178,9 @@ OrchestrionSequencerFactory::CreateSequencer(
         !sequence.empty())
       leftHand.emplace(v, std::move(sequence));
   }
-  auto pedalSequence = GetPedalSequence(score, static_cast<int>(rightHandStaff->second),
-    static_cast<int>(rightHandStaff->second) + 2);
+  auto pedalSequence =
+      GetPedalSequence(score, static_cast<int>(rightHandStaff->second),
+                       static_cast<int>(rightHandStaff->second) + 2);
 
   return std::make_unique<OrchestrionSequencer>(
       static_cast<int>(rightHandStaff->first), std::move(rightHand),
