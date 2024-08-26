@@ -48,10 +48,10 @@ GetRightHandStaff(const std::vector<mu::engraving::RepeatSegment *> &repeats,
                   const mu::playback::IPlaybackController::InstrumentTrackIdMap
                       &instrumentTrackIdMap,
                   size_t nScoreTracks) {
-  for (const auto &repeat : repeats)
-    for (const auto &measure : repeat->measureList())
-      for (const auto &segment : measure->segments())
-        for (auto track = 0u; track < nScoreTracks; ++track)
+  for (auto track = 0u; track < nScoreTracks; ++track)
+    for (const auto &repeat : repeats)
+      for (const auto &measure : repeat->measureList())
+        for (const auto &segment : measure->segments())
           if (const auto chord = dynamic_cast<const mu::engraving::Chord *>(
                   segment.element(track))) {
             const auto staves = chord->part()->staves();
