@@ -1,13 +1,16 @@
 #include "VoiceBlank.h"
 
 namespace dgk {
-VoiceBlank::VoiceBlank(Tick tick) : m_tick{std::move(tick)} {}
+VoiceBlank::VoiceBlank(Tick beginTick, Tick endTick)
+    : m_beginTick{std::move(beginTick)}, m_endTick{std::move(endTick)} {}
 
 bool VoiceBlank::IsChord() const { return false; }
 
 std::vector<int> VoiceBlank::GetPitches() const { return {}; }
 
-Tick VoiceBlank::GetTick() const { return m_tick; }
+Tick VoiceBlank::GetBeginTick() const { return m_beginTick; }
+
+Tick VoiceBlank::GetEndTick() const { return m_endTick; }
 
 void VoiceBlank::SetHighlight(bool) {}
 

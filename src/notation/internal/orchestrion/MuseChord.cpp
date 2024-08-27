@@ -43,7 +43,7 @@ std::vector<int> MuseChord::GetPitches() const {
   return chord;
 }
 
-dgk::Tick MuseChord::GetTick() const { return m_tick; }
+dgk::Tick MuseChord::GetBeginTick() const { return m_tick; }
 
 dgk::Tick MuseChord::GetEndTick() const {
   if (m_isChord)
@@ -97,7 +97,7 @@ void MuseChord::ScrollToYou() const {
 
 dgk::Tick MuseChord::GetChordEndTick() const {
   auto chord = dynamic_cast<const me::Chord *>(m_segment.element(m_track));
-  auto endTick = GetTick();
+  auto endTick = GetBeginTick();
   while (chord) {
     endTick += chord->actualTicks().ticks();
     chord = chord->nextTiedChord();
@@ -107,7 +107,7 @@ dgk::Tick MuseChord::GetChordEndTick() const {
 
 dgk::Tick MuseChord::GetRestEndTick() const {
   const me::Segment *segment = &m_segment;
-  auto endTick = GetTick();
+  auto endTick = GetBeginTick();
   while (segment) {
     const auto rest = dynamic_cast<const me::Rest *>(segment->element(m_track));
     if (!rest)

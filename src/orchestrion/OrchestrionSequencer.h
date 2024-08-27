@@ -10,6 +10,7 @@
 #include <queue>
 #include <random>
 #include <thread>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
@@ -73,5 +74,7 @@ private:
   std::mt19937 m_rng{0};
   std::uniform_int_distribution<int> m_delayDist{0, 50000};   // microseconds
   std::uniform_int_distribution<int> m_velocityDist{70, 130}; // percents
+
+  std::unordered_set<int> m_pressedKeys;
 };
 } // namespace dgk

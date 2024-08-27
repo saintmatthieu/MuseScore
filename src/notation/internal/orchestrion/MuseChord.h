@@ -22,8 +22,8 @@ public:
             int measurePlaybackTick);
 
   bool IsChord() const override;
-  Tick GetTick() const override;
-  Tick GetEndTick() const;
+  Tick GetBeginTick() const override;
+  Tick GetEndTick() const override;
 
 private:
   std::vector<int> GetPitches() const override;

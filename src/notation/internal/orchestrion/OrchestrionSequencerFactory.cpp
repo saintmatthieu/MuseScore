@@ -99,12 +99,13 @@ auto GetChordSequence(mu::engraving::Score &score,
     if (TakeIt(segment, staffIdx, voice, prevWasRest)) {
       auto chord = std::make_shared<MuseChord>(score, interaction, segment,
                                                staffIdx, voice, measureTick);
+      const auto chordEndTick = chord->GetEndTick();
       if (endTick.withRepeats > 0 // we don't care if the voice doesn't begin at
                                   // the start.
-          && endTick.withRepeats < chord->GetTick().withRepeats)
+          && endTick.withRepeats < chord->GetBeginTick().withRepeats)
         // There is a blank in this voice.
-        sequence.push_back(std::make_shared<VoiceBlank>(endTick));
-      endTick = chord->GetEndTick();
+        sequence.push_back(std::make_shared<VoiceBlank>(endTick, chordEndTick));
+      endTick = chordEndTick;
       sequence.push_back(std::move(chord));
     }
   });

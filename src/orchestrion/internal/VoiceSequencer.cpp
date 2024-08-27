@@ -67,13 +67,13 @@ void VoiceSequencer::Advance(NoteEvent::Type event, int midiPitch,
     // `nextBegin` might show the end for this event type, yet don't switch
     // anything off until the cursor has reached it.
     if (m_active.end == m_numGestures ||
-        cursorTick >= m_gestures[m_active.end]->GetTick())
+        cursorTick >= m_gestures[m_active.end]->GetBeginTick())
       // Ok then.
       m_active.begin = m_active.end = nextBegin;
     return;
   }
 
-  if (cursorTick < m_gestures[nextBegin]->GetTick())
+  if (cursorTick < m_gestures[nextBegin]->GetBeginTick())
     // We're finished or the cursor hasn't reached our next event yet.
     return;
 
@@ -98,7 +98,7 @@ std::vector<int> VoiceSequencer::GoToTick(int tick) {
   m_active.begin = m_active.end = m_numGestures;
   for (auto i = 0; i < m_gestures.size(); ++i)
     if (m_gestures[i]->IsChord() &&
-        m_gestures[i]->GetTick().withoutRepeats >= tick) {
+        m_gestures[i]->GetBeginTick().withoutRepeats >= tick) {
       m_active.begin = m_active.end = i;
       break;
     }
@@ -123,7 +123,7 @@ int VoiceSequencer::GetNextBegin(NoteEvent::Type event) const {
 std::optional<dgk::Tick>
 VoiceSequencer::GetNextTick(NoteEvent::Type event) const {
   const auto i = GetNextBegin(event);
-  return i < m_numGestures ? std::make_optional(m_gestures[i]->GetTick())
+  return i < m_numGestures ? std::make_optional(m_gestures[i]->GetBeginTick())
                            : std::nullopt;
 }
 
@@ -134,9 +134,13 @@ std::optional<dgk::Tick> VoiceSequencer::GetTickForPedal() const {
     return std::nullopt;
   else if (m_gestures[m_active.begin]->IsChord() ||
            m_active.begin + 1 == m_numGestures)
-    return m_gestures[m_active.begin]->GetTick();
+    return m_gestures[m_active.begin]->GetBeginTick();
   else
     return std::nullopt;
+}
+
+dgk::Tick VoiceSequencer::GetFinalTick() const {
+  return m_gestures.empty() ? dgk::Tick{0, 0} : m_gestures.back()->GetEndTick();
 }
 
 } // namespace dgk

@@ -24,6 +24,7 @@ public:
   std::vector<int> GoToTick(int tick);
 
   std::optional<dgk::Tick> GetNextTick(NoteEvent::Type) const;
+  dgk::Tick GetFinalTick() const;
   std::optional<dgk::Tick> GetTickForPedal() const;
 
 private:
