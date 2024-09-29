@@ -57,7 +57,11 @@ foreach(_component ${_components})
     find_package(Qt6${_component} REQUIRED)
     list(APPEND QT_LIBRARIES ${Qt6${_component}_LIBRARIES})
     list(APPEND QT_INCLUDES ${Qt6${_component}_INCLUDE_DIRS})
-    add_definitions(${Qt6${_component}_DEFINITIONS})
+
+    # "-D$<$<NOT:$<CONFIG:Debug>>:QT_NO_DEBUG>" doesn't get evaluated properly by the Ninja generator.
+    string(REPLACE "-D$<$<NOT:$<CONFIG:Debug>>:QT_NO_DEBUG>" "" CLEANED_DEFINITIONS "${Qt6${_component}_DEFINITIONS}")
+    # Now add the cleaned definitions
+    add_definitions(${CLEANED_DEFINITIONS})
 endforeach()
 
 include_directories(${QT_INCLUDES})
