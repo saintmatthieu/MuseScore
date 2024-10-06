@@ -1,0 +1,2 @@
+module MuseScore.AppShell
+AppTitleBar 1.0 ../../platform/win/AppTitleBar.qml

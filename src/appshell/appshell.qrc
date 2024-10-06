@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
+        <file>qml/MuseScore/AppShell/qmldir</file>
         <file>qml/Main.wasm.qml</file>
         <file>qml/MainToolBar.qml</file>
         <file>qml/HomePage/HomeMenu.qml</file>
