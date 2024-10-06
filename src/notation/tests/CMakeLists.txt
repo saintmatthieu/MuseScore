@@ -72,7 +72,7 @@ set(MODULE_TEST_LINK
     update
     workspacestub
     iex_guitarpro
-    orchestrion
+    orchestrionsequencer
 )
 
 set(MODULE_TEST_DATA_ROOT ${CMAKE_CURRENT_LIST_DIR})

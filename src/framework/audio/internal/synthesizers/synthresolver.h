@@ -29,7 +29,7 @@
 
 #include "async/asyncable.h"
 #include "isynthresolver.h"
-#include "orchestrion/OrchestrionTypes.h"
+#include "orchestrionsequencer/OrchestrionTypes.h"
 
 namespace muse::audio::synth {
 class SynthResolver : public ISynthResolver, public mu::async::Asyncable {

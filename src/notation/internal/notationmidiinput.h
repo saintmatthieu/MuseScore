@@ -34,7 +34,7 @@
 #include "inotationinteraction.h"
 #include "inotationundostack.h"
 #include "dom/repeatList.h"
-#include "orchestrion/OrchestrionSequencer.h"
+#include "orchestrionsequencer/OrchestrionSequencer.h"
 
 #include <array>
 

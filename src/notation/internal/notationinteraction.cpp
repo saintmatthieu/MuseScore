@@ -89,7 +89,7 @@
 #include "notationselection.h"
 #include "scorecallbacks.h"
 
-#include "orchestrion/ComputerKeyboardMidiController.h"
+#include "orchestrionsequencer/ComputerKeyboardMidiController.h"
 
 using namespace mu::io;
 using namespace mu::notation;

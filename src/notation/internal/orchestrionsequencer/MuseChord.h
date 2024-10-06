@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Orchestrion/IChord.h"
+#include "orchestrionsequencer/IChord.h"
 
 namespace mu::engraving {
 class Note;

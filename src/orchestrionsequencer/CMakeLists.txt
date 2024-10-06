@@ -1,4 +1,4 @@
-set(MODULE orchestrion)
+set(MODULE orchestrionsequencer)
 
 set(MODULE_SRC
     internal/VoiceSequencer.cpp

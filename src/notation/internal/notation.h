@@ -31,8 +31,8 @@
 #include "../inotation.h"
 #include "igetscore.h"
 #include "../inotationconfiguration.h"
-#include "orchestrion/OrchestrionSequencer.h"
-#include "orchestrion/ComputerKeyboardMidiController.h"
+#include "orchestrionsequencer/OrchestrionSequencer.h"
+#include "orchestrionsequencer/ComputerKeyboardMidiController.h"
 #include "playback/iplaybackcontroller.h"
 
 namespace mu::engraving {
