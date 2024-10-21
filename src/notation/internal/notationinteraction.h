@@ -75,6 +75,7 @@ public:
     EngravingItem* hitElement(const muse::PointF& pos, float width) const override;
     std::vector<EngravingItem*> hitElements(const muse::PointF& pos, float width) const override;
     Staff* hitStaff(const muse::PointF& pos) const override;
+    void goToElement(EngravingItem* element) override;
     const HitElementContext& hitElementContext() const override;
     void setHitElementContext(const HitElementContext& context) override;
 

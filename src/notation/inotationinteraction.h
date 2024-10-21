@@ -56,6 +56,8 @@ public:
     virtual std::vector<EngravingItem*> hitElements(const muse::PointF& pos, float width) const = 0;
     virtual Staff* hitStaff(const muse::PointF& pos) const = 0;
 
+    virtual void goToElement(EngravingItem* element) = 0;
+
     struct HitElementContext
     {
         notation::EngravingItem* element = nullptr;
