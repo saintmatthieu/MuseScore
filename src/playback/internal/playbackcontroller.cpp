@@ -310,7 +310,7 @@ void PlaybackController::setTrackSoloMuteState(const InstrumentTrackId& trackId,
     m_notation->soloMuteState()->setTrackSoloMuteState(trackId, state);
 }
 
-void PlaybackController::playElements(const std::vector<const notation::EngravingItem*>& elements, double gain)
+void PlaybackController::playElements(const std::vector<const notation::EngravingItem*>& elements, notation::NotePerformanceAttributeMap performanceAttributes)
 {
     IF_ASSERT_FAILED(notationPlayback()) {
         return;
@@ -345,7 +345,7 @@ void PlaybackController::playElements(const std::vector<const notation::Engravin
         elementsForPlaying.push_back(element);
     }
 
-    notationPlayback()->triggerEventsForItems(elementsForPlaying, gain);
+    notationPlayback()->triggerEventsForItems(elementsForPlaying, std::move(performanceAttributes));
 }
 
 void PlaybackController::playMetronome(int tick)
@@ -1577,7 +1577,7 @@ void PlaybackController::setNotation(notation::INotationPtr notation)
 
     m_notation->interaction()->textEditingEnded().onReceive(this, [this](engraving::TextBase* text) {
         if (text && text->isHarmony()) {
-            playElements({ text }, 1.0);
+            playElements({ text });
         }
     });
 

@@ -59,6 +59,7 @@ struct ArrangementContext
     voice_layer_idx_t voiceLayerIndex = 0;
     staff_layer_idx_t staffLayerIndex = 0;
     double bps = 0.0;
+    bool isRightHand = true;
 
     bool operator==(const ArrangementContext& other) const
     {
@@ -68,7 +69,7 @@ struct ArrangementContext
                && actualDuration == other.actualDuration
                && voiceLayerIndex == other.voiceLayerIndex
                && staffLayerIndex == other.staffLayerIndex
-               && bps == other.bps;
+               && bps == other.bps && isRightHand == other.isRightHand;
     }
 };
 
