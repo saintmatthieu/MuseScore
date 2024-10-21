@@ -1,7 +1,6 @@
 #include <fluidsynth.h>
 
 #include "FluidGestureSynthesizer.h"
-#include "orchestrion/OrchestrionTypes.h"
 #include "sfcachedloader.h"
 #include <cassert>
 

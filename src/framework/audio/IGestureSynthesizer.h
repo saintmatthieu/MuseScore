@@ -1,6 +1,6 @@
 #pragma once
 
-#include "orchestrion/OrchestrionTypes.h"
+#include "orchestrionsequencer/OrchestrionTypes.h"
 #include <vector>
 
 namespace dgk {

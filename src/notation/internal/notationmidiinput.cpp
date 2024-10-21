@@ -31,7 +31,7 @@
 #include "engraving/dom/rest.h"
 #include "engraving/dom/factory.h"
 #include "engraving/types/fraction.h"
-#include "orchestrion/OrchestrionSequencerFactory.h"
+#include "orchestrionsequencer/OrchestrionSequencerFactory.h"
 
 #include "notationtypes.h"
 

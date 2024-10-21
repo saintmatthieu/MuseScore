@@ -90,7 +90,7 @@
 #include "notationselection.h"
 #include "scorecallbacks.h"
 
-#include "orchestrion/ComputerKeyboardMidiController.h"
+#include "orchestrionsequencer/ComputerKeyboardMidiController.h"
 
 using namespace mu::notation;
 using namespace mu::engraving;

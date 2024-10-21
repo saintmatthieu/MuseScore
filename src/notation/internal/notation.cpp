@@ -38,7 +38,7 @@
 #include "notationmidiinput.h"
 #include "notationparts.h"
 #include "notationtypes.h"
-#include "orchestrion/OrchestrionSequencerFactory.h"
+#include "orchestrionsequencer/OrchestrionSequencerFactory.h"
 
 #include "log.h"
 
