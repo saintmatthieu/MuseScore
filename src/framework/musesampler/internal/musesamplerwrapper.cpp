@@ -429,4 +429,5 @@ void MuseSamplerWrapper::extractOutputSamples(samples_t samples, float* output)
 void MuseSamplerWrapper::revokePlayingNotes()
 {
     m_allNotesOffRequested = true;
+    m_sequencer.revokePlayingNotes();
 }
