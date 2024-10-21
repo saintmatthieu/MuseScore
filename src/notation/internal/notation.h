@@ -112,7 +112,6 @@ private:
     INotationAccessibilityPtr m_accessibility = nullptr;
     INotationElementsPtr m_elements = nullptr;
 
-    const dgk::OrchestrionGetter m_getOrchestrion;
     std::unique_ptr<dgk::OrchestrionSequencer> m_orchestrionSequencer;
     dgk::ComputerKeyboardMidiController m_orchestrionKeyboardController;
 };

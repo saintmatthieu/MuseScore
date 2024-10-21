@@ -20,11 +20,9 @@ struct NoteEvent {
 };
 
 class IChord;
-class OrchestrionSequencer;
 
 using ChordPtr = std::shared_ptr<IChord>;
 using Staff = std::map<int /*voice*/, std::vector<ChordPtr>>;
-using OrchestrionGetter = std::function<OrchestrionSequencer&()>;
 
 class Finally {
 public:
