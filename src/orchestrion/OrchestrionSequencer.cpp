@@ -4,9 +4,9 @@
 #include <numeric>
 
 namespace dgk {
-OrchestrionSequencer::OrchestrionSequencer(Staff rightHand, Staff leftHand,
-                                           MidiOutCb cb)
-    : m_cb{std::move(cb)} {
+OrchestrionSequencer::OrchestrionSequencer(int track, Staff rightHand,
+                                           Staff leftHand, MidiOutCb cb)
+    : track{track}, m_cb{std::move(cb)} {
   for (auto &[voice, sequence] : rightHand)
     m_rightHand.emplace_back(
         std::make_unique<VoiceSequencer>(voice, std::move(sequence)));
@@ -15,8 +15,7 @@ OrchestrionSequencer::OrchestrionSequencer(Staff rightHand, Staff leftHand,
         std::make_unique<VoiceSequencer>(voice, std::move(sequence)));
 }
 
-void
-OrchestrionSequencer::OnInputEvent(const NoteEvent &input) {
+void OrchestrionSequencer::OnInputEvent(const NoteEvent &input) {
 
   auto &hand = input.pitch >= 60 ? m_rightHand : m_leftHand;
   const auto nextNoteonTick = std::accumulate(

@@ -41,7 +41,7 @@ bool IsVisible(const mu::engraving::Staff &staff) {
 
 // At the moment we are not flexible at all: we look for the first part that has
 // two staves and assume this is what we want to play.
-std::optional<size_t>
+std::optional<std::pair<size_t /*track*/, size_t /*staff*/>>
 GetRightHandStaff(const std::vector<mu::engraving::RepeatSegment *> &repeats,
                   size_t nScoreTracks) {
   for (const auto &repeat : repeats)
@@ -52,7 +52,7 @@ GetRightHandStaff(const std::vector<mu::engraving::RepeatSegment *> &repeats,
                   segment.element(track))) {
             const auto staves = chord->part()->staves();
             if (staves.size() == 2 && IsVisible(*chord->staff()))
-              return chord->staff()->idx();
+              return { {track, chord->staff()->idx()} };
           }
   return std::nullopt;
 }
@@ -108,16 +108,17 @@ OrchestrionSequencerFactory::CreateSequencer(
   Staff leftHand;
   for (auto v = 0; v < numVoices; ++v) {
     if (auto sequence =
-            GetChordSequence(score, interaction, *rightHandStaff, v);
+            GetChordSequence(score, interaction, rightHandStaff->second, v);
         !sequence.empty())
       rightHand.emplace(v, std::move(sequence));
     if (auto sequence =
-            GetChordSequence(score, interaction, *rightHandStaff + 1, v);
+            GetChordSequence(score, interaction, rightHandStaff->second + 1, v);
         !sequence.empty())
       leftHand.emplace(v, std::move(sequence));
   }
   return std::make_unique<OrchestrionSequencer>(
-      std::move(rightHand), std::move(leftHand), std::move(cb));
+      static_cast<int>(rightHandStaff->first), std::move(rightHand), std::move(leftHand),
+      std::move(cb));
 }
 
 NoteEvent ToDgkNoteEvent(const muse::midi::Event &museEvent) {

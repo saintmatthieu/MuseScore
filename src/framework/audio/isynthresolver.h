@@ -30,6 +30,10 @@
 #include "isynthesizer.h"
 #include "audiotypes.h"
 
+namespace dgk {
+struct NoteEvent;
+}
+
 namespace muse::audio::synth {
 class ISynthResolver : MODULE_EXPORT_INTERFACE
 {
@@ -55,13 +59,15 @@ public:
     virtual void init(const AudioInputParams& defaultInputParams) = 0;
 
     virtual ISynthesizerPtr resolveSynth(const TrackId trackId, const AudioInputParams& params,
-                                         const PlaybackSetupData& setupData) const = 0;
-    virtual ISynthesizerPtr resolveDefaultSynth(const TrackId trackId) const = 0;
+                                         const PlaybackSetupData& setupData) = 0;
+    virtual ISynthesizerPtr resolveDefaultSynth(const TrackId trackId) = 0;
     virtual AudioInputParams resolveDefaultInputParams() const = 0;
     virtual AudioResourceMetaList resolveAvailableResources() const = 0;
     virtual SoundPresetList resolveAvailableSoundPresets(const AudioResourceMeta& resourceMeta) const = 0;
     virtual void registerResolver(const AudioSourceType type, IResolverPtr resolver) = 0;
     virtual void clearSources() = 0;
+
+    virtual void postNoteEvents(int track, const std::vector<dgk::NoteEvent>& noteEvents) = 0;
 };
 
 using ISynthResolverPtr = std::shared_ptr<ISynthResolver>;

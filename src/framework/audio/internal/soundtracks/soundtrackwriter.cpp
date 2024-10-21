@@ -104,7 +104,7 @@ Ret SoundTrackWriter::write()
     DEFER {
         m_encoderPtr->flush();
 
-        audioEngine()->setMode(RenderMode::IdleMode);
+        audioEngine()->setMode(RenderMode::IdleMode); // TODO delete this line?
 
         m_source->setSampleRate(audioEngine()->sampleRate());
         m_source->setIsActive(false);

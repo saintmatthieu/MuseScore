@@ -25,9 +25,10 @@
 #include <memory>
 
 #include "iaudiosource.h"
+#include "IGestureSynthesizer.h"
 
 namespace muse::audio::synth {
-class ISynthesizer : public IAudioSource
+class ISynthesizer : public IAudioSource, public dgk::IGestureSynthesizer
 {
 public:
     virtual ~ISynthesizer() = default;

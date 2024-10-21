@@ -43,6 +43,9 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/internal/musesampleruiactions.h
     ${CMAKE_CURRENT_LIST_DIR}/internal/musesampleractioncontroller.cpp
     ${CMAKE_CURRENT_LIST_DIR}/internal/musesampleractioncontroller.h
+
+    ${CMAKE_CURRENT_LIST_DIR}/internal/MuseGestureSynthesizer.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/internal/MuseGestureSynthesizer.h
     )
 
 setup_module()

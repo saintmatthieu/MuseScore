@@ -272,6 +272,7 @@ typedef const char*(* ms_PresetList_get_next)(ms_PresetList);
 typedef ms_MuseSampler (* ms_MuseSampler_create)();
 typedef void (* ms_MuseSampler_destroy)(ms_MuseSampler);
 typedef ms_Result (* ms_MuseSampler_init)(ms_MuseSampler ms, double sample_rate, int block_size, int channel_count);
+typedef ms_Result (* ms_MuseSampler_init_2)(ms_MuseSampler ms, double sample_rate, int block_size, int channel_count);
 
 // Added in 0.100
 typedef ms_Result (* ms_MuseSampler_init_2)(ms_MuseSampler ms, double sample_rate, int block_size, int channel_count);
