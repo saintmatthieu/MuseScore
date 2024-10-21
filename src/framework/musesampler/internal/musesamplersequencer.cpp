@@ -126,8 +126,8 @@ void MuseSamplerSequencer::updateOffStreamEvents(const PlaybackEventsMap& events
     const char* textArticulation_cstr = m_offStreamCache.textArticulation.c_str();
     const char* syllable_cstr = m_offStreamCache.syllable.c_str();
 
-    for (const auto& pair : events) {
-        for (const auto& event : pair.second) {
+    for (const auto& [tick, eventList] : events) {
+        for (const auto& event : eventList) {
             if (!std::holds_alternative<mpe::NoteEvent>(event)) {
                 continue;
             }
@@ -140,6 +140,16 @@ void MuseSamplerSequencer::updateOffStreamEvents(const PlaybackEventsMap& events
             IF_ASSERT_FAILED(track) {
                 continue;
             }
+
+            timestamp_t timestampFrom = noteEvent.arrangementCtx().actualTimestamp;
+
+            int pitch{};
+            int centsOffset{};
+            pitchAndTuning(noteEvent.pitchCtx().nominalPitchLevel, pitch, centsOffset);
+
+            ms_NoteArticulation articulationFlag = ms_NoteArticulation_None;
+            ms_NoteHead notehead = ms_NoteHead_Normal;
+            parseArticulations(noteEvent.expressionCtx().articulations, articulationFlag, notehead);
 
             AuditionStartNoteEvent noteOn;
             pitchAndTuning(noteEvent.pitchCtx().nominalPitchLevel, noteOn.msEvent._pitch, noteOn.msEvent._offset_cents);
@@ -155,13 +165,30 @@ void MuseSamplerSequencer::updateOffStreamEvents(const PlaybackEventsMap& events
             timestamp_t timestampFrom = arrangementCtx.actualTimestamp;
             m_offStreamEvents[arrangementCtx.actualTimestamp].emplace(std::move(noteOn));
 
-            // AuditionStopNoteEvent noteOff;
-            // noteOff.msEvent = { noteOn.msEvent._pitch };
-            // noteOff.msTrack = track;
+            const auto duration = noteEvent.arrangementCtx().actualDuration;
+            const auto killTime = tick + duration;
+            m_ringingChords[killTime].push_back(pitch);
 
-            // timestamp_t timestampTo = timestampFrom + arrangementCtx.actualDuration;
-            // m_offStreamEvents[timestampTo].emplace(std::move(noteOff));
+            // Not quite right to have this here, but too tired now.
+            auto it = m_ringingChords.begin();
+            while (it != m_ringingChords.end() && tick >= it->first) {
+              const auto &pitches = it->second;
+              std::for_each(pitches.begin(), pitches.end(), [&](int pitch) {
+                AuditionStopNoteEvent noteOff;
+                noteOff.msEvent = {pitch};
+                noteOff.msTrack = track;
+                m_offStreamEvents[tick].emplace(std::move(noteOff));
+              });
+              it = m_ringingChords.erase(it);
+            }
         }
+
+      const auto firstTimestamp = m_ringingChords.begin()->first;
+      decltype(m_ringingChords) newRingingChords;
+      for (const auto &[timestamp, pitches] : m_ringingChords) {
+        newRingingChords[timestamp - firstTimestamp] = pitches;
+      }
+      m_ringingChords = newRingingChords;
     }
 
     updateOffSequenceIterator();

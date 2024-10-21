@@ -124,6 +124,7 @@ private:
 
     std::string m_defaultPresetCode;
     OffStreamParams m_offStreamCache;
+    std::map<mpe::timestamp_t, std::vector<int>> m_ringingChords;
 };
 }
 
