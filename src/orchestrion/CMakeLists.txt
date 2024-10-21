@@ -6,6 +6,8 @@ set(MODULE_SRC
     OrchestrionSequencer.cpp
     OrchestrionSequencer.h
     OrchestrionTypes.h
+    VoiceBlank.cpp
+    VoiceBlank.h
     IChord.h
 )
 

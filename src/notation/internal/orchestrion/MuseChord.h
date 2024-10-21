@@ -20,12 +20,15 @@ public:
             mu::notation::INotationInteraction &interaction,
             const mu::engraving::Segment &segment, size_t staffIdx, int voice);
 
+  int GetTick() const override;
+  int GetEndTick() const;
+
 private:
   std::vector<int> GetPitches() const override;
-  int GetTick() const override;
-  int GetEndTick() const override;
   void SetHighlight(bool value) override;
   void ScrollToYou() const override;
+  int GetChordEndTick() const;
+  int GetRestEndTick() const;
 
   std::vector<mu::engraving::Note *> GetNotes() const;
 
@@ -35,5 +38,6 @@ private:
   const size_t m_staffIdx;
   const int m_voice;
   const int m_track;
+  const bool m_isChord;
 };
 } // namespace dgk

@@ -18,8 +18,8 @@ MuseChord::MuseChord(me::Score &score,
                      const me::Segment &segment, size_t staffIdx, int voice)
     : m_score{score}, m_notationInteraction{interaction}, m_segment{segment},
       m_staffIdx{staffIdx}, m_voice{voice}, m_track{static_cast<int>(
-                                                staffIdx * me::VOICES +
-                                                voice)} {}
+                                                staffIdx * me::VOICES + voice)},
+      m_isChord{dynamic_cast<const me::Chord *>(m_segment.element(m_track)) != nullptr} {}
 
 std::vector<me::Note *> MuseChord::GetNotes() const {
   if (const auto museChord =
@@ -40,7 +40,10 @@ std::vector<int> MuseChord::GetPitches() const {
 int MuseChord::GetTick() const { return m_segment.tick().ticks(); }
 
 int MuseChord::GetEndTick() const {
-  return GetTick() + m_segment.ticks().ticks();
+  if (m_isChord)
+    return GetChordEndTick();
+  else
+    return GetRestEndTick();
 }
 
 void MuseChord::SetHighlight(bool value) {
@@ -84,5 +87,28 @@ void MuseChord::SetHighlight(bool value) {
 void MuseChord::ScrollToYou() const {
   m_notationInteraction.showItem(m_segment.element(m_track));
   m_notationInteraction.selectionChanged().notify();
+}
+
+int MuseChord::GetChordEndTick() const {
+  auto chord = dynamic_cast<const me::Chord *>(m_segment.element(m_track));
+  auto endTick = GetTick();
+  while (chord) {
+    endTick += chord->actualTicks().ticks();
+    chord = chord->nextTiedChord();
+  }
+  return endTick;
+}
+
+int MuseChord::GetRestEndTick() const {
+  const me::Segment* segment = &m_segment;
+  auto endTick = GetTick();
+  while (segment) {
+    const auto rest = dynamic_cast<const me::Rest *>(segment->element(m_track));
+    if (!rest)
+      break;
+    endTick += rest->actualTicks().ticks();
+    segment = segment->next1();
+  }
+  return endTick;
 }
 } // namespace dgk

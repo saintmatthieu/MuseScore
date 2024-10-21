@@ -1,6 +1,7 @@
 #include "OrchestrionSequencerFactory.h"
 #include "MuseChord.h"
 #include "Orchestrion/OrchestrionSequencer.h"
+#include "Orchestrion/VoiceBlank.h"
 #include "engraving/dom/chord.h"
 #include "engraving/dom/measure.h"
 #include "engraving/dom/mscore.h"
@@ -13,23 +14,6 @@
 
 namespace dgk {
 namespace {
-std::vector<const mu::engraving::Chord *>
-GetChords(const mu::engraving::Segment &segment, size_t nScoreTracks) {
-  std::vector<const mu::engraving::Chord *> chords;
-  auto trackId = 0;
-  while (trackId < nScoreTracks) {
-    if (const auto chord = dynamic_cast<const mu::engraving::Chord *>(
-            segment.element(trackId))) {
-      const auto staff = chord->staff();
-      if (staff->visible() &&
-          !staff->staffType(mu::engraving::Fraction(0, 1))->isMuted())
-        chords.push_back(chord);
-    }
-    ++trackId;
-  }
-  return chords;
-}
-
 bool HasUntiedNotes(const mu::engraving::Chord &chord) {
   return std::any_of(
       chord.notes().begin(), chord.notes().end(),
@@ -77,6 +61,7 @@ auto GetChordSequence(mu::engraving::Score &score,
                       size_t staffIdx, int voice) {
   std::vector<ChordPtr> sequence;
   auto prevWasRest = false;
+  auto endTick = 0;
   const auto &repeats = score.repeatList();
   std::for_each(
       repeats.begin(), repeats.end(),
@@ -87,11 +72,20 @@ auto GetChordSequence(mu::engraving::Score &score,
             [&](const mu::engraving::Measure *measure) {
               const auto &museSegments = measure->segments();
               for (const auto &museSegment : museSegments)
-                if (TakeIt(museSegment, staffIdx, voice, prevWasRest))
-                  sequence.push_back(std::make_shared<MuseChord>(
-                      score, interaction, museSegment, staffIdx, voice));
+                if (TakeIt(museSegment, staffIdx, voice, prevWasRest)) {
+                  auto chord = std::make_shared<MuseChord>(
+                      score, interaction, museSegment, staffIdx, voice);
+                  if (endTick > 0 // we don't care if the voice doesn't begin at
+                                  // the start.
+                      && endTick < chord->GetTick())
+                    // There is a blank in this voice.
+                    sequence.push_back(std::make_shared<VoiceBlank>(endTick));
+                  endTick = chord->GetEndTick();
+                  sequence.push_back(std::move(chord));
+                }
             });
       });
+  sequence.push_back(std::make_shared<VoiceBlank>(endTick));
   return sequence;
 }
 

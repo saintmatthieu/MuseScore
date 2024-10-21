@@ -18,21 +18,24 @@ public:
 
   const int voice;
 
-  Next OnInputEvent(NoteEvent::Type, int midiPitch, bool consume);
+  Next OnInputEvent(NoteEvent::Type, int midiPitch, int cursorTick);
   //! Returns noteoffs that were pending.
   std::vector<int> GoToTick(int tick);
 
-  /*!
-   * If `GetNextNoteonTick().has_value()`, then `GetNextNoteoffTick() ==
-   * GetNextNoteonTick()`.
-   */
-  std::optional<int> GetNextNoteonTick() const;
-  int GetNextNoteoffTick() const;
+  std::optional<int> GetNextTick(NoteEvent::Type) const;
 
 private:
-  const std::vector<ChordPtr> m_chords;
-  int m_chordIndex = 0;
+  void Advance(NoteEvent::Type, int midiPitch, int cursorTick);
+  int GetNextBegin(NoteEvent::Type) const;
+
+  struct Range {
+    int begin = 0;
+    int end = 0;
+  };
+
+  const std::vector<ChordPtr> m_gestures;
+  const int m_numGestures;
+  Range m_active; // Range of active chords / rests.
   std::optional<uint8_t> m_pressedKey;
-  std::vector<int> m_pendingNoteoffs;
 };
 } // namespace dgk

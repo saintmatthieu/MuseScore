@@ -15,25 +15,24 @@ OrchestrionSequencer::OrchestrionSequencer(Staff rightHand, Staff leftHand) {
 
 std::vector<NoteEvent>
 OrchestrionSequencer::OnInputEvent(const NoteEvent &input) {
-  const auto isRightHand = input.pitch >= 60;
-  auto &hand = isRightHand ? m_rightHand : m_leftHand;
+
+  auto &hand = input.pitch >= 60 ? m_rightHand : m_leftHand;
   const auto nextNoteonTick = std::accumulate(
       hand.begin(), hand.end(), std::optional<int>{},
-      [](const auto &acc, const auto &voice) {
-        const auto tick = voice->GetNextNoteonTick();
+      [&](const auto &acc, const auto &voice) {
+        const auto tick = voice->GetNextTick(input.type);
         return tick.has_value()
                    ? std::make_optional(std::min(acc.value_or(*tick), *tick))
                    : acc;
       });
 
+  if (!nextNoteonTick.has_value())
+    return {};
+
   std::vector<NoteEvent> output;
   for (auto &sequencer : hand) {
-
-    const auto noteoffTick = sequencer->GetNextNoteoffTick();
-    const auto consume =
-        !nextNoteonTick.has_value() || noteoffTick <= *nextNoteonTick;
-
-    const auto next = sequencer->OnInputEvent(input.type, input.pitch, consume);
+    const auto next =
+        sequencer->OnInputEvent(input.type, input.pitch, *nextNoteonTick);
     output.reserve(output.size() + next.noteOffs.size() + next.noteOns.size());
     std::transform(next.noteOffs.begin(), next.noteOffs.end(),
                    std::back_inserter(output), [&](int note) {
@@ -47,21 +46,6 @@ OrchestrionSequencer::OnInputEvent(const NoteEvent &input) {
                    });
   };
 
-  const auto bothHands = {&m_rightHand, &m_leftHand};
-  const auto nextNoteoffTick = std::accumulate(
-      bothHands.begin(), bothHands.end(), std::numeric_limits<int>::max(),
-      [](int acc, const auto &hand) {
-        const auto tick = std::accumulate(
-            hand->begin(), hand->end(), std::numeric_limits<int>::max(),
-            [](int acc, const auto &voice) {
-              const auto tick = voice->GetNextNoteoffTick();
-              return std::min(acc, tick);
-            });
-        return std::min(acc, tick);
-      });
-  constexpr auto track = 0; // TODO (if necessary)
-  // m_scroller->ScrollTo(nextNoteoffTick, track);
-  // Use IChord::SetHighlight() and ::ScrollToYou() instead.
   return output;
 }
 
