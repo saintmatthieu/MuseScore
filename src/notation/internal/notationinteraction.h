@@ -45,6 +45,10 @@ class Lasso;
 
 class QDrag;
 
+namespace dgk {
+class ComputerKeyboardMidiController;
+}
+
 namespace mu::notation {
 class Notation;
 class NotationSelection;
@@ -56,7 +60,7 @@ class NotationInteraction : public INotationInteraction, public muse::Injectable
     muse::Inject<engraving::rendering::ISingleRenderer> engravingRenderer = { this };
 
 public:
-    NotationInteraction(Notation* notation, INotationUndoStackPtr undoStack);
+    NotationInteraction(Notation* notation, INotationUndoStackPtr undoStack, dgk::ComputerKeyboardMidiController&);
 
     void paint(muse::draw::Painter* painter);
 
@@ -176,6 +180,9 @@ public:
     muse::Ret canAddBoxes() const override;
     void addBoxes(BoxType boxType, int count, AddBoxesTarget target) override;
     void addBoxes(BoxType boxType, int count, int beforeBoxIndex, bool moveSignaturesClef = true) override;
+
+    void onAltPlusLetter(char letter) override;
+    void onReleasedLetter(char letter) override;
 
     void copySelection() override;
     void copyLyrics() override;
@@ -458,6 +465,8 @@ private:
     HitElementContext m_hitElementContext;
 
     muse::async::Channel<ShowItemRequest> m_showItemRequested;
+
+    dgk::ComputerKeyboardMidiController& m_orchestrionKeyboardController;
 };
 }
 

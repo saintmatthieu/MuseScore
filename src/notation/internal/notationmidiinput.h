@@ -28,7 +28,6 @@
 #include "playback/iplaybackcontroller.h"
 #include "inotationconfiguration.h"
 #include "actions/iactionsdispatcher.h"
-#include "midi/imidioutport.h"
 
 #include "../inotationmidiinput.h"
 #include "igetscore.h"
@@ -52,13 +51,16 @@ class NotationMidiInput : public INotationMidiInput, public muse::Injectable
     muse::Inject<muse::midi::IMidiOutPort> midiOutPort = { this };
 
 public:
-    NotationMidiInput(IGetScore* getScore, INotationInteractionPtr notationInteraction, INotationUndoStackPtr undoStack,
-                      const muse::modularity::ContextPtr& iocCtx);
+  NotationMidiInput(IGetScore *getScore,
+                    INotationInteractionPtr notationInteraction,
+                    INotationUndoStackPtr undoStack,
+                      const muse::modularity::ContextPtr& iocCtx,
+                    const dgk::OrchestrionGetter &);
 
     void onMidiEventReceived(const muse::midi::Event& event) override;
     muse::async::Channel<std::vector<const Note*> > notesReceived() const override;
 
-    void onRealtimeAdvance() override;
+  void onRealtimeAdvance() override;
 
 private:
     void goToElement(EngravingItem *el) override;
@@ -85,7 +87,6 @@ private:
     bool isRealtimeManual() const;
 
     bool isNoteInputMode() const;
-    dgk::OrchestrionSequencer& getOrchestrion();
 
     IGetScore* m_getScore = nullptr;
     INotationInteractionPtr m_notationInteraction;
@@ -101,7 +102,7 @@ private:
 
     bool m_shouldDisableMetronome = false;
 
-    std::unique_ptr<dgk::OrchestrionSequencer> m_orchestrionSequencer;
+    const dgk::OrchestrionGetter& m_getOrchestrion;
 };
 }
 

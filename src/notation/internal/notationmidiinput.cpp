@@ -53,125 +53,10 @@ void SendDgkNoteEvents(const std::vector<dgk::NoteEvent> &events,
 }
 } // namespace
 
-namespace {
-void SendDgkNoteEvents(const std::vector<dgk::NoteEvent> &events,
-                       muse::midi::IMidiOutPort &midiOutPort) {
-  std::for_each(events.begin(), events.end(), [&](const dgk::NoteEvent &event) {
-    midiOutPort.sendEvent(dgk::ToMuseMidiEvent(event));
-  });
-}
-} // namespace
-
-
-namespace {
-  std::vector<Chord*> getChords(const Segment& segment,
-    const mu::engraving::Score& score) {
-    std::vector<Chord*> chords;
-    auto trackId = 0;
-    while (trackId < score.ntracks()) {
-      auto element = segment.element(trackId);
-      if (auto chord = dynamic_cast<Chord*>(element))
-        chords.push_back(chord);
-      ++trackId;
-    }
-    return chords;
-  }
-
-  std::vector<Note*> getUntiedNotes(const Chord& chord) {
-    std::vector<Note*> notes;
-    for (Note* note : chord.notes()) {
-      if (!note->tieBack()) {
-        notes.push_back(note);
-      }
-    }
-    return notes;
-  }
-} // namespace
-
-SegmentIterator::SegmentIterator(const engraving::Score &score,
-                                 const RepeatSegmentVector &repeatList)
-    : m_score{score}, m_repeatList{repeatList} {
-  goToStart();
-}
-
-Segment *SegmentIterator::next() {
-  while (m_repeatSegmentIt != m_repeatList.end()) {
-    if (auto segment = nextRepeatSegment())
-      return segment;
-    m_repeatSegmentIt++;
-    if (m_repeatSegmentIt == m_repeatList.end()) {
-      // Finished !
-      goToStart();
-      return nullptr;
-    }
-    m_measureIt = (*m_repeatSegmentIt)->measureList().begin();
-    m_pSegment = (*m_measureIt)->first();
-  }
-  return nullptr;
-}
-
-void SegmentIterator::goTo(Segment *segment) {
-  if (m_repeatSegmentIt == m_repeatList.end()) {
-    m_repeatSegmentIt = m_repeatList.begin();
-  }
-  // Go to beginning of repeat and start search from there.
-  m_measureIt = (*m_repeatSegmentIt)->measureList().begin();
-  while (m_repeatSegmentIt != m_repeatList.end()) {
-    m_measureIt = (*m_repeatSegmentIt)->measureList().begin();
-    while (m_measureIt != (*m_repeatSegmentIt)->measureList().end()) {
-      const auto &segments = (*m_measureIt)->segments();
-      if (std::find_if(segments.begin(), segments.end(),
-                       [segment](const Segment &candidate) {
-                         return segment == &candidate;
-                       }) != segments.end()) {
-        m_pSegment = segment;
-        return;
-      }
-      ++m_measureIt;
-    }
-    ++m_repeatSegmentIt;
-  }
-}
-
-bool SegmentIterator::skipSegment(const Segment& segment, const engraving::Score& score) {
-  const auto chords = getChords(segment, score);
-  return std::all_of(chords.begin(), chords.end(), [](const Chord *chord) {
-    return getUntiedNotes(*chord).empty();
-  });
-}
-
-void SegmentIterator::goToStart() {
-  m_repeatSegmentIt = m_repeatList.begin();
-  m_measureIt = (*m_repeatSegmentIt)->measureList().begin();
-  m_pSegment = (*m_measureIt)->first();
-}
-
-Segment *SegmentIterator::nextRepeatSegment() {
-  assert(m_repeatSegmentIt != m_repeatList.end());
-  while (m_measureIt != (*m_repeatSegmentIt)->measureList().end()) {
-    if (auto segment = nextMeasureSegment())
-      return segment;
-    m_measureIt++;
-    if (m_measureIt != (*m_repeatSegmentIt)->measureList().end())
-      m_pSegment = (*m_measureIt)->first();
-  }
-  return nullptr;
-}
-
-Segment *SegmentIterator::nextMeasureSegment() {
-  assert(m_pSegment);
-  while (m_pSegment && SegmentIterator::skipSegment(*m_pSegment, m_score))
-    m_pSegment = m_pSegment->next();
-  auto segment = m_pSegment;
-  if (m_pSegment)
-    m_pSegment = m_pSegment->next();
-  return segment;
-}
-
 NotationMidiInput::NotationMidiInput(IGetScore* getScore, INotationInteractionPtr notationInteraction,
-                                     INotationUndoStackPtr undoStack, const muse::modularity::ContextPtr& iocCtx)
+                                     INotationUndoStackPtr undoStack, const muse::modularity::ContextPtr& iocCtx, const dgk::OrchestrionGetter &getOrchestrion)
     : muse::Injectable(iocCtx), m_getScore(getScore),
-    m_notationInteraction(notationInteraction), m_undoStack(undoStack)
+    m_notationInteraction(notationInteraction), m_undoStack(undoStack), m_getOrchestrion(getOrchestrion)
 {
     QObject::connect(&m_processTimer, &QTimer::timeout, [this]() { doProcessEvents(); });
 
@@ -198,10 +83,7 @@ void NotationMidiInput::onMidiEventReceived(const muse::midi::Event& event)
         event.opcode() != muse::midi::Event::Opcode::NoteOff)
       return;
 
-    auto& orchestrion = getOrchestrion();
-    const std::vector<dgk::NoteEvent> outputEvents =
-        orchestrion.OnInputEvent(dgk::ToDgkNoteEvent(event));
-    SendDgkNoteEvents(outputEvents, *midiOutPort());
+    m_getOrchestrion().OnInputEvent(dgk::ToDgkNoteEvent(event));
 }
 
 muse::async::Channel<std::vector<const Note*> > NotationMidiInput::notesReceived() const
@@ -234,8 +116,7 @@ void NotationMidiInput::onRealtimeAdvance()
 void NotationMidiInput::rewind() {
   playbackController()->seekBeat(0, 0);
   score()->deselectAll();
-  const auto noteOffs = getOrchestrion().GoToTick(0);
-  SendDgkNoteEvents(noteOffs, *midiOutPort());
+  m_getOrchestrion().GoToTick(0);
 }
 
 void NotationMidiInput::goToElement(EngravingItem *el) {
@@ -243,8 +124,7 @@ void NotationMidiInput::goToElement(EngravingItem *el) {
   if (!note) {
     return;
   }
-  const auto noteoffs = getOrchestrion().GoToTick(note->tick().ticks());
-  SendDgkNoteEvents(noteoffs, *midiOutPort());
+  m_getOrchestrion().GoToTick(note->tick().ticks());
 }
 
 mu::engraving::Score* NotationMidiInput::score() const
@@ -507,17 +387,4 @@ bool NotationMidiInput::isRealtimeManual() const
 bool NotationMidiInput::isNoteInputMode() const
 {
     return m_notationInteraction->noteInput()->isNoteInputMode();
-}
-
-dgk::OrchestrionSequencer& NotationMidiInput::getOrchestrion() {
-  if (!m_orchestrionSequencer) {
-    // Doing this in `init` fails, probably because the master score is not
-    // yet loaded. Doing this now isn't great, though, as it might delay the
-    // first note.
-    // TODO find out when the master score is loaded and do this then
-    const auto score = m_getScore->score();
-    m_orchestrionSequencer = dgk::OrchestrionSequencerFactory::CreateSequencer(
-      *score, *m_notationInteraction);
-  }
-  return *m_orchestrionSequencer;
 }

@@ -4,7 +4,9 @@
 #include <numeric>
 
 namespace dgk {
-OrchestrionSequencer::OrchestrionSequencer(Staff rightHand, Staff leftHand) {
+OrchestrionSequencer::OrchestrionSequencer(Staff rightHand, Staff leftHand,
+                                           MidiOutCb cb)
+    : m_cb{std::move(cb)} {
   for (auto &[voice, sequence] : rightHand)
     m_rightHand.emplace_back(
         std::make_unique<VoiceSequencer>(voice, std::move(sequence)));
@@ -13,7 +15,7 @@ OrchestrionSequencer::OrchestrionSequencer(Staff rightHand, Staff leftHand) {
         std::make_unique<VoiceSequencer>(voice, std::move(sequence)));
 }
 
-std::vector<NoteEvent>
+void
 OrchestrionSequencer::OnInputEvent(const NoteEvent &input) {
 
   auto &hand = input.pitch >= 60 ? m_rightHand : m_leftHand;
@@ -27,7 +29,7 @@ OrchestrionSequencer::OnInputEvent(const NoteEvent &input) {
       });
 
   if (!nextNoteonTick.has_value())
-    return {};
+    return;
 
   std::vector<NoteEvent> output;
   for (auto &voiceSequencer : hand) {
@@ -48,10 +50,11 @@ OrchestrionSequencer::OnInputEvent(const NoteEvent &input) {
                    });
   };
 
-  return output;
+  if (!output.empty())
+    m_cb(output);
 }
 
-std::vector<NoteEvent> OrchestrionSequencer::GoToTick(int tick) {
+void OrchestrionSequencer::GoToTick(int tick) {
 
   std::vector<NoteEvent> output;
   for (auto hand : {&m_rightHand, &m_leftHand}) {
@@ -65,6 +68,7 @@ std::vector<NoteEvent> OrchestrionSequencer::GoToTick(int tick) {
                      });
     }
   }
-  return output;
+  if (!output.empty())
+    m_cb(output);
 }
 } // namespace dgk
