@@ -129,9 +129,9 @@ Ret FluidSynth::init()
 
     createFluidInstance();
 
-    m_sequencer.setOnOffStreamFlushed([this]() {
-        m_allNotesOffRequested = true;
-    });
+    // m_sequencer.setOnOffStreamFlushed([this]() {
+    //     m_allNotesOffRequested = true;
+    // });
 
     LOGD() << "synth inited\n";
     return true;
@@ -301,6 +301,7 @@ const mpe::PlaybackData& FluidSynth::playbackData() const
 void FluidSynth::revokePlayingNotes()
 {
     m_allNotesOffRequested = true;
+    m_sequencer.revokePlayingNotes();
 }
 
 void FluidSynth::flushSound()
