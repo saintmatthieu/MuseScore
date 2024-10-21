@@ -155,12 +155,12 @@ void MuseSamplerSequencer::updateOffStreamEvents(const PlaybackEventsMap& events
             timestamp_t timestampFrom = arrangementCtx.actualTimestamp;
             m_offStreamEvents[arrangementCtx.actualTimestamp].emplace(std::move(noteOn));
 
-            AuditionStopNoteEvent noteOff;
-            noteOff.msEvent = { noteOn.msEvent._pitch };
-            noteOff.msTrack = track;
+            // AuditionStopNoteEvent noteOff;
+            // noteOff.msEvent = { noteOn.msEvent._pitch };
+            // noteOff.msTrack = track;
 
-            timestamp_t timestampTo = timestampFrom + arrangementCtx.actualDuration;
-            m_offStreamEvents[timestampTo].emplace(std::move(noteOff));
+            // timestamp_t timestampTo = timestampFrom + arrangementCtx.actualDuration;
+            // m_offStreamEvents[timestampTo].emplace(std::move(noteOff));
         }
     }
 

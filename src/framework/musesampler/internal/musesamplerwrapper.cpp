@@ -43,7 +43,7 @@ MuseSamplerWrapper::MuseSamplerWrapper(MuseSamplerLibHandlerPtr samplerLib,
     }
 
     m_sequencer.setOnOffStreamFlushed([this]() {
-        m_allNotesOffRequested = true;
+        // m_allNotesOffRequested = true;
     });
 
     config()->samplesToPreallocateChanged().onReceive(this, [this](const samples_t samples) {
