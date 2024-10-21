@@ -117,6 +117,11 @@ Notation::~Notation()
     m_score = nullptr;
 }
 
+void Notation::rewind()
+{
+    m_midiInput->rewind();
+}
+
 void Notation::setScore(Score* score)
 {
     if (m_score == score) {

@@ -35,14 +35,17 @@ class Score;
 }
 
 namespace mu::notation {
+class INotation;
+
 class NotationPlayback : public INotationPlayback, public muse::async::Asyncable
 {
     INJECT(INotationConfiguration, configuration)
 
 public:
-    NotationPlayback(IGetScore* getScore, muse::async::Notification notationChanged);
+    NotationPlayback(IGetScore* getScore, INotation* notation, muse::async::Notification notationChanged);
 
     void init() override;
+    void rewind() override;
 
     const engraving::InstrumentTrackId& metronomeTrackId() const override;
     engraving::InstrumentTrackId chordSymbolsTrackId(const muse::ID& partId) const override;
@@ -98,6 +101,7 @@ private:
                                                             bool withSoundFlags) const;
 
     IGetScore* m_getScore = nullptr;
+    INotation* m_notation = nullptr;
 
     muse::async::Notification m_notationChanged;
 
