@@ -30,6 +30,7 @@
 #include "engraving/dom/note.h"
 #include "engraving/dom/rest.h"
 #include "engraving/dom/factory.h"
+#include "engraving/types/fraction.h"
 
 #include "notationtypes.h"
 
@@ -40,20 +41,22 @@ using namespace mu::notation;
 
 static constexpr int PROCESS_INTERVAL = 20;
 
-
 namespace {
-  std::vector<Chord*> getChords(const Segment& segment,
-    const mu::engraving::Score& score) {
-    std::vector<Chord*> chords;
-    auto trackId = 0;
-    while (trackId < score.ntracks()) {
-      auto element = segment.element(trackId);
-      if (auto chord = dynamic_cast<Chord*>(element))
+std::vector<Chord *> getChords(const Segment &segment,
+                               const mu::engraving::Score &score) {
+  std::vector<Chord *> chords;
+  auto trackId = 0;
+  while (trackId < score.ntracks()) {
+    if (const auto chord = dynamic_cast<Chord *>(segment.element(trackId))) {
+      const auto staff = chord->staff();
+      if (staff->visible() &&
+          !staff->staffType(mu::engraving::Fraction(0, 1))->isMuted())
         chords.push_back(chord);
-      ++trackId;
     }
-    return chords;
+    ++trackId;
   }
+  return chords;
+}
 
   std::vector<Note*> getUntiedNotes(const Chord& chord) {
     std::vector<Note*> notes;
@@ -64,7 +67,7 @@ namespace {
     }
     return notes;
   }
-} // namespace
+  } // namespace
 
 SegmentIterator::SegmentIterator(const engraving::Score &score,
                                  const RepeatSegmentVector &repeatList)
@@ -111,8 +114,13 @@ void SegmentIterator::goTo(Segment *segment) {
   }
 }
 
-bool SegmentIterator::skipSegment(const Segment& segment, const engraving::Score& score) {
+bool SegmentIterator::skipSegment(const Segment &segment,
+                                  const engraving::Score &score) {
+  if (segment.segmentType() != mu::engraving::SegmentType::ChordRest)
+    return true;
   const auto chords = getChords(segment, score);
+  if (chords.empty())
+    return true;
   return std::all_of(chords.begin(), chords.end(), [](const Chord *chord) {
     return getUntiedNotes(*chord).empty();
   });

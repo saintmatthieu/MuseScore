@@ -239,10 +239,12 @@ public:
     bool showBarlines() const { return m_showBarlines; }
     double userMag() const { return m_userMag; }
     bool isSmall() const { return m_small; }
+    bool isMuted() const { return m_muted; }
     bool invisible() const { return m_invisible; }
     const Color& color() const { return m_color; }
     void setUserMag(double val) { m_userMag = val; }
     void setSmall(bool val) { m_small = val; }
+    void setMuted(bool val) { m_muted = val; }
     void setInvisible(bool val) { m_invisible = val; }
     void setColor(const Color& val) { m_color = val; }
     Spatium yoffset() const { return m_yoffset; }
@@ -379,6 +381,7 @@ private:
     Spatium m_yoffset;
     bool m_small = false;
     bool m_invisible = false;
+    bool m_muted = false;
     Color m_color;
 
     int m_lines = 5;
