@@ -16,10 +16,16 @@ OrchestrionSequencer::OrchestrionSequencer(int track, Staff rightHand,
 }
 
 void OrchestrionSequencer::OnInputEvent(const NoteEvent &input) {
+  OnInputEventRecursive(input, loopEnabled);
+}
 
-  auto &hand = input.pitch < 60 && !m_leftHand.empty() ? m_leftHand : m_rightHand;
-  const auto nextNoteonTick = std::accumulate(
-      hand.begin(), hand.end(), std::optional<int>{},
+void OrchestrionSequencer::OnInputEventRecursive(const NoteEvent &input,
+                                                 bool loop) {
+
+  auto &hand =
+      input.pitch < 60 && !m_leftHand.empty() ? m_leftHand : m_rightHand;
+  auto nextNoteonTick = std::accumulate(
+      hand.begin(), hand.end(), std::optional<dgk::Tick>{},
       [&](const auto &acc, const auto &voice) {
         const auto tick = voice->GetNextTick(input.type);
         return tick.has_value()
@@ -27,13 +33,21 @@ void OrchestrionSequencer::OnInputEvent(const NoteEvent &input) {
                    : acc;
       });
 
-  if (!nextNoteonTick.has_value())
+  if (!nextNoteonTick.has_value() && !loop)
     return;
+
+  if (loop && input.type == NoteEvent::Type::noteOn &&
+      loopRightBoundary.has_value() &&
+      (!nextNoteonTick.has_value() ||
+       nextNoteonTick->withoutRepeats >= *loopRightBoundary)) {
+    GoToTick(loopLeftBoundary);
+    return OnInputEventRecursive(input, false);
+  }
 
   std::vector<NoteEvent> output;
   for (auto &voiceSequencer : hand) {
-    const auto next =
-        voiceSequencer->OnInputEvent(input.type, input.pitch, *nextNoteonTick);
+    const auto next = voiceSequencer->OnInputEvent(input.type, input.pitch,
+                                                   *nextNoteonTick);
     output.reserve(output.size() + next.noteOffs.size() + next.noteOns.size());
     std::transform(next.noteOffs.begin(), next.noteOffs.end(),
                    std::back_inserter(output), [&](int note) {

@@ -62,7 +62,7 @@ auto GetChordSequence(mu::engraving::Score &score,
                       size_t staffIdx, int voice) {
   std::vector<ChordPtr> sequence;
   auto prevWasRest = true;
-  auto endTick = 0;
+  dgk::Tick endTick{0, 0};
   auto &repeats = score.repeatList(true);
   auto measureTick = 0;
   std::for_each(
@@ -78,9 +78,9 @@ auto GetChordSequence(mu::engraving::Score &score,
                   auto chord = std::make_shared<MuseChord>(
                       score, interaction, museSegment, staffIdx, voice,
                       measureTick);
-                  if (endTick > 0 // we don't care if the voice doesn't begin at
-                                  // the start.
-                      && endTick < chord->GetTickWithRepeats())
+                  if (endTick.withRepeats > 0 // we don't care if the voice
+                                              // doesn't begin at the start.
+                      && endTick.withRepeats < chord->GetTick().withRepeats)
                     // There is a blank in this voice.
                     sequence.push_back(std::make_shared<VoiceBlank>(endTick));
                   endTick = chord->GetEndTick();
@@ -90,7 +90,7 @@ auto GetChordSequence(mu::engraving::Score &score,
             });
       });
   if (!sequence.empty())
-    sequence.push_back(std::make_shared<VoiceBlank>(endTick));
+    sequence.push_back(std::make_shared<VoiceBlank>(std::move(endTick)));
   return sequence;
 }
 

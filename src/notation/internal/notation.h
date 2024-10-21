@@ -97,6 +97,8 @@ protected:
     muse::async::Notification m_notationChanged;
 
 private:
+    void setLoopBoundariesEnabled(bool enabled) override;
+
     friend class NotationInteraction;
     friend class NotationPainting;
 

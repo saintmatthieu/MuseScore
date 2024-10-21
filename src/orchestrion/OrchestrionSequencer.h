@@ -17,8 +17,13 @@ public:
   void GoToTick(int tick);
 
   const int track;
+  bool loopEnabled = false;
+  int loopLeftBoundary = 0;
+  std::optional<int> loopRightBoundary;
 
 private:
+  void OnInputEventRecursive(const NoteEvent &inputEvent, bool loop);
+
   using Hand = std::vector<std::unique_ptr<VoiceSequencer>>;
   Hand m_rightHand;
   Hand m_leftHand;
