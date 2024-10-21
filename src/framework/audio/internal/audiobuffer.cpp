@@ -26,10 +26,8 @@
 
 using namespace muse::audio;
 
-static constexpr size_t DEFAULT_SIZE_PER_CHANNEL = 1024 * 8;
-static constexpr size_t DEFAULT_SIZE = DEFAULT_SIZE_PER_CHANNEL * 2;
-
-static const std::vector<float> SILENT_FRAMES(DEFAULT_SIZE, 0.f);
+static constexpr size_t CAPACITY = 8192;
+static constexpr size_t TARGET_BUFFER_SIZE = 1024;
 
 //#define DEBUG_AUDIO
 #ifdef DEBUG_AUDIO
@@ -126,7 +124,7 @@ void AudioBuffer::init(const audioch_t audioChannelsCount)
     m_minSamplesToReserve = DEFAULT_SIZE_PER_CHANNEL / 2;
     m_renderStep = m_minSamplesToReserve;
 
-    m_data.resize(m_samplesPerChannel * m_audioChannelsCount, 0.f);
+    m_data.resize(CAPACITY, 0.f);
 }
 
 void AudioBuffer::setSource(IAudioSourcePtr source)
@@ -166,9 +164,8 @@ void AudioBuffer::forward()
         return;
     }
 
-    const auto currentWriteIdx = m_writeIndex.load(std::memory_order_relaxed);
+    size_t nextWriteIdx = m_writeIndex.load(std::memory_order_relaxed);
     const auto currentReadIdx = m_readIndex.load(std::memory_order_acquire);
-    size_t nextWriteIdx = currentWriteIdx;
 
     while (reservedFrames(nextWriteIdx, currentReadIdx) < m_minSamplesToReserve) {
         samples_t renderStep = m_renderStep;
@@ -198,7 +195,7 @@ void AudioBuffer::pop(float* dest, size_t sampleCount)
     const auto currentReadIdx = m_readIndex.load(std::memory_order_relaxed);
     const auto currentWriteIdx = m_writeIndex.load(std::memory_order_acquire);
     if (currentReadIdx == currentWriteIdx) { // empty queue
-        std::memcpy(dest, SILENT_FRAMES.data(), sampleCount * sizeof(float) * m_audioChannelsCount);
+        std::fill(dest, dest + sampleCount * m_audioChannelsCount, 0.f);
         return;
     }
 
@@ -227,12 +224,12 @@ void AudioBuffer::pop(float* dest, size_t sampleCount)
 
     size_t left = totalSampleCount - count;
     if (left > 0) {
-        std::memcpy(dest + count, m_data.data(), left * memStep);
+        std::memcpy(dest + right, m_data.data(), left * sizeof(float));
         newReadIdx = left;
     }
 
-    if (newReadIdx >= DEFAULT_SIZE) {
-        newReadIdx -= DEFAULT_SIZE;
+    if (newReadIdx >= CAPACITY) {
+        newReadIdx -= CAPACITY;
     }
 
     m_readIndex.store(newReadIdx, std::memory_order_release);
