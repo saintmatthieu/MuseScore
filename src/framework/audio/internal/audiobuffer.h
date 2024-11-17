@@ -66,7 +66,7 @@ private:
     alignas(cache_line_size) std::atomic<size_t> m_readIndex = 0;
     alignas(cache_line_size) std::vector<float> m_data;
 
-    size_t m_targetBufferSize = 0;
+    samples_t m_samplesPerChannel = 0;
     audioch_t m_audioChannelsCount = 0;
     samples_t m_minSamplesToReserve = 0;
     samples_t m_renderStep = 0;
