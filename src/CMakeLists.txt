@@ -80,3 +80,5 @@ add_subdirectory(stubs)
 if (OS_IS_WASM)
     add_subdirectory(wasmtest)
 endif()
+
+add_subdirectory(orchestrion)

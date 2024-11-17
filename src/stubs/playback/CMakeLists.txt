@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-declare_module(playback)
+declare_module(playbackstub)
 
 set(MODULE_QRC ${CMAKE_CURRENT_LIST_DIR}/playback.qrc)
 
