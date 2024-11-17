@@ -27,7 +27,7 @@
 using namespace muse::audio;
 
 static constexpr size_t CAPACITY = 8192;
-static constexpr size_t TARGET_BUFFER_SIZE = 2048;
+static constexpr size_t TARGET_BUFFER_SIZE = 1024;
 
 //#define DEBUG_AUDIO
 #ifdef DEBUG_AUDIO
