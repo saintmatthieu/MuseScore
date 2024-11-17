@@ -60,7 +60,7 @@ void AudioConfiguration::init()
 #if defined(Q_OS_WASM)
     defaultBufferSize = 8192;
 #else
-    defaultBufferSize = 256;
+    defaultBufferSize = 1024;
 #endif
     settings()->setDefaultValue(AUDIO_BUFFER_SIZE_KEY, Val(defaultBufferSize));
     settings()->valueChanged(AUDIO_BUFFER_SIZE_KEY).onReceive(nullptr, [this](const Val&) {
