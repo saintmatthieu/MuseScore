@@ -28,6 +28,7 @@
 #include "playback/iplaybackcontroller.h"
 #include "inotationconfiguration.h"
 #include "actions/iactionsdispatcher.h"
+#include "midi/imidioutport.h"
 
 #include "../inotationmidiinput.h"
 #include "igetscore.h"
