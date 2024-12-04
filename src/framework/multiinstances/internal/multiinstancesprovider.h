@@ -81,6 +81,8 @@ public:
     async::Notification instancesChanged() const override;
 
     void notifyAboutInstanceWasQuited() override;
+    void notifyAboutGainedFocus() override;
+    async::Notification otherInstanceGainedFocus() const override;
 
     // Quit for all
     void quitForAll() override;
@@ -99,6 +101,7 @@ private:
     std::string m_selfID;
 
     async::Notification m_instancesChanged;
+    async::Notification m_otherInstanceGainedFocus;
     async::Channel<std::string> m_resourceChanged;
 
     std::map<std::string, muse::ipc::IpcLock*> m_locks;
