@@ -205,7 +205,7 @@ muse::midi::Event ToMuseMidiEvent(const NoteEvent &dgkEvent) {
                               muse::midi::Event::MessageType::ChannelVoice10);
   museEvent.setChannel(dgkEvent.channel);
   museEvent.setNote(dgkEvent.pitch);
-  museEvent.setVelocity(dgkEvent.velocity * 128);
+  museEvent.setVelocity(std::clamp<uint16_t>(dgkEvent.velocity * 128, 0, 127));
   return museEvent;
 }
 

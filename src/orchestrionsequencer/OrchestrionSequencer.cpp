@@ -272,7 +272,7 @@ void OrchestrionSequencer::PostNoteEvents(NoteEvents events) {
   for (auto i = 0u; i < events.size(); ++i) {
     auto &event = events[i];
     event.velocity =
-        std::clamp(event.velocity * m_velocityDist(m_rng) / 100, 0.f, 127.f);
+        std::clamp(event.velocity * m_velocityDist(m_rng) / 100, 0.f, 1.f);
     entries.emplace_back(
         QueueEntry<NoteEvent>{now + microseconds{delays[i]}, std::move(event)});
   }
