@@ -111,10 +111,6 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/internal/notationcreator.h
     ${CMAKE_CURRENT_LIST_DIR}/internal/mscoreerrorscontroller.cpp
     ${CMAKE_CURRENT_LIST_DIR}/internal/mscoreerrorscontroller.h
-    ${CMAKE_CURRENT_LIST_DIR}/internal/orchestrionsequencer/OrchestrionSequencerFactory.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/internal/orchestrionsequencer/OrchestrionSequencerFactory.h
-    ${CMAKE_CURRENT_LIST_DIR}/internal/orchestrionsequencer/MuseChord.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/internal/orchestrionsequencer/MuseChord.h
 
     ${CMAKE_CURRENT_LIST_DIR}/view/abstractnotationpaintview.cpp
     ${CMAKE_CURRENT_LIST_DIR}/view/abstractnotationpaintview.h

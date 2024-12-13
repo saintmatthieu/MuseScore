@@ -22,7 +22,6 @@
 #include "midiinputoutputcontroller.h"
 
 #include "midi/miditypes.h"
-#include "orchestrionsequencer/OrchestrionSequencerFactory.h"
 #include "engraving/dom/masterscore.h"
 
 #include "log.h"

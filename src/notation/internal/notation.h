@@ -31,8 +31,6 @@
 #include "../inotation.h"
 #include "igetscore.h"
 #include "../inotationconfiguration.h"
-#include "orchestrionsequencer/OrchestrionSequencer.h"
-#include "orchestrionsequencer/ComputerKeyboardMidiController.h"
 #include "playback/iplaybackcontroller.h"
 
 namespace mu::engraving {
@@ -99,8 +97,6 @@ protected:
     muse::async::Notification m_notationChanged;
 
 private:
-    void setLoopBoundariesEnabled(bool enabled) override;
-
     friend class NotationInteraction;
     friend class NotationPainting;
 
@@ -117,9 +113,6 @@ private:
     INotationMidiInputPtr m_midiInput = nullptr;
     INotationAccessibilityPtr m_accessibility = nullptr;
     INotationElementsPtr m_elements = nullptr;
-
-    std::unique_ptr<dgk::OrchestrionSequencer> m_orchestrionSequencer;
-    dgk::ComputerKeyboardMidiController m_orchestrionKeyboardController;
 };
 }
 

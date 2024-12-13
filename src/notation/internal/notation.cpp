@@ -38,7 +38,6 @@
 #include "notationmidiinput.h"
 #include "notationparts.h"
 #include "notationtypes.h"
-#include "orchestrionsequencer/OrchestrionSequencerFactory.h"
 
 #include "log.h"
 
@@ -46,13 +45,13 @@ using namespace mu::notation;
 using namespace mu::engraving;
 
 Notation::Notation(const muse::modularity::ContextPtr& iocCtx, mu::engraving::Score *score)
-    : muse::Injectable(iocCtx), m_orchestrionKeyboardController{m_orchestrionSequencer} {
+    : muse::Injectable(iocCtx) {
   m_painting = std::make_shared<NotationPainting>(this);
   m_viewState = std::make_shared<NotationViewState>(this);
   m_soloMuteState = std::make_shared<NotationSoloMuteState>();
   m_undoStack = std::make_shared<NotationUndoStack>(this, m_notationChanged);
-  m_interaction = std::make_shared<NotationInteraction>(this, m_undoStack, m_orchestrionKeyboardController);
-  m_midiInput = std::make_shared<NotationMidiInput>(this, m_interaction, m_undoStack, iocContext(), m_orchestrionSequencer);
+  m_interaction = std::make_shared<NotationInteraction>(this, m_undoStack);
+  m_midiInput = std::make_shared<NotationMidiInput>(this, m_interaction, m_undoStack, iocContext());
   m_accessibility = std::make_shared<NotationAccessibility>(this);
   m_parts = std::make_shared<NotationParts>(this, m_interaction, m_undoStack);
   m_style = std::make_shared<NotationStyle>(this, m_undoStack);
@@ -123,40 +122,6 @@ void Notation::setScore(Score* score)
     if (m_score == score) {
         return;
     }
-
-    playbackController()->isPlayAllowedChanged().onNotify(this, [&]() {
-      const auto &map = playbackController()->instrumentTrackIdMap();
-      if (map.empty()) {
-        m_orchestrionSequencer.reset();
-        return;
-      }
-      m_orchestrionSequencer =
-          dgk::OrchestrionSequencerFactory::CreateSequencer(
-              *m_score, *m_interaction, map,
-              [this](
-                  const std::variant<dgk::NoteEvents, dgk::PedalEvent> &event) {
-                if (std::holds_alternative<dgk::NoteEvents>(event)) {
-                  const auto &events = std::get<dgk::NoteEvents>(event);
-                  std::for_each(events.begin(), events.end(),
-                                [&](const dgk::NoteEvent &event) {
-                                  midiOutPort()->sendEvent(
-                                      dgk::ToMuseMidiEvent(event));
-                                });
-                } else if (std::holds_alternative<dgk::PedalEvent>(event)) {
-                  const auto &pedalEvent = std::get<dgk::PedalEvent>(event);
-                  midiOutPort()->sendEvent(dgk::ToMuseMidiEvent(pedalEvent));
-                }
-                synthResolver()->postEventVariant(m_orchestrionSequencer->track,
-                                                  event);
-              });
-      m_score->loopBoundaryTickChanged().onReceive(
-          this, [this](LoopBoundaryType type, auto tick) {
-            if (type == LoopBoundaryType::LoopIn)
-              m_orchestrionSequencer->loopLeftBoundary = tick;
-            else
-              m_orchestrionSequencer->loopRightBoundary = tick;
-          });
-    });
 
     m_score = score;
     m_scoreInited.notify();
@@ -277,12 +242,6 @@ bool Notation::hasVisibleParts() const
 void Notation::notifyAboutNotationChanged()
 {
     m_notationChanged.notify();
-}
-
-void Notation::setLoopBoundariesEnabled(bool enabled) {
-  if (m_orchestrionSequencer) {
-    m_orchestrionSequencer->loopEnabled = enabled;
-  }
 }
 
 void Notation::setViewMode(const ViewMode& viewMode)

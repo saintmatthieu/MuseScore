@@ -1,11 +1,15 @@
 #pragma once
 
+#include "IOrchestrionSequencer.h"
 #include "OrchestrionTypes.h"
 #include "internal/VoiceSequencer.h"
 #include <array>
+#include <async/asyncable.h>
 #include <chrono>
+#include <context/iglobalcontext.h>
 #include <functional>
 #include <memory>
+#include <modularity/ioc.h>
 #include <mutex>
 #include <queue>
 #include <random>
@@ -14,22 +18,23 @@
 #include <variant>
 #include <vector>
 
-namespace dgk {
-class OrchestrionSequencer {
+namespace dgk
+{
+class OrchestrionSequencer : public IOrchestrionSequencer,
+                             public muse::Injectable,
+                             public muse::async::Asyncable
+{
+  muse::Inject<mu::context::IGlobalContext> globalContext;
+
 public:
-  using MidiOutCb =
-      std::function<void(const std::variant<NoteEvents, PedalEvent> &)>;
   OrchestrionSequencer(int track, Staff rightHand, Staff leftHand,
                        PedalSequence, MidiOutCb);
   ~OrchestrionSequencer();
-  void OnInputEvent(const NoteEvent &inputEvent);
-  //! Returns noteoffs that were pending.
-  void GoToTick(int tick);
 
-  const int track;
-  bool loopEnabled = false;
-  int loopLeftBoundary = 0;
-  std::optional<int> loopRightBoundary;
+  void OnInputEvent(const NoteEvent &inputEvent) override;
+  //! Returns noteoffs that were pending.
+  void GoToTick(int tick) override;
+  int GetTrack() const override;
 
   using Hand = std::vector<std::unique_ptr<VoiceSequencer>>;
 
@@ -37,12 +42,14 @@ private:
   using OptTimePoint =
       std::optional<std::chrono::time_point<std::chrono::steady_clock>>;
 
-  template <typename EventType> struct QueueEntry {
+  template <typename EventType> struct QueueEntry
+  {
     OptTimePoint time;
     EventType event;
   };
 
-  template <typename EventType> struct ThreadMembers {
+  template <typename EventType> struct ThreadMembers
+  {
     std::queue<QueueEntry<EventType>> queue;
     std::mutex mutex;
     std::condition_variable cv;
@@ -56,6 +63,8 @@ private:
   void OnInputEventRecursive(const NoteEvent &inputEvent, bool loop);
   void PostPedalEvent(PedalEvent event);
   void PostNoteEvents(NoteEvents events);
+
+  const int m_track;
 
   Hand m_rightHand;
   Hand m_leftHand;

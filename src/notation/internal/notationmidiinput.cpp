@@ -31,9 +31,10 @@
 #include "engraving/dom/rest.h"
 #include "engraving/dom/factory.h"
 #include "engraving/types/fraction.h"
-#include "orchestrionsequencer/OrchestrionSequencerFactory.h"
 
 #include "notationtypes.h"
+#include "orchestrionsequencer/OrchestrionTypes.h"
+#include "orchestrionsequencer/IOrchestrionSequencer.h"
 
 #include "defer.h"
 #include "log.h"
@@ -44,9 +45,22 @@ using namespace mu::notation;
 
 static constexpr int PROCESS_INTERVAL = 20;
 
+namespace {
+dgk::NoteEvent ToDgkNoteEvent(const muse::midi::Event &museEvent)
+{
+  const auto type = museEvent.opcode() == muse::midi::Event::Opcode::NoteOn
+                        ? dgk::NoteEvent::Type::noteOn
+                        : dgk::NoteEvent::Type::noteOff;
+  const int channel = museEvent.channel();
+  const int pitch = museEvent.note();
+  const float velocity = museEvent.velocity() / 128.0f;
+  return dgk::NoteEvent{type, channel, pitch, velocity};
+}
+}
+
 NotationMidiInput::NotationMidiInput(IGetScore* getScore, INotationInteractionPtr notationInteraction,
-                                     INotationUndoStackPtr undoStack, const muse::modularity::ContextPtr& iocCtx, const std::unique_ptr<dgk::OrchestrionSequencer>& orchestrion)
-    : m_getScore(getScore), m_notationInteraction(notationInteraction), m_undoStack(undoStack), m_orchestrion(orchestrion)
+                                     INotationUndoStackPtr undoStack, const muse::modularity::ContextPtr& iocCtx)
+    : m_getScore(getScore), m_notationInteraction(notationInteraction), m_undoStack(undoStack)
 {
     QObject::connect(&m_processTimer, &QTimer::timeout, [this]() { doProcessEvents(); });
 
@@ -73,7 +87,8 @@ void NotationMidiInput::onMidiEventReceived(const muse::midi::Event& event)
         event.opcode() != muse::midi::Event::Opcode::NoteOff)
       return;
 
-    m_orchestrion->OnInputEvent(dgk::ToDgkNoteEvent(event));
+    if (auto sequencer = orchestrion()->sequencer())
+        sequencer->OnInputEvent(ToDgkNoteEvent(event));
 }
 
 muse::async::Channel<std::vector<const Note*> > NotationMidiInput::notesReceived() const
@@ -106,7 +121,8 @@ void NotationMidiInput::onRealtimeAdvance()
 void NotationMidiInput::rewind() {
   playbackController()->seekBeat(0, 0);
   score()->deselectAll();
-  m_orchestrion->GoToTick(0);
+  if (auto sequencer = orchestrion()->sequencer())
+    sequencer->GoToTick(0);
 }
 
 void NotationMidiInput::goToElement(EngravingItem *el) {
@@ -114,7 +130,8 @@ void NotationMidiInput::goToElement(EngravingItem *el) {
   if (!note) {
     return;
   }
-  m_orchestrion->GoToTick(note->tick().ticks());
+  if (auto sequencer = orchestrion()->sequencer())
+    sequencer->GoToTick(note->tick().ticks());
 }
 
 mu::engraving::Score* NotationMidiInput::score() const

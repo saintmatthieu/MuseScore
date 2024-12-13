@@ -30,10 +30,6 @@
 #include "isynthesizer.h"
 #include "audiotypes.h"
 
-namespace dgk {
-struct NoteEvent;
-}
-
 namespace muse::audio::synth {
 class ISynthResolver : MODULE_EXPORT_INTERFACE
 {

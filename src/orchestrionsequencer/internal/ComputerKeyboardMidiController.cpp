@@ -1,11 +1,15 @@
 #include "ComputerKeyboardMidiController.h"
 #include "OrchestrionSequencer.h"
 
-namespace dgk {
+namespace dgk
+{
 
-namespace {
-auto letterToMidiPitch(char letter) {
-  switch (letter) {
+namespace
+{
+auto letterToMidiPitch(char letter)
+{
+  switch (letter)
+  {
   case 'y':
     return 58;
   case 'x':
@@ -20,11 +24,8 @@ auto letterToMidiPitch(char letter) {
 }
 } // namespace
 
-ComputerKeyboardMidiController::ComputerKeyboardMidiController(
-    const std::unique_ptr<OrchestrionSequencer> &orchestrion)
-    : m_orchestrion{orchestrion} {}
-
-void ComputerKeyboardMidiController::onAltPlusLetter(char letter) {
+void ComputerKeyboardMidiController::onAltPlusLetter(char letter)
+{
   if (m_pressedLetters.count(letter) > 0)
     // An auto-repeat event probably, the user keeping the finger pressed on
     // a key.
@@ -37,16 +38,17 @@ void ComputerKeyboardMidiController::onAltPlusLetter(char letter) {
   if (evt.pitch == 0)
     return;
   m_pressedLetters.insert(letter);
-  m_orchestrion->OnInputEvent(evt);
+  orchestrionSequencer()->OnInputEvent(evt);
 }
 
-void ComputerKeyboardMidiController::onReleasedLetter(char letter) {
+void ComputerKeyboardMidiController::onReleasedLetter(char letter)
+{
   m_pressedLetters.erase(letter);
   NoteEvent evt;
   evt.type = NoteEvent::Type::noteOff;
   evt.velocity = 0.f;
   evt.pitch = letterToMidiPitch(letter);
   if (evt.pitch != 0)
-    m_orchestrion->OnInputEvent(evt);
+    orchestrionSequencer()->OnInputEvent(evt);
 }
 } // namespace dgk

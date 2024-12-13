@@ -3,9 +3,12 @@
 #include <iterator>
 #include <numeric>
 
-namespace dgk {
-namespace {
-auto MakeHand(Staff staff) {
+namespace dgk
+{
+namespace
+{
+auto MakeHand(Staff staff)
+{
   OrchestrionSequencer::Hand hand;
   for (auto &[voice, sequence] : staff)
     hand.emplace_back(
@@ -14,7 +17,8 @@ auto MakeHand(Staff staff) {
 }
 
 auto MakeAllVoices(const OrchestrionSequencer::Hand &rightHand,
-                   const OrchestrionSequencer::Hand &leftHand) {
+                   const OrchestrionSequencer::Hand &leftHand)
+{
   std::vector<const VoiceSequencer *> allVoices;
   allVoices.reserve(rightHand.size() + leftHand.size());
   std::transform(rightHand.begin(), rightHand.end(),
@@ -28,51 +32,61 @@ auto MakeAllVoices(const OrchestrionSequencer::Hand &rightHand,
 } // namespace
 
 template <typename EventType>
-std::thread
-OrchestrionSequencer::MakeThread(OrchestrionSequencer &self,
-                                 ThreadMembers<EventType> &m,
-                                 std::function<void(EventType)> cb) {
-  return std::thread{[&, cb = cb] {
-    while (true) {
-      std::vector<QueueEntry<EventType>> entries;
+std::thread OrchestrionSequencer::MakeThread(OrchestrionSequencer &self,
+                                             ThreadMembers<EventType> &m,
+                                             std::function<void(EventType)> cb)
+{
+  return std::thread{
+      [&, cb = cb]
       {
-        std::unique_lock lock{m.mutex};
-        m.cv.wait(lock, [&] { return !m.queue.empty() || self.m_finished; });
-        if (self.m_finished)
-          return;
-        while (!m.queue.empty()) {
-          entries.push_back(m.queue.front());
-          m.queue.pop();
+        while (true)
+        {
+          std::vector<QueueEntry<EventType>> entries;
+          {
+            std::unique_lock lock{m.mutex};
+            m.cv.wait(lock,
+                      [&] { return !m.queue.empty() || self.m_finished; });
+            if (self.m_finished)
+              return;
+            while (!m.queue.empty())
+            {
+              entries.push_back(m.queue.front());
+              m.queue.pop();
+            }
+          }
+          for (auto &entry : entries)
+          {
+            if (entry.time.has_value())
+              std::this_thread::sleep_until(*entry.time);
+            cb(std::move(entry.event));
+          }
         }
-      }
-      for (auto &entry : entries) {
-        if (entry.time.has_value())
-          std::this_thread::sleep_until(*entry.time);
-        cb(std::move(entry.event));
-      }
-    }
-  }};
+      }};
 }
 
 OrchestrionSequencer::OrchestrionSequencer(int track, Staff rightHand,
                                            Staff leftHand,
                                            PedalSequence pedalSequence,
                                            MidiOutCb cb)
-    : track{track}, m_rightHand{MakeHand(std::move(rightHand))},
-      m_leftHand{MakeHand(std::move(leftHand))}, m_allVoices{MakeAllVoices(
-                                                     m_rightHand, m_leftHand)},
+    : m_track{track}, m_rightHand{MakeHand(std::move(rightHand))},
+      m_leftHand{MakeHand(std::move(leftHand))},
+      m_allVoices{MakeAllVoices(m_rightHand, m_leftHand)},
       m_pedalSequence{std::move(pedalSequence)},
       m_pedalSequenceIt{m_pedalSequence.begin()}, m_cb{std::move(cb)},
-      m_pedalThread{
-          MakeThread<PedalEvent>(*this, m_pedalThreadMembers,
-                                 [this](PedalEvent event) { m_cb(event); })},
-      m_noteThread{MakeThread<NoteEvent>(
-          *this, m_noteThreadMembers,
-          [this](NoteEvent event) { m_cb(NoteEvents{event}); })} {}
+      m_pedalThread{MakeThread<PedalEvent>(*this, m_pedalThreadMembers,
+                                           [this](PedalEvent event)
+                                           { m_cb(event); })},
+      m_noteThread{MakeThread<NoteEvent>(*this, m_noteThreadMembers,
+                                         [this](NoteEvent event)
+                                         { m_cb(NoteEvents{event}); })}
+{
+}
 
-OrchestrionSequencer::~OrchestrionSequencer() {
-  if (m_pedalDown) {
-    PostPedalEvent(PedalEvent{track, false});
+OrchestrionSequencer::~OrchestrionSequencer()
+{
+  if (m_pedalDown)
+  {
+    PostPedalEvent(PedalEvent{m_track, false});
     using namespace std::chrono_literals;
     std::this_thread::sleep_for(100ms);
   }
@@ -83,12 +97,15 @@ OrchestrionSequencer::~OrchestrionSequencer() {
   m_noteThread.join();
 }
 
-namespace {
+namespace
+{
 auto GetNextNoteonTick(const OrchestrionSequencer::Hand &hand,
-                       NoteEvent::Type type) {
+                       NoteEvent::Type type)
+{
   return std::accumulate(
       hand.begin(), hand.end(), std::optional<dgk::Tick>{},
-      [&](const auto &acc, const auto &voice) {
+      [&](const auto &acc, const auto &voice)
+      {
         const auto tick = voice->GetNextTick(type);
         return tick.has_value()
                    ? std::make_optional(std::min(acc.value_or(*tick), *tick))
@@ -97,13 +114,21 @@ auto GetNextNoteonTick(const OrchestrionSequencer::Hand &hand,
 }
 } // namespace
 
-void OrchestrionSequencer::OnInputEvent(const NoteEvent &input) {
+void OrchestrionSequencer::OnInputEvent(const NoteEvent &input)
+{
 
-  if (input.type == NoteEvent::Type::noteOn) {
+  if (input.type == NoteEvent::Type::noteOn)
+  {
     m_pressedKeys.insert(input.pitch);
-  } else if (m_pressedKeys.count(input.pitch))
+  }
+  else if (m_pressedKeys.count(input.pitch))
     m_pressedKeys.erase(input.pitch);
 
+  const auto loopEnabled = globalContext()
+                               ->currentMasterNotation()
+                               ->playback()
+                               ->loopBoundaries()
+                               .enabled;
   OnInputEventRecursive(input, loopEnabled);
 
   // Make sure to release the pedal if we've reached the end of this part.
@@ -111,48 +136,54 @@ void OrchestrionSequencer::OnInputEvent(const NoteEvent &input) {
       !GetNextNoteonTick(m_rightHand, NoteEvent::Type::noteOff) &&
       !GetNextNoteonTick(m_leftHand, NoteEvent::Type::noteOff) &&
       input.type == NoteEvent::Type::noteOff && m_pressedKeys.empty())
-    PostPedalEvent(PedalEvent{track, false});
+    PostPedalEvent(PedalEvent{m_track, false});
 }
 
-namespace {
+namespace
+{
 void Append(dgk::NoteEvents &output, const std::vector<int> &notes, int voice,
-            float velocity, NoteEvent::Type type) {
+            float velocity, NoteEvent::Type type)
+{
   std::transform(notes.begin(), notes.end(), std::back_inserter(output),
-                 [&](int note) {
-                   return NoteEvent{type, voice, note, velocity};
-                 });
+                 [&](int note)
+                 { return NoteEvent{type, voice, note, velocity}; });
 }
 
-auto GetFinalTick(const std::vector<const VoiceSequencer *> &voices) {
+auto GetFinalTick(const std::vector<const VoiceSequencer *> &voices)
+{
   return voices.empty()
              ? dgk::Tick{0, 0}
-             : (*std::max_element(voices.begin(), voices.end(),
-                                  [](const VoiceSequencer *a,
-                                     const VoiceSequencer *b) -> bool {
-                                    return a->GetFinalTick() <
-                                           b->GetFinalTick();
-                                  }))
+             : (*std::max_element(
+                    voices.begin(), voices.end(),
+                    [](const VoiceSequencer *a, const VoiceSequencer *b) -> bool
+                    { return a->GetFinalTick() < b->GetFinalTick(); }))
                    ->GetFinalTick();
 }
 } // namespace
 
 void OrchestrionSequencer::OnInputEventRecursive(const NoteEvent &input,
-                                                 bool loop) {
+                                                 bool loop)
+{
 
   auto &hand =
       input.pitch < 60 && !m_leftHand.empty() ? m_leftHand : m_rightHand;
   const auto cursorTick =
       GetNextNoteonTick(hand, input.type).value_or(GetFinalTick(m_allVoices));
 
+  const auto &loopBoundaries =
+      globalContext()->currentMasterNotation()->playback()->loopBoundaries();
+
   if (loop && input.type == NoteEvent::Type::noteOn &&
-      loopRightBoundary.has_value() &&
-      cursorTick.withoutRepeats >= *loopRightBoundary) {
-    GoToTick(loopLeftBoundary);
+      loopBoundaries.loopOutTick > 0 &&
+      cursorTick.withoutRepeats >= loopBoundaries.loopOutTick)
+  {
+    GoToTick(loopBoundaries.loopInTick);
     return OnInputEventRecursive(input, false);
   }
 
   std::vector<NoteEvent> output;
-  for (auto &voiceSequencer : hand) {
+  for (auto &voiceSequencer : hand)
+  {
     const auto next =
         voiceSequencer->OnInputEvent(input.type, input.pitch, cursorTick);
     output.reserve(output.size() + next.noteOffs.size() + next.noteOns.size());
@@ -168,7 +199,8 @@ void OrchestrionSequencer::OnInputEventRecursive(const NoteEvent &input,
   // For the pedal we wait on the slowest of both hands.
   const auto leastPedalTick = std::accumulate(
       m_allVoices.begin(), m_allVoices.end(), std::optional<dgk::Tick>{},
-      [&](const auto &acc, const VoiceSequencer *voice) {
+      [&](const auto &acc, const VoiceSequencer *voice)
+      {
         const auto tick = voice->GetTickForPedal();
         return tick.has_value()
                    ? std::make_optional(acc.has_value() ? std::min(*acc, *tick)
@@ -180,31 +212,37 @@ void OrchestrionSequencer::OnInputEventRecursive(const NoteEvent &input,
   const auto newPedalSequenceIt =
       leastPedalTick.has_value()
           ? std::find_if(m_pedalSequenceIt, m_pedalSequence.end(),
-                         [&](const auto &item) {
-                           return item.tick > leastPedalTick->withRepeats;
-                         })
+                         [&](const auto &item)
+                         { return item.tick > leastPedalTick->withRepeats; })
           : m_pedalSequence.end();
-  if (newPedalSequenceIt > m_pedalSequenceIt) {
-    if (input.type == NoteEvent::Type::noteOff) {
+  if (newPedalSequenceIt > m_pedalSequenceIt)
+  {
+    if (input.type == NoteEvent::Type::noteOff)
+    {
       // Just a release.
-      PostPedalEvent(PedalEvent{track, false});
-    } else {
+      PostPedalEvent(PedalEvent{m_track, false});
+    }
+    else
+    {
       const auto &item = *(newPedalSequenceIt - 1);
-      PostPedalEvent(PedalEvent{track, item.down});
+      PostPedalEvent(PedalEvent{m_track, item.down});
       m_pedalSequenceIt = newPedalSequenceIt;
     }
   }
 }
 
-void OrchestrionSequencer::GoToTick(int tick) {
-
+void OrchestrionSequencer::GoToTick(int tick)
+{
   std::vector<NoteEvent> output;
-  for (auto hand : {&m_rightHand, &m_leftHand}) {
-    for (auto &sequencer : *hand) {
+  for (auto hand : {&m_rightHand, &m_leftHand})
+  {
+    for (auto &sequencer : *hand)
+    {
       const auto next = sequencer->GoToTick(tick);
       output.reserve(output.size() + next.size());
       std::transform(next.begin(), next.end(), std::back_inserter(output),
-                     [&](int note) {
+                     [&](int note)
+                     {
                        return NoteEvent{NoteEvent::Type::noteOff,
                                         sequencer->voice, note, 0.f};
                      });
@@ -213,15 +251,19 @@ void OrchestrionSequencer::GoToTick(int tick) {
   if (!output.empty())
     m_cb(output);
 
-  m_cb(PedalEvent{track, false});
+  m_cb(PedalEvent{m_track, false});
   m_pedalSequenceIt = std::lower_bound(
       m_pedalSequence.begin(), m_pedalSequence.end(), tick,
       [](const auto &item, int tick) { return item.tick < tick; });
 }
 
-void OrchestrionSequencer::PostPedalEvent(PedalEvent event) {
+int OrchestrionSequencer::GetTrack() const { return m_track; }
+
+void OrchestrionSequencer::PostPedalEvent(PedalEvent event)
+{
   OptTimePoint actionTime;
-  if (event.on) {
+  if (event.on)
+  {
     using namespace std::chrono_literals;
     // Delay a bit actioning the pedal so that, if it were just released, the
     // dampers have time to dampen the notes.
@@ -234,7 +276,7 @@ void OrchestrionSequencer::PostPedalEvent(PedalEvent event) {
     if (event.on && m_pedalDown)
       // Always insert a pedal off event between two pedal on events.
       m.queue.emplace(
-          QueueEntry<PedalEvent>{std::nullopt, PedalEvent{track, false}});
+          QueueEntry<PedalEvent>{std::nullopt, PedalEvent{m_track, false}});
     m.queue.emplace(QueueEntry<PedalEvent>{actionTime, std::move(event)});
   }
 
@@ -242,15 +284,16 @@ void OrchestrionSequencer::PostPedalEvent(PedalEvent event) {
   m_pedalDown = event.on;
 }
 
-void OrchestrionSequencer::PostNoteEvents(NoteEvents events) {
+void OrchestrionSequencer::PostNoteEvents(NoteEvents events)
+{
 
   using namespace std::chrono;
 
   const auto numNoteons =
-      std::count_if(events.begin(), events.end(), [](const auto &event) {
-        return event.type == NoteEvent::Type::noteOn;
-      });
-  if (numNoteons < 2) {
+      std::count_if(events.begin(), events.end(), [](const auto &event)
+                    { return event.type == NoteEvent::Type::noteOn; });
+  if (numNoteons < 2)
+  {
     m_cb(events);
     return;
   }
@@ -269,7 +312,8 @@ void OrchestrionSequencer::PostNoteEvents(NoteEvents events) {
   std::vector<QueueEntry<NoteEvent>> entries;
   entries.reserve(events.size());
   const auto now = steady_clock::now();
-  for (auto i = 0u; i < events.size(); ++i) {
+  for (auto i = 0u; i < events.size(); ++i)
+  {
     auto &event = events[i];
     event.velocity =
         std::clamp(event.velocity * m_velocityDist(m_rng) / 100, 0.f, 1.f);

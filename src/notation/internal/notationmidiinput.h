@@ -35,7 +35,7 @@
 #include "inotationinteraction.h"
 #include "inotationundostack.h"
 #include "dom/repeatList.h"
-#include "orchestrionsequencer/OrchestrionSequencer.h"
+#include "orchestrionsequencer/IOrchestrion.h"
 
 #include <array>
 
@@ -50,13 +50,13 @@ class NotationMidiInput : public INotationMidiInput, public muse::Injectable
     muse::Inject<muse::actions::IActionsDispatcher> dispatcher = { this };
     muse::Inject<INotationConfiguration> configuration = { this };
     muse::Inject<muse::midi::IMidiOutPort> midiOutPort = { this };
+    muse::Inject<dgk::IOrchestrion> orchestrion = { this };
 
 public:
   NotationMidiInput(IGetScore *getScore,
                     INotationInteractionPtr notationInteraction,
                     INotationUndoStackPtr undoStack,
-                      const muse::modularity::ContextPtr& iocCtx,
-                    const std::unique_ptr<dgk::OrchestrionSequencer> &);
+                      const muse::modularity::ContextPtr& iocCtx);
 
     void onMidiEventReceived(const muse::midi::Event& event) override;
     muse::async::Channel<std::vector<const Note*> > notesReceived() const override;
@@ -102,8 +102,6 @@ private:
     bool m_allowRealtimeRests = false;
 
     bool m_shouldDisableMetronome = false;
-
-    const std::unique_ptr<dgk::OrchestrionSequencer>& m_orchestrion;
 };
 }
 
