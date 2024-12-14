@@ -80,6 +80,7 @@ OrchestrionSequencer::OrchestrionSequencer(int track, Staff rightHand,
                                          [this](NoteEvent event)
                                          { m_cb(NoteEvents{event}); })}
 {
+  dispatcher()->reg(this, "nav-first-control", [this] { GoToTick(0); });
 }
 
 OrchestrionSequencer::~OrchestrionSequencer()

@@ -3,6 +3,8 @@
 #include "IOrchestrionSequencer.h"
 #include "OrchestrionTypes.h"
 #include "internal/VoiceSequencer.h"
+#include <actions/actionable.h>
+#include <actions/iactionsdispatcher.h>
 #include <array>
 #include <async/asyncable.h>
 #include <chrono>
@@ -22,9 +24,11 @@ namespace dgk
 {
 class OrchestrionSequencer : public IOrchestrionSequencer,
                              public muse::Injectable,
-                             public muse::async::Asyncable
+                             public muse::async::Asyncable,
+                             public muse::actions::Actionable
 {
   muse::Inject<mu::context::IGlobalContext> globalContext;
+  muse::Inject<muse::actions::IActionsDispatcher> dispatcher;
 
 public:
   OrchestrionSequencer(int track, Staff rightHand, Staff leftHand,

@@ -44,54 +44,59 @@
 using namespace mu::notation;
 using namespace mu::engraving;
 
-Notation::Notation(const muse::modularity::ContextPtr& iocCtx, mu::engraving::Score *score)
-    : muse::Injectable(iocCtx) {
-  m_painting = std::make_shared<NotationPainting>(this);
-  m_viewState = std::make_shared<NotationViewState>(this);
-  m_soloMuteState = std::make_shared<NotationSoloMuteState>();
-  m_undoStack = std::make_shared<NotationUndoStack>(this, m_notationChanged);
-  m_interaction = std::make_shared<NotationInteraction>(this, m_undoStack);
-  m_midiInput = std::make_shared<NotationMidiInput>(this, m_interaction, m_undoStack, iocContext());
-  m_accessibility = std::make_shared<NotationAccessibility>(this);
-  m_parts = std::make_shared<NotationParts>(this, m_interaction, m_undoStack);
-  m_style = std::make_shared<NotationStyle>(this, m_undoStack);
-  m_elements = std::make_shared<NotationElements>(this);
+Notation::Notation(const muse::modularity::ContextPtr& iocCtx, mu::engraving::Score* score)
+    : muse::Injectable(iocCtx)
+{
+    m_painting = std::make_shared<NotationPainting>(this);
+    m_viewState = std::make_shared<NotationViewState>(this);
+    m_soloMuteState = std::make_shared<NotationSoloMuteState>();
+    m_undoStack = std::make_shared<NotationUndoStack>(this, m_notationChanged);
+    m_interaction = std::make_shared<NotationInteraction>(this, m_undoStack);
+    m_midiInput = std::make_shared<NotationMidiInput>(this, m_interaction, m_undoStack, iocContext());
+    m_accessibility = std::make_shared<NotationAccessibility>(this);
+    m_parts = std::make_shared<NotationParts>(this, m_interaction, m_undoStack);
+    m_style = std::make_shared<NotationStyle>(this, m_undoStack);
+    m_elements = std::make_shared<NotationElements>(this);
 
-  m_interaction->noteInput()->noteAdded().onNotify(
-      this, [this]() { notifyAboutNotationChanged(); });
-
-  m_interaction->dragChanged().onNotify(
-      this, [this]() { notifyAboutNotationChanged(); });
-
-  m_interaction->textEditingChanged().onNotify(
-      this, [this]() { notifyAboutNotationChanged(); });
-
-  m_interaction->dropChanged().onNotify(
-      this, [this]() { notifyAboutNotationChanged(); });
-
-  m_midiInput->notesReceived().onReceive(
-      this, [this](const std::vector<const Note *> &) {
+    m_interaction->noteInput()->noteAdded().onNotify(this, [this]() {
         notifyAboutNotationChanged();
-      });
+    });
 
-  m_style->styleChanged().onNotify(this,
-                                   [this]() { notifyAboutNotationChanged(); });
+    m_interaction->dragChanged().onNotify(this, [this]() {
+        notifyAboutNotationChanged();
+    });
 
-  m_parts->partsChanged().onNotify(this,
-                                   [this]() { notifyAboutNotationChanged(); });
+    m_interaction->textEditingChanged().onNotify(this, [this]() {
+        notifyAboutNotationChanged();
+    });
 
-  engravingConfiguration()->selectionColorChanged().onReceive(
-      this,
-      [this](int, const muse::draw::Color &) { notifyAboutNotationChanged(); });
+    m_interaction->dropChanged().onNotify(this, [this]() {
+        notifyAboutNotationChanged();
+    });
 
-  configuration()->canvasOrientation().ch.onReceive(
-      this, [this](muse::Orientation) {
+    m_midiInput->notesReceived().onReceive(this, [this](const std::vector<const Note*>&){
+        notifyAboutNotationChanged();
+    });
+
+    m_style->styleChanged().onNotify(this, [this]() {
+        notifyAboutNotationChanged();
+    });
+
+    m_parts->partsChanged().onNotify(this, [this]() {
+        notifyAboutNotationChanged();
+    });
+
+    engravingConfiguration()->selectionColorChanged().onReceive(this, [this](int, const muse::draw::Color&) {
+        notifyAboutNotationChanged();
+    });
+
+    configuration()->canvasOrientation().ch.onReceive(this, [this](muse::Orientation) {
         if (m_score && m_score->autoLayoutEnabled()) {
-          m_score->doLayout();
+            m_score->doLayout();
         }
-      });
+    });
 
-  setScore(score);
+    setScore(score);
 }
 
 Notation::~Notation()
@@ -110,11 +115,6 @@ Notation::~Notation()
     //! NOTE: The master score will be deleted later from ~EngravingProject()
     //! Its excerpts will be deleted directly in ~MasterScore()
     m_score = nullptr;
-}
-
-void Notation::rewind()
-{
-    m_midiInput->rewind();
 }
 
 void Notation::setScore(Score* score)

@@ -52,8 +52,6 @@ public:
     explicit Notation(const muse::modularity::ContextPtr& iocCtx, engraving::Score* score = nullptr);
     ~Notation() override;
 
-    void rewind() override;
-
     QString name() const override;
     QString projectName() const override;
     QString projectNameAndPartName() const override;

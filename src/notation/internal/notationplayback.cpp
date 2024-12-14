@@ -20,7 +20,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "notationplayback.h"
-#include "notation.h"
 
 #include <cmath>
 
@@ -54,9 +53,9 @@ using namespace muse::async;
 
 static constexpr double PLAYBACK_TAIL_SECS = 3;
 
-NotationPlayback::NotationPlayback(IGetScore* getScore, INotation* notation,
+NotationPlayback::NotationPlayback(IGetScore* getScore,
                                    muse::async::Notification notationChanged)
-    : m_getScore(getScore), m_notation(notation), m_notationChanged(notationChanged)
+    : m_getScore(getScore), m_notationChanged(notationChanged)
 {
     m_notationChanged.onNotify(this, [this]() {
         updateLoopBoundaries();
@@ -67,8 +66,6 @@ mu::engraving::Score* NotationPlayback::score() const
 {
     return m_getScore->score();
 }
-
-void NotationPlayback::rewind() { m_notation->rewind(); }
 
 void NotationPlayback::init()
 {

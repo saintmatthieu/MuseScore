@@ -118,13 +118,6 @@ void NotationMidiInput::onRealtimeAdvance()
     }
 }
 
-void NotationMidiInput::rewind() {
-  playbackController()->seekBeat(0, 0);
-  score()->deselectAll();
-  if (auto sequencer = orchestrion()->sequencer())
-    sequencer->GoToTick(0);
-}
-
 void NotationMidiInput::goToElement(EngravingItem *el) {
   auto note = dynamic_cast<Note*>(el);
   if (!note) {

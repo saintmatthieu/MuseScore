@@ -28,7 +28,6 @@
 #include "playback/iplaybackcontroller.h"
 #include "inotationconfiguration.h"
 #include "actions/iactionsdispatcher.h"
-#include "midi/imidioutport.h"
 
 #include "../inotationmidiinput.h"
 #include "igetscore.h"
@@ -49,7 +48,6 @@ class NotationMidiInput : public INotationMidiInput, public muse::Injectable
     muse::Inject<playback::IPlaybackController> playbackController = { this };
     muse::Inject<muse::actions::IActionsDispatcher> dispatcher = { this };
     muse::Inject<INotationConfiguration> configuration = { this };
-    muse::Inject<muse::midi::IMidiOutPort> midiOutPort = { this };
     muse::Inject<dgk::IOrchestrion> orchestrion = { this };
 
 public:
@@ -66,7 +64,6 @@ public:
 private:
     void goToElement(EngravingItem *el) override;
 
-    void rewind() override;
     mu::engraving::Score* score() const;
 
     void doProcessEvents();
