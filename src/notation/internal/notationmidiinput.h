@@ -62,8 +62,6 @@ public:
   void onRealtimeAdvance() override;
 
 private:
-    void goToElement(EngravingItem *el) override;
-
     mu::engraving::Score* score() const;
 
     void doProcessEvents();

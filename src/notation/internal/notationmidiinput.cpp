@@ -118,15 +118,6 @@ void NotationMidiInput::onRealtimeAdvance()
     }
 }
 
-void NotationMidiInput::goToElement(EngravingItem *el) {
-  auto note = dynamic_cast<Note*>(el);
-  if (!note) {
-    return;
-  }
-  if (auto sequencer = orchestrion()->sequencer())
-    sequencer->GoToTick(note->tick().ticks());
-}
-
 mu::engraving::Score* NotationMidiInput::score() const
 {
     IF_ASSERT_FAILED(m_getScore) {

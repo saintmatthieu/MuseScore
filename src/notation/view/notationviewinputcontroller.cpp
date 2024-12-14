@@ -30,6 +30,7 @@
 #include "log.h"
 #include "commonscene/commonscenetypes.h"
 #include "abstractelementpopupmodel.h"
+#include "orchestrionsequencer/IOrchestrionSequencer.h"
 
 using namespace mu;
 using namespace mu::notation;
@@ -737,9 +738,12 @@ void NotationViewInputController::handleLeftClick(const ClickContext& ctx)
         return;
     }
 
-    if (ctx.hitElement->isPlayable()) {
-        // playbackController()->playElements({ ctx.hitElement });
-        viewInteraction()->goToElement(ctx.hitElement);
+    // if (ctx.hitElement->isPlayable()) {
+    //     paybackController()->playElements({ ctx.hitElement });
+    // }
+
+    if (auto note = dynamic_cast<Note*>(ctx.hitElement)) {
+        orchestrion()->sequencer()->GoToTick(note->tick().ticks());
     }
 
     if (viewInteraction()->isTextSelected()) {

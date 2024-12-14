@@ -179,10 +179,9 @@ inline QString extractSyllable(const QString& text)
     return _text.mid(textPos, splitPos - textPos);
 }
 
-NotationInteraction::NotationInteraction(
-    Notation *notation, INotationUndoStackPtr undoStack)
-    : muse::Injectable(notation->iocContext()), m_notation(notation), m_undoStack(undoStack),
-      m_editData(&m_scoreCallbacks) {
+NotationInteraction::NotationInteraction(Notation* notation, INotationUndoStackPtr undoStack)
+    : muse::Injectable(notation->iocContext()), m_notation(notation), m_undoStack(undoStack), m_editData(&m_scoreCallbacks)
+{
     m_noteInput = std::make_shared<NotationNoteInput>(notation, this, m_undoStack, iocContext());
     m_selection = std::make_shared<NotationSelection>(notation);
 
@@ -461,10 +460,6 @@ EngravingItem* NotationInteraction::hitElement(const PointF& pos, float width) c
 Staff* NotationInteraction::hitStaff(const PointF& pos) const
 {
     return hitMeasure(pos).staff;
-}
-
-void NotationInteraction::goToElement(EngravingItem *element) {
-  m_notation->midiInput()->goToElement(element);
 }
 
 mu::engraving::Page* NotationInteraction::point2page(const PointF& p, bool useNearestPage) const

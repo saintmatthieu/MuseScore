@@ -42,10 +42,6 @@ public:
     MOCK_METHOD(std::vector<EngravingItem*>, hitElements, (const muse::PointF&, float), (const, override));
     MOCK_METHOD(Staff*, hitStaff, (const muse::PointF&), (const, override));
 
-    MOCK_METHOD(void, goToElement, (EngravingItem* element), (override));
-    MOCK_METHOD(void, onAltPlusLetter, (char letter), (override));
-    MOCK_METHOD(void, onReleasedLetter, (char letter), (override));
-
     MOCK_METHOD(const HitElementContext&, hitElementContext, (), (const, override));
     MOCK_METHOD(void, setHitElementContext, (const HitElementContext&), (override));
 
