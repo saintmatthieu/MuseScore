@@ -43,7 +43,6 @@ struct RenderingContext {
     int nominalPositionEndTick = 0;
     int nominalDurationTicks = 0;
     int positionTickOffset = 0;
-    bool isRightHand = true;
 
     BeatsPerSecond beatsPerSecond = 0;
     TimeSigFrac timeSignatureFraction;

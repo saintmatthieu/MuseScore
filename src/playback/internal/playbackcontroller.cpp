@@ -310,7 +310,7 @@ void PlaybackController::setTrackSoloMuteState(const InstrumentTrackId& trackId,
     m_notation->soloMuteState()->setTrackSoloMuteState(trackId, state);
 }
 
-void PlaybackController::playElements(const std::vector<const notation::EngravingItem*>& elements, notation::NotePerformanceAttributeMap performanceAttributes)
+void PlaybackController::playElements(const std::vector<const notation::EngravingItem*>& elements)
 {
     IF_ASSERT_FAILED(notationPlayback()) {
         return;
@@ -345,7 +345,7 @@ void PlaybackController::playElements(const std::vector<const notation::Engravin
         elementsForPlaying.push_back(element);
     }
 
-    notationPlayback()->triggerEventsForItems(elementsForPlaying, std::move(performanceAttributes));
+    notationPlayback()->triggerEventsForItems(elementsForPlaying);
 }
 
 void PlaybackController::playMetronome(int tick)
@@ -1569,11 +1569,9 @@ void PlaybackController::setNotation(notation::INotationPtr notation)
         updateLoop();
     });
 
-    // We want to highlight the notes that are currently being played, and this
-    // callback sends an all-noteoff event :/
-    // m_notation->interaction()->selectionChanged().onNotify(this, [this]() {
-    //     onSelectionChanged();
-    // });
+    m_notation->interaction()->selectionChanged().onNotify(this, [this]() {
+        onSelectionChanged();
+    });
 
     m_notation->interaction()->textEditingEnded().onReceive(this, [this](engraving::TextBase* text) {
         if (text && text->isHarmony()) {

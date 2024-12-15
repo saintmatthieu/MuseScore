@@ -40,7 +40,6 @@
 #include "renderers/gracechordsrenderer.h"
 #include "renderers/chordarticulationsrenderer.h"
 #include "filters/chordfilter.h"
-#include "notation/notationtypes.h"
 
 using namespace mu::engraving;
 using namespace muse;
@@ -319,9 +318,7 @@ void PlaybackEventsRenderer::renderFixedNoteEvent(const Note* note, const mpe::t
     }
 
     NominalNoteCtx noteCtx(note, ctx);
-    auto noteEvent = buildNoteEvent(std::move(noteCtx));
-    const_cast<bool&>(noteEvent.arrangementCtx().isRightHand) = notation::isRightHandChord(*note->chord());
-    result.emplace_back(noteEvent);
+    result.emplace_back(buildNoteEvent(std::move(noteCtx)));
 }
 
 void PlaybackEventsRenderer::renderRestEvents(const Rest* rest, const int tickPositionOffset, mpe::PlaybackEventsMap& result) const

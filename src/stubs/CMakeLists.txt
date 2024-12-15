@@ -38,10 +38,14 @@ if (NOT MUE_BUILD_PALETTE_MODULE)
     add_subdirectory(palette)
 endif()
 
-add_subdirectory(playback)
+if (NOT MUE_BUILD_PLAYBACK_MODULE)
+    add_subdirectory(playback)
+endif()
 
 if (NOT MUE_BUILD_PROJECT_MODULE)
     add_subdirectory(project)
 endif()
 
-add_subdirectory(workspacescene)
+if (NOT MUSE_MODULE_WORKSPACE)
+    add_subdirectory(workspacescene)
+endif()

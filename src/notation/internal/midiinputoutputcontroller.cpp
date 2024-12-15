@@ -22,7 +22,6 @@
 #include "midiinputoutputcontroller.h"
 
 #include "midi/miditypes.h"
-#include "engraving/dom/masterscore.h"
 
 #include "log.h"
 

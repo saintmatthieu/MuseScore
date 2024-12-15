@@ -25,13 +25,10 @@
 #include "async/asyncable.h"
 #include "modularity/ioc.h"
 #include "iengravingconfiguration.h"
-#include "midi/imidioutport.h"
-#include "audio/isynthresolver.h"
 
 #include "../inotation.h"
 #include "igetscore.h"
 #include "../inotationconfiguration.h"
-#include "playback/iplaybackcontroller.h"
 
 namespace mu::engraving {
 class Score;
@@ -44,9 +41,6 @@ class Notation : virtual public INotation, public IGetScore, public muse::Inject
 {
     muse::Inject<INotationConfiguration> configuration = { this };
     muse::Inject<engraving::IEngravingConfiguration> engravingConfiguration = { this };
-    INJECT(muse::midi::IMidiOutPort, midiOutPort)
-    INJECT(muse::audio::synth::ISynthResolver, synthResolver)
-    INJECT(mu::playback::IPlaybackController, playbackController)
 
 public:
     explicit Notation(const muse::modularity::ContextPtr& iocCtx, engraving::Score* score = nullptr);

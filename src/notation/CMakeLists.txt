@@ -181,7 +181,6 @@ set(MODULE_LINK
     commonscene
     muse::uicomponents
     muse::ui
-    orchestrionsequencer
     )
 
 if (MUE_BUILD_NOTATION_TESTS)

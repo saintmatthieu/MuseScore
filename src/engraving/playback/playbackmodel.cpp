@@ -206,7 +206,7 @@ const PlaybackData& PlaybackModel::resolveTrackPlaybackData(const ID& partId, co
     return resolveTrackPlaybackData(idKey(partId, instrumentId));
 }
 
-void PlaybackModel::triggerEventsForItems(const std::vector<const EngravingItem*>& items, notation::NotePerformanceAttributeMap performanceAttributes)
+void PlaybackModel::triggerEventsForItems(const std::vector<const EngravingItem*>& items)
 {
     std::vector<const EngravingItem*> playableItems = filterPlayableItems(items);
     if (playableItems.empty()) {
@@ -235,7 +235,7 @@ void PlaybackModel::triggerEventsForItems(const std::vector<const EngravingItem*
     const RepeatList& repeats = repeatList();
 
     constexpr timestamp_t actualTimestamp = 0;
-    constexpr dynamic_level_t actualDynamicLevel = dynamicLevelFromType(static_cast<muse::mpe::DynamicType>(MAX_DYNAMIC_LEVEL));
+    constexpr dynamic_level_t actualDynamicLevel = dynamicLevelFromType(muse::mpe::DynamicType::Natural);
     duration_t actualDuration = MScore::defaultPlayDuration * 1000;
 
     const PlaybackContextPtr ctx = playbackCtx(trackId);
@@ -248,21 +248,10 @@ void PlaybackModel::triggerEventsForItems(const std::vector<const EngravingItem*
             continue;
         }
 
-        const auto tick = item->tick().ticks();
-        int utick = repeats.tick2utick(tick);
+        int utick = repeats.tick2utick(item->tick().ticks());
         minTick = std::min(utick, minTick);
 
-        auto duration = actualDuration;
-        if (const auto *note = dynamic_cast<const Note *>(item)) {
-          duration = note->playTicks();
-        }
-
-        const dynamic_level_t dynamicLevel =
-            actualDynamicLevel * (performanceAttributes.count(item)
-                                      ? performanceAttributes.at(item)->gain
-                                      : 1.0);
-        m_renderer.render(item, tick, duration, dynamicLevel,
-                          ctx->persistentArticulationType(utick), profile,
+        m_renderer.render(item, actualTimestamp, actualDuration, actualDynamicLevel, ctx->persistentArticulationType(utick), profile,
                           result);
     }
 
@@ -896,7 +885,7 @@ std::vector<const EngravingItem*> PlaybackModel::filterPlayableItems(const std::
             continue;
         }
 
-        if (!item->isPlayable() && !item->isRest()) {
+        if (!item->isPlayable()) {
             continue;
         }
 
