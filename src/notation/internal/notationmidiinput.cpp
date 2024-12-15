@@ -28,39 +28,21 @@
 #include "engraving/dom/tie.h"
 #include "engraving/dom/score.h"
 #include "engraving/dom/note.h"
-#include "engraving/dom/rest.h"
 #include "engraving/dom/factory.h"
-#include "engraving/types/fraction.h"
 
 #include "notationtypes.h"
-#include "orchestrionsequencer/OrchestrionTypes.h"
-#include "orchestrionsequencer/IOrchestrionSequencer.h"
 
 #include "defer.h"
 #include "log.h"
-
-#include <unordered_map>
 
 using namespace mu::notation;
 
 static constexpr int PROCESS_INTERVAL = 20;
 
-namespace {
-dgk::NoteEvent ToDgkNoteEvent(const muse::midi::Event &museEvent)
-{
-  const auto type = museEvent.opcode() == muse::midi::Event::Opcode::NoteOn
-                        ? dgk::NoteEvent::Type::noteOn
-                        : dgk::NoteEvent::Type::noteOff;
-  const int channel = museEvent.channel();
-  const int pitch = museEvent.note();
-  const float velocity = museEvent.velocity() / 128.0f;
-  return dgk::NoteEvent{type, channel, pitch, velocity};
-}
-}
-
 NotationMidiInput::NotationMidiInput(IGetScore* getScore, INotationInteractionPtr notationInteraction,
                                      INotationUndoStackPtr undoStack, const muse::modularity::ContextPtr& iocCtx)
-    : m_getScore(getScore), m_notationInteraction(notationInteraction), m_undoStack(undoStack)
+    : muse::Injectable(iocCtx), m_getScore(getScore),
+    m_notationInteraction(notationInteraction), m_undoStack(undoStack)
 {
     QObject::connect(&m_processTimer, &QTimer::timeout, [this]() { doProcessEvents(); });
 
@@ -83,12 +65,13 @@ void NotationMidiInput::onMidiEventReceived(const muse::midi::Event& event)
         return;
     }
 
-    if (event.opcode() != muse::midi::Event::Opcode::NoteOn &&
-        event.opcode() != muse::midi::Event::Opcode::NoteOff)
-      return;
+    if (event.opcode() == muse::midi::Event::Opcode::NoteOn || event.opcode() == muse::midi::Event::Opcode::NoteOff) {
+        m_eventsQueue.push_back(event);
 
-    if (auto sequencer = orchestrion()->sequencer())
-        sequencer->OnInputEvent(ToDgkNoteEvent(event));
+        if (!m_processTimer.isActive()) {
+            m_processTimer.start(PROCESS_INTERVAL);
+        }
+    }
 }
 
 muse::async::Channel<std::vector<const Note*> > NotationMidiInput::notesReceived() const
@@ -134,17 +117,14 @@ void NotationMidiInput::doProcessEvents()
         return;
     }
 
-    std::vector<Note*> notes;
-
-    NotePerformanceAttributeMap attributeMap;
+    std::vector<const Note*> notes;
 
     for (size_t i = 0; i < m_eventsQueue.size(); ++i) {
         const muse::midi::Event& event = m_eventsQueue.at(i);
-
-        if (event.opcode() != muse::midi::Event::Opcode::NoteOn || event.velocity() == 0)
-            continue;
-
-        auto attributes = std::make_shared<PerformanceAttributes>(PerformanceAttributes{ event.velocity() / 128., event.pitchNote() >= 60 });
+        Note* note = isNoteInputMode() ? addNoteToScore(event) : makeNote(event);
+        if (note) {
+            notes.push_back(note);
+        }
 
         bool chord = i != 0;
         bool noteOn = event.opcode() == muse::midi::Event::Opcode::NoteOn;
@@ -156,19 +136,13 @@ void NotationMidiInput::doProcessEvents()
     }
 
     if (!notes.empty()) {
-        std::vector<EngravingItem*> notesItems;
-        for (Note* note : notes) {
+        std::vector<const EngravingItem*> notesItems;
+        for (const Note* note : notes) {
             notesItems.push_back(note);
         }
 
-        playbackController()->playElements(
-            {notesItems.begin(), notesItems.end()}, std::move(attributeMap));
-        m_notesReceivedChannel.send({notes.begin(), notes.end()});
-
-        auto pScore = score();
-        pScore->deselectAll();
-        pScore->select(notesItems, engraving::SelectType::ADD);
-        m_notationInteraction->showItem(notesItems[0]);
+        playbackController()->playElements(notesItems);
+        m_notesReceivedChannel.send(notes);
     }
 
     m_eventsQueue.clear();

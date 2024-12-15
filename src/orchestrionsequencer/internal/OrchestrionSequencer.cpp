@@ -1,6 +1,7 @@
 #include "OrchestrionSequencer.h"
 #include <algorithm>
 #include <iterator>
+#include <notation/inotationmidiinput.h>
 #include <numeric>
 
 namespace dgk
@@ -28,6 +29,17 @@ auto MakeAllVoices(const OrchestrionSequencer::Hand &rightHand,
                  std::back_inserter(allVoices),
                  [](const auto &voice) { return voice.get(); });
   return allVoices;
+}
+
+dgk::NoteEvent ToDgkNoteEvent(const muse::midi::Event &museEvent)
+{
+  const auto type = museEvent.opcode() == muse::midi::Event::Opcode::NoteOn
+                        ? dgk::NoteEvent::Type::noteOn
+                        : dgk::NoteEvent::Type::noteOff;
+  const int channel = museEvent.channel();
+  const int pitch = museEvent.note();
+  const float velocity = museEvent.velocity() / 128.0f;
+  return dgk::NoteEvent{type, channel, pitch, velocity};
 }
 } // namespace
 
@@ -81,6 +93,26 @@ OrchestrionSequencer::OrchestrionSequencer(int track, Staff rightHand,
                                          { m_cb(NoteEvents{event}); })}
 {
   dispatcher()->reg(this, "nav-first-control", [this] { GoToTick(0); });
+  midiInPort()->eventReceived().onReceive(
+      this, [this](const muse::midi::tick_t, const muse::midi::Event &event)
+      { OnMidiEventReceived(event); });
+}
+
+void OrchestrionSequencer::OnMidiEventReceived(const muse::midi::Event &event)
+{
+  if (event.isChannelVoice20())
+  {
+    auto events = event.toMIDI10();
+    for (auto &midi10event : events)
+      OnMidiEventReceived(midi10event);
+    return;
+  }
+
+  if (event.opcode() != muse::midi::Event::Opcode::NoteOn &&
+      event.opcode() != muse::midi::Event::Opcode::NoteOff)
+    return;
+
+  OnInputEvent(ToDgkNoteEvent(event));
 }
 
 OrchestrionSequencer::~OrchestrionSequencer()

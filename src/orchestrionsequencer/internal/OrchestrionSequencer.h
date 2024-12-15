@@ -19,6 +19,7 @@
 #include <unordered_set>
 #include <variant>
 #include <vector>
+#include <midi/imidiinport.h>
 
 namespace dgk
 {
@@ -29,6 +30,7 @@ class OrchestrionSequencer : public IOrchestrionSequencer,
 {
   muse::Inject<mu::context::IGlobalContext> globalContext;
   muse::Inject<muse::actions::IActionsDispatcher> dispatcher;
+  muse::Inject<muse::midi::IMidiInPort> midiInPort;
 
 public:
   OrchestrionSequencer(int track, Staff rightHand, Staff leftHand,
@@ -64,6 +66,7 @@ private:
                                 ThreadMembers<EventType> &members,
                                 std::function<void(EventType)> cb);
 
+  void OnMidiEventReceived(const muse::midi::Event &event);
   void OnInputEventRecursive(const NoteEvent &inputEvent, bool loop);
   void PostPedalEvent(PedalEvent event);
   void PostNoteEvents(NoteEvents events);

@@ -33,10 +33,6 @@
 #include "igetscore.h"
 #include "inotationinteraction.h"
 #include "inotationundostack.h"
-#include "dom/repeatList.h"
-#include "orchestrionsequencer/IOrchestrion.h"
-
-#include <array>
 
 namespace mu::engraving {
 class Score;
@@ -48,18 +44,15 @@ class NotationMidiInput : public INotationMidiInput, public muse::Injectable
     muse::Inject<playback::IPlaybackController> playbackController = { this };
     muse::Inject<muse::actions::IActionsDispatcher> dispatcher = { this };
     muse::Inject<INotationConfiguration> configuration = { this };
-    muse::Inject<dgk::IOrchestrion> orchestrion = { this };
 
 public:
-  NotationMidiInput(IGetScore *getScore,
-                    INotationInteractionPtr notationInteraction,
-                    INotationUndoStackPtr undoStack,
+    NotationMidiInput(IGetScore* getScore, INotationInteractionPtr notationInteraction, INotationUndoStackPtr undoStack,
                       const muse::modularity::ContextPtr& iocCtx);
 
     void onMidiEventReceived(const muse::midi::Event& event) override;
     muse::async::Channel<std::vector<const Note*> > notesReceived() const override;
 
-  void onRealtimeAdvance() override;
+    void onRealtimeAdvance() override;
 
 private:
     mu::engraving::Score* score() const;
