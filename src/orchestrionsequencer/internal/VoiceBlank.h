@@ -12,8 +12,6 @@ private:
   std::vector<int> GetPitches() const override;
   Tick GetBeginTick() const override;
   Tick GetEndTick() const override;
-  void SetHighlight(bool value) override;
-  void ScrollToYou() const override;
 
   const Tick m_beginTick;
   const Tick m_endTick;

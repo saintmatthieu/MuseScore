@@ -1,6 +1,7 @@
 #pragma once
 
 #include <modularity/imoduleinterface.h>
+#include <async/notification.h>
 
 namespace dgk
 {
@@ -14,5 +15,6 @@ public:
   virtual ~IOrchestrion() = default;
 
   virtual IOrchestrionSequencer* sequencer() = 0;
+  virtual muse::async::Notification sequencerChanged() const = 0;
 };
 } // namespace dgk

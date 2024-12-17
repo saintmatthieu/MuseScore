@@ -13,16 +13,16 @@ void Orchestrion::init()
         const auto masterNotation = globalContext()->currentMasterNotation();
         if (!masterNotation)
         {
-          m_sequencer.reset();
+          setSequencer(nullptr);
           return;
         }
         const auto &map = playbackController()->instrumentTrackIdMap();
         if (map.empty())
         {
-          m_sequencer.reset();
+          setSequencer(nullptr);
           return;
         }
-        m_sequencer = OrchestrionSequencerFactory::CreateSequencer(
+        auto sequencer = OrchestrionSequencerFactory{}.CreateSequencer(
             *masterNotation, map,
             [this](const std::variant<NoteEvents, PedalEvent> &event)
             {
@@ -40,8 +40,22 @@ void Orchestrion::init()
               }
               synthResolver()->postEventVariant(m_sequencer->GetTrack(), event);
             });
+        setSequencer(std::move(sequencer));
       });
 }
 
+void Orchestrion::setSequencer(std::unique_ptr<IOrchestrionSequencer> sequencer)
+{
+  if (sequencer == m_sequencer)
+    return;
+  m_sequencer = std::move(sequencer);
+  m_sequencerChanged.notify();
+}
+
 IOrchestrionSequencer *Orchestrion::sequencer() { return m_sequencer.get(); }
+
+muse::async::Notification Orchestrion::sequencerChanged() const
+{
+  return m_sequencerChanged;
+}
 } // namespace dgk

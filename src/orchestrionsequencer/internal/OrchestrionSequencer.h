@@ -11,6 +11,7 @@
 #include <context/iglobalcontext.h>
 #include <functional>
 #include <memory>
+#include <midi/imidiinport.h>
 #include <modularity/ioc.h>
 #include <mutex>
 #include <queue>
@@ -19,7 +20,6 @@
 #include <unordered_set>
 #include <variant>
 #include <vector>
-#include <midi/imidiinport.h>
 
 namespace dgk
 {
@@ -33,8 +33,10 @@ class OrchestrionSequencer : public IOrchestrionSequencer,
   muse::Inject<muse::midi::IMidiInPort> midiInPort;
 
 public:
-  OrchestrionSequencer(int track, Staff rightHand, Staff leftHand,
-                       PedalSequence, MidiOutCb);
+  using Hand = std::vector<std::unique_ptr<VoiceSequencer>>;
+
+  OrchestrionSequencer(int track, Hand rightHand, Hand leftHand, PedalSequence,
+                       MidiOutCb);
   ~OrchestrionSequencer();
 
   void OnInputEvent(const NoteEvent &inputEvent) override;
@@ -42,7 +44,8 @@ public:
   void GoToTick(int tick) override;
   int GetTrack() const override;
 
-  using Hand = std::vector<std::unique_ptr<VoiceSequencer>>;
+  muse::async::Channel<int, ChordActivationChange>
+  ChordActivationChanged() const override;
 
 private:
   using OptTimePoint =
@@ -92,5 +95,8 @@ private:
   std::uniform_int_distribution<int> m_velocityDist{70, 130}; // percents
 
   std::unordered_set<int> m_pressedKeys;
+
+  muse::async::Channel<int, ChordActivationChange>
+      m_chordActivationChanged;
 };
 } // namespace dgk

@@ -8,15 +8,6 @@ namespace dgk
 {
 namespace
 {
-auto MakeHand(Staff staff)
-{
-  OrchestrionSequencer::Hand hand;
-  for (auto &[voice, sequence] : staff)
-    hand.emplace_back(
-        std::make_unique<VoiceSequencer>(voice, std::move(sequence)));
-  return hand;
-}
-
 auto MakeAllVoices(const OrchestrionSequencer::Hand &rightHand,
                    const OrchestrionSequencer::Hand &leftHand)
 {
@@ -76,12 +67,12 @@ std::thread OrchestrionSequencer::MakeThread(OrchestrionSequencer &self,
       }};
 }
 
-OrchestrionSequencer::OrchestrionSequencer(int track, Staff rightHand,
-                                           Staff leftHand,
+OrchestrionSequencer::OrchestrionSequencer(int track, Hand rightHand,
+                                           Hand leftHand,
                                            PedalSequence pedalSequence,
                                            MidiOutCb cb)
-    : m_track{track}, m_rightHand{MakeHand(std::move(rightHand))},
-      m_leftHand{MakeHand(std::move(leftHand))},
+    : m_track{track}, m_rightHand{std::move(rightHand)},
+      m_leftHand{std::move(leftHand)},
       m_allVoices{MakeAllVoices(m_rightHand, m_leftHand)},
       m_pedalSequence{std::move(pedalSequence)},
       m_pedalSequenceIt{m_pedalSequence.begin()}, m_cb{std::move(cb)},
@@ -96,6 +87,20 @@ OrchestrionSequencer::OrchestrionSequencer(int track, Staff rightHand,
   midiInPort()->eventReceived().onReceive(
       this, [this](const muse::midi::tick_t, const muse::midi::Event &event)
       { OnMidiEventReceived(event); });
+  std::for_each(
+      m_allVoices.begin(), m_allVoices.end(),
+      [this](const VoiceSequencer *voiceSequencer)
+      {
+        voiceSequencer->ChordActivationChanged().onReceive(
+            this, [this, voiceSequencer](ChordActivationChange change)
+            { m_chordActivationChanged.send(voiceSequencer->track, change); });
+      });
+}
+
+muse::async::Channel<int /* track */, ChordActivationChange>
+OrchestrionSequencer::ChordActivationChanged() const
+{
+  return m_chordActivationChanged;
 }
 
 void OrchestrionSequencer::OnMidiEventReceived(const muse::midi::Event &event)

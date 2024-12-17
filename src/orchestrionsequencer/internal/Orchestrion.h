@@ -24,8 +24,11 @@ public:
 
 private:
   IOrchestrionSequencer *sequencer() override;
+  muse::async::Notification sequencerChanged() const override;
+  void setSequencer(std::unique_ptr<IOrchestrionSequencer> sequencer);
 
 private:
   std::unique_ptr<IOrchestrionSequencer> m_sequencer;
+  muse::async::Notification m_sequencerChanged;
 };
 } // namespace dgk

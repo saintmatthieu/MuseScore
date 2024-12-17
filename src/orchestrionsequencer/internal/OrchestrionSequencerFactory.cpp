@@ -16,6 +16,7 @@
 #include "engraving/dom/staff.h"
 #include "notation/imasternotation.h"
 #include <cassert>
+#include <engraving/dom/mscore.h>
 
 namespace dgk
 {
@@ -28,10 +29,8 @@ bool HasUntiedNotes(const mu::engraving::Chord &chord)
                      { return !note->tieBack(); });
 }
 
-bool TakeIt(const mu::engraving::Segment &segment, size_t staffIdx, int voice,
-            bool &prevWasRest)
+bool TakeIt(const mu::engraving::Segment &segment, int track, bool &prevWasRest)
 {
-  const auto track = staffIdx * mu::engraving::VOICES + voice;
   const auto element = segment.element(track);
   if (!dynamic_cast<const mu::engraving::ChordRest *>(element))
     return false;
@@ -102,20 +101,22 @@ void ForAllSegments(
 }
 
 auto GetChordSequence(mu::engraving::Score &score,
-                      mu::notation::INotationInteraction &interaction,
+                      orchestrion::IChordRegistry &chordRegistry,
                       size_t staffIdx, int voice)
 {
   std::vector<ChordPtr> sequence;
   auto prevWasRest = true;
   dgk::Tick endTick{0, 0};
+  const auto track = static_cast<int>(staffIdx * mu::engraving::VOICES + voice);
   ForAllSegments(
       score,
       [&](const mu::engraving::Segment &segment, int measureTick)
       {
-        if (TakeIt(segment, staffIdx, voice, prevWasRest))
+        if (TakeIt(segment, track, prevWasRest))
         {
-          auto chord = std::make_shared<MuseChord>(
-              score, interaction, segment, staffIdx, voice, measureTick);
+          auto chord =
+              std::make_shared<MuseChord>(segment, track, voice, measureTick);
+          chordRegistry.RegisterChord(chord.get(), &segment);
           const auto chordEndTick = chord->GetEndTick();
           if (endTick.withRepeats > 0 // we don't care if the voice doesn't
                                       // begin at the start.
@@ -174,6 +175,17 @@ PedalSequence GetPedalSequence(mu::engraving::Score &score, int beginStaffIdx,
   return sequence;
 }
 
+auto MakeHand(size_t staffIdx, const Staff &staff)
+{
+  OrchestrionSequencer::Hand hand;
+  for (auto &[voice, sequence] : staff)
+  {
+    const int track = staffIdx * mu::engraving::VOICES + voice;
+    hand.emplace_back(
+        std::make_unique<VoiceSequencer>(track, voice, std::move(sequence)));
+  }
+  return hand;
+}
 } // namespace
 
 std::unique_ptr<IOrchestrionSequencer>
@@ -181,7 +193,7 @@ OrchestrionSequencerFactory::CreateSequencer(
     mu::notation::IMasterNotation &masterNotation,
     const mu::playback::IPlaybackController::InstrumentTrackIdMap
         &instrumentTrackIdMap,
-    IOrchestrionSequencer::MidiOutCb cb)
+    MidiOutCb cb)
 {
   auto &score = *masterNotation.masterScore();
   const auto rightHandStaff =
@@ -194,25 +206,21 @@ OrchestrionSequencerFactory::CreateSequencer(
     return nullptr;
   Staff rightHand;
   Staff leftHand;
+  const auto &[trackId, staff] = *rightHandStaff;
   for (auto v = 0; v < numVoices; ++v)
   {
-    auto &interaction = *masterNotation.notation()->interaction();
-    if (auto sequence =
-            GetChordSequence(score, interaction, rightHandStaff->second, v);
+    if (auto sequence = GetChordSequence(score, *chordRegistry(), staff, v);
         !sequence.empty())
       rightHand.emplace(v, std::move(sequence));
-    if (auto sequence =
-            GetChordSequence(score, interaction, rightHandStaff->second + 1, v);
+    if (auto sequence = GetChordSequence(score, *chordRegistry(), staff + 1, v);
         !sequence.empty())
       leftHand.emplace(v, std::move(sequence));
   }
-  auto pedalSequence =
-      GetPedalSequence(score, static_cast<int>(rightHandStaff->second),
-                       static_cast<int>(rightHandStaff->second) + 2);
+  auto pedalSequence = GetPedalSequence(score, staff, staff + 2);
 
   return std::make_unique<OrchestrionSequencer>(
-      static_cast<int>(rightHandStaff->first), std::move(rightHand),
-      std::move(leftHand), std::move(pedalSequence), std::move(cb));
+      static_cast<int>(trackId), MakeHand(staff, rightHand),
+      MakeHand(staff + 1, leftHand), std::move(pedalSequence), std::move(cb));
 }
 
 muse::midi::Event ToMuseMidiEvent(const NoteEvent &dgkEvent)

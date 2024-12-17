@@ -1,16 +1,11 @@
 #pragma once
 
-#include "OrchestrionSequencer.h"
 #include "OrchestrionTypes.h"
-#include "midi/midievent.h"
+#include "ScoreAnimation/IChordRegistry.h"
 #include "playback/iplaybackcontroller.h"
 #include <memory>
+#include <modularity/ioc.h>
 #include <vector>
-
-namespace mu::engraving
-{
-class Score;
-}
 
 namespace mu::notation
 {
@@ -19,13 +14,17 @@ class IMasterNotation;
 
 namespace dgk
 {
-class OrchestrionSequencerFactory
+class IOrchestrionSequencer;
+
+class OrchestrionSequencerFactory : public muse::Injectable
 {
+  muse::Inject<orchestrion::IChordRegistry> chordRegistry;
+
 public:
-  static std::unique_ptr<IOrchestrionSequencer> CreateSequencer(
+  std::unique_ptr<IOrchestrionSequencer> CreateSequencer(
       mu::notation::IMasterNotation &masterNotation,
       const mu::playback::IPlaybackController::InstrumentTrackIdMap &,
-      IOrchestrionSequencer::MidiOutCb cb);
+      MidiOutCb cb);
 };
 
 muse::midi::Event ToMuseMidiEvent(const NoteEvent &noteEvent);
