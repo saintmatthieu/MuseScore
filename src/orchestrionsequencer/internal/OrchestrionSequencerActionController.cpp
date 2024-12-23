@@ -16,22 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-#pragma once
-
-#include "OrchestrionTypes.h"
-#include <async/channel.h>
+#include "OrchestrionSequencerActionController.h"
 
 namespace dgk
 {
-class IOrchestrionSequencer
+void OrchestrionSequencerActionController::init()
 {
-public:
-  virtual ~IOrchestrionSequencer() = default;
+  const auto ids = uiActions()->computerKeyboardSetterActionIds();
 
-  virtual void OnInputEvent(const NoteEvent &inputEvent) = 0;
-  virtual void GoToTick(int tick) = 0;
-  virtual int GetTrack() const = 0;
-  virtual muse::async::Channel<int /* track */, ChordActivationChange>
-  ChordActivationChanged() const = 0;
-};
+  for (const auto &[layout, id] : ids)
+    dispatcher()->reg(this, id, [layout, this](const muse::actions::ActionData &args)
+                      { keyboard()->setLayout(layout); });
+}
 } // namespace dgk

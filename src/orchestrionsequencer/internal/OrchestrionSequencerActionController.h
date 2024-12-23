@@ -18,20 +18,22 @@
  */
 #pragma once
 
-#include "OrchestrionTypes.h"
-#include <async/channel.h>
+#include "IComputerKeyboard.h"
+#include "IOrchestrionSequencerUiActions.h"
+#include <actions/actionable.h>
+#include <actions/iactionsdispatcher.h>
+#include <modularity/ioc.h>
 
 namespace dgk
 {
-class IOrchestrionSequencer
+class OrchestrionSequencerActionController : public muse::actions::Actionable,
+                                             public muse::Injectable
 {
-public:
-  virtual ~IOrchestrionSequencer() = default;
+  muse::Inject<IComputerKeyboard> keyboard;
+  muse::Inject<muse::actions::IActionsDispatcher> dispatcher;
+  muse::Inject<IOrchestrionSequencerUiActions> uiActions;
 
-  virtual void OnInputEvent(const NoteEvent &inputEvent) = 0;
-  virtual void GoToTick(int tick) = 0;
-  virtual int GetTrack() const = 0;
-  virtual muse::async::Channel<int /* track */, ChordActivationChange>
-  ChordActivationChanged() const = 0;
+public:
+  void init();
 };
 } // namespace dgk
