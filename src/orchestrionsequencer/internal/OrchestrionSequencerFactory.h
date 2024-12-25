@@ -23,8 +23,7 @@ class OrchestrionSequencerFactory : public muse::Injectable
 public:
   std::unique_ptr<IOrchestrionSequencer> CreateSequencer(
       mu::notation::IMasterNotation &masterNotation,
-      const mu::playback::IPlaybackController::InstrumentTrackIdMap &,
-      MidiOutCb cb);
+      const mu::playback::IPlaybackController::InstrumentTrackIdMap &);
 };
 
 muse::midi::Event ToMuseMidiEvent(const NoteEvent &noteEvent);

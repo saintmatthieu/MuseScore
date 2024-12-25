@@ -33,5 +33,6 @@ public:
   virtual int GetTrack() const = 0;
   virtual muse::async::Channel<int /* track */, ChordActivationChange>
   ChordActivationChanged() const = 0;
+  virtual muse::async::Channel<EventVariant> OutputEvent() const = 0;
 };
 } // namespace dgk

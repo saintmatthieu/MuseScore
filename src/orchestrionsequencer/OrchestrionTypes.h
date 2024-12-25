@@ -35,8 +35,6 @@ struct PedalEvent
 };
 
 using EventVariant = std::variant<NoteEvents, PedalEvent>;
-using MidiOutCb =
-    std::function<void(const std::variant<NoteEvents, PedalEvent> &)>;
 struct PedalSequenceItem
 {
   int tick = 0;

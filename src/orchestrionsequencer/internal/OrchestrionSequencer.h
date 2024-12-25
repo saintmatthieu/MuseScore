@@ -35,8 +35,7 @@ class OrchestrionSequencer : public IOrchestrionSequencer,
 public:
   using Hand = std::vector<std::unique_ptr<VoiceSequencer>>;
 
-  OrchestrionSequencer(int track, Hand rightHand, Hand leftHand, PedalSequence,
-                       MidiOutCb);
+  OrchestrionSequencer(int track, Hand rightHand, Hand leftHand, PedalSequence);
   ~OrchestrionSequencer();
 
   void OnInputEvent(const NoteEvent &inputEvent) override;
@@ -46,6 +45,7 @@ public:
 
   muse::async::Channel<int, ChordActivationChange>
   ChordActivationChanged() const override;
+  muse::async::Channel<EventVariant> OutputEvent() const override;
 
 private:
   using OptTimePoint =
@@ -81,7 +81,6 @@ private:
   const std::vector<const VoiceSequencer *> m_allVoices;
   const PedalSequence m_pedalSequence;
   PedalSequence::const_iterator m_pedalSequenceIt;
-  const MidiOutCb m_cb;
 
   std::thread m_pedalThread;
   ThreadMembers<PedalEvent> m_pedalThreadMembers;
@@ -96,7 +95,7 @@ private:
 
   std::unordered_set<int> m_pressedKeys;
 
-  muse::async::Channel<int, ChordActivationChange>
-      m_chordActivationChanged;
+  muse::async::Channel<int, ChordActivationChange> m_chordActivationChanged;
+  muse::async::Channel<EventVariant> m_outputEvent;
 };
 } // namespace dgk

@@ -192,8 +192,7 @@ std::unique_ptr<IOrchestrionSequencer>
 OrchestrionSequencerFactory::CreateSequencer(
     mu::notation::IMasterNotation &masterNotation,
     const mu::playback::IPlaybackController::InstrumentTrackIdMap
-        &instrumentTrackIdMap,
-    MidiOutCb cb)
+        &instrumentTrackIdMap)
 {
   auto &score = *masterNotation.masterScore();
   const auto rightHandStaff =
@@ -220,7 +219,7 @@ OrchestrionSequencerFactory::CreateSequencer(
 
   return std::make_unique<OrchestrionSequencer>(
       static_cast<int>(trackId), MakeHand(staff, rightHand),
-      MakeHand(staff + 1, leftHand), std::move(pedalSequence), std::move(cb));
+      MakeHand(staff + 1, leftHand), std::move(pedalSequence));
 }
 
 muse::midi::Event ToMuseMidiEvent(const NoteEvent &dgkEvent)

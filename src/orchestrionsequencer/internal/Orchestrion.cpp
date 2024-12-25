@@ -22,8 +22,10 @@ void Orchestrion::init()
           setSequencer(nullptr);
           return;
         }
-        auto sequencer = OrchestrionSequencerFactory{}.CreateSequencer(
-            *masterNotation, map,
+        auto sequencer =
+            OrchestrionSequencerFactory{}.CreateSequencer(*masterNotation, map);
+        sequencer->OutputEvent().onReceive(
+            this,
             [this](const std::variant<NoteEvents, PedalEvent> &event)
             {
               if (std::holds_alternative<NoteEvents>(event))

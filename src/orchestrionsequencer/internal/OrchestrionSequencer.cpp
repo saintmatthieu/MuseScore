@@ -69,19 +69,18 @@ std::thread OrchestrionSequencer::MakeThread(OrchestrionSequencer &self,
 
 OrchestrionSequencer::OrchestrionSequencer(int track, Hand rightHand,
                                            Hand leftHand,
-                                           PedalSequence pedalSequence,
-                                           MidiOutCb cb)
+                                           PedalSequence pedalSequence)
     : m_track{track}, m_rightHand{std::move(rightHand)},
       m_leftHand{std::move(leftHand)},
       m_allVoices{MakeAllVoices(m_rightHand, m_leftHand)},
       m_pedalSequence{std::move(pedalSequence)},
-      m_pedalSequenceIt{m_pedalSequence.begin()}, m_cb{std::move(cb)},
+      m_pedalSequenceIt{m_pedalSequence.begin()},
       m_pedalThread{MakeThread<PedalEvent>(*this, m_pedalThreadMembers,
                                            [this](PedalEvent event)
-                                           { m_cb(event); })},
-      m_noteThread{MakeThread<NoteEvent>(*this, m_noteThreadMembers,
-                                         [this](NoteEvent event)
-                                         { m_cb(NoteEvents{event}); })}
+                                           { m_outputEvent.send(event); })},
+      m_noteThread{MakeThread<NoteEvent>(
+          *this, m_noteThreadMembers,
+          [this](NoteEvent event) { m_outputEvent.send(NoteEvents{event}); })}
 {
   dispatcher()->reg(this, "nav-first-control", [this] { GoToTick(0); });
   midiInPort()->eventReceived().onReceive(
@@ -101,6 +100,11 @@ muse::async::Channel<int /* track */, ChordActivationChange>
 OrchestrionSequencer::ChordActivationChanged() const
 {
   return m_chordActivationChanged;
+}
+
+muse::async::Channel<EventVariant> OrchestrionSequencer::OutputEvent() const
+{
+  return m_outputEvent;
 }
 
 void OrchestrionSequencer::OnMidiEventReceived(const muse::midi::Event &event)
@@ -287,9 +291,9 @@ void OrchestrionSequencer::GoToTick(int tick)
     }
   }
   if (!output.empty())
-    m_cb(output);
+    m_outputEvent.send(output);
 
-  m_cb(PedalEvent{m_track, false});
+  m_outputEvent.send(PedalEvent{m_track, false});
   m_pedalSequenceIt = std::lower_bound(
       m_pedalSequence.begin(), m_pedalSequence.end(), tick,
       [](const auto &item, int tick) { return item.tick < tick; });
@@ -332,7 +336,7 @@ void OrchestrionSequencer::PostNoteEvents(NoteEvents events)
                     { return event.type == NoteEvent::Type::noteOn; });
   if (numNoteons < 2)
   {
-    m_cb(events);
+    m_outputEvent.send(std::move(events));
     return;
   }
 
