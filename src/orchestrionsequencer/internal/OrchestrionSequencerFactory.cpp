@@ -222,26 +222,4 @@ OrchestrionSequencerFactory::CreateSequencer(
       MakeHand(staff + 1, leftHand), std::move(pedalSequence));
 }
 
-muse::midi::Event ToMuseMidiEvent(const NoteEvent &dgkEvent)
-{
-  muse::midi::Event museEvent(dgkEvent.type == dgk::NoteEvent::Type::noteOn
-                                  ? muse::midi::Event::Opcode::NoteOn
-                                  : muse::midi::Event::Opcode::NoteOff,
-                              muse::midi::Event::MessageType::ChannelVoice10);
-  museEvent.setChannel(dgkEvent.channel);
-  museEvent.setNote(dgkEvent.pitch);
-  museEvent.setVelocity(std::clamp<uint16_t>(dgkEvent.velocity * 128, 0, 127));
-  return museEvent;
-}
-
-muse::midi::Event ToMuseMidiEvent(const PedalEvent &pedalEvent)
-{
-  muse::midi::Event museEvent(muse::midi::Event::Opcode::ControlChange,
-                              muse::midi::Event::MessageType::ChannelVoice10);
-  museEvent.setChannel(pedalEvent.channel);
-  museEvent.setIndex(0x40);
-  museEvent.setData(pedalEvent.on ? 127 : 0);
-  return museEvent;
-}
-
 } // namespace dgk

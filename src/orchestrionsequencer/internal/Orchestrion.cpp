@@ -24,24 +24,6 @@ void Orchestrion::init()
         }
         auto sequencer =
             OrchestrionSequencerFactory{}.CreateSequencer(*masterNotation, map);
-        sequencer->OutputEvent().onReceive(
-            this,
-            [this](const std::variant<NoteEvents, PedalEvent> &event)
-            {
-              if (std::holds_alternative<NoteEvents>(event))
-              {
-                const auto &events = std::get<NoteEvents>(event);
-                std::for_each(
-                    events.begin(), events.end(), [&](const NoteEvent &event)
-                    { midiOutPort()->sendEvent(ToMuseMidiEvent(event)); });
-              }
-              else if (std::holds_alternative<PedalEvent>(event))
-              {
-                const auto &pedalEvent = std::get<PedalEvent>(event);
-                midiOutPort()->sendEvent(ToMuseMidiEvent(pedalEvent));
-              }
-              synthResolver()->postEventVariant(m_sequencer->GetTrack(), event);
-            });
         setSequencer(std::move(sequencer));
       });
 }

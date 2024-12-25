@@ -25,7 +25,4 @@ public:
       mu::notation::IMasterNotation &masterNotation,
       const mu::playback::IPlaybackController::InstrumentTrackIdMap &);
 };
-
-muse::midi::Event ToMuseMidiEvent(const NoteEvent &noteEvent);
-muse::midi::Event ToMuseMidiEvent(const PedalEvent &pedalEvent);
 } // namespace dgk
