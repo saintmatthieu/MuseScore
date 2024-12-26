@@ -36,7 +36,7 @@
 #include "notation/inotationplayback.h"
 #include "notation/inotationconfiguration.h"
 
-#include "orchestrionsequencer/IOrchestrion.h"
+#include "OrchestrionSequencer/IOrchestrion.h"
 
 #include "playback/iplaybackcontroller.h"
 

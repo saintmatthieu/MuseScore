@@ -30,7 +30,7 @@
 #include "log.h"
 #include "commonscene/commonscenetypes.h"
 #include "abstractelementpopupmodel.h"
-#include "orchestrionsequencer/IOrchestrionSequencer.h"
+#include "OrchestrionSequencer/IOrchestrionSequencer.h"
 
 using namespace mu;
 using namespace mu::notation;

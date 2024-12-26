@@ -1,6 +1,6 @@
 #include "MuseGestureSynthesizer.h"
 #include "internal/libhandler.h"
-#include "orchestrionsequencer/OrchestrionTypes.h"
+#include "OrchestrionSequencer/OrchestrionTypes.h"
 
 namespace dgk {
 MuseGestureSynthesizer::MuseGestureSynthesizer(
