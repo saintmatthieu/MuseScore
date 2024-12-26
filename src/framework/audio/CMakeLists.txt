@@ -94,6 +94,7 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/audioutils.h
     ${CMAKE_CURRENT_LIST_DIR}/iplayer.h
     ${CMAKE_CURRENT_LIST_DIR}/itracks.h
+    ${CMAKE_CURRENT_LIST_DIR}/OrchestrionEventTypes.h
     ${CMAKE_CURRENT_LIST_DIR}/iaudiooutput.h
     ${CMAKE_CURRENT_LIST_DIR}/isynthresolver.h
     ${CMAKE_CURRENT_LIST_DIR}/ifxresolver.h

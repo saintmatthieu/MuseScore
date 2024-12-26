@@ -1,14 +1,13 @@
 #pragma once
 
-#include "OrchestrionSequencer/OrchestrionTypes.h"
-#include <vector>
+#include "OrchestrionEventTypes.h"
 
-namespace dgk {
-struct NoteEvent;
-
-class IGestureSynthesizer {
+namespace dgk
+{
+class IGestureSynthesizer
+{
 public:
   virtual ~IGestureSynthesizer() = default;
-  virtual void processEventVariant(const dgk::EventVariant&) {}
+  virtual void processEventVariant(const dgk::EventVariant &) {}
 };
 } // namespace dgk
