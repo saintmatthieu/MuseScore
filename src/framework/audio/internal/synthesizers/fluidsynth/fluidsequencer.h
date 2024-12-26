@@ -30,8 +30,6 @@
 #include "../../abstracteventsequencer.h"
 #include "soundmapping.h"
 
-#include <unordered_map>
-
 namespace muse::audio {
 class FluidSequencer : public AbstractEventSequencer<midi::Event>
 {
@@ -44,7 +42,6 @@ public:
     async::Channel<midi::channel_t, midi::Program> channelAdded() const;
 
     const ChannelMap& channels() const;
-    void revokePlayingNotes();
 
 private:
     void updateOffStreamEvents(const mpe::PlaybackEventsMap& events, const mpe::PlaybackParamList& params) override;
@@ -68,12 +65,6 @@ private:
     int pitchBendLevel(const mpe::pitch_level_t pitchLevel) const;
 
     mutable ChannelMap m_channels;
-    std::unordered_map<
-        bool /*right hand*/,
-        std::unordered_map<
-            midi::channel_t,
-            std::map<mpe::timestamp_t, std::vector<midi::note_idx_t>>>>
-        m_ringingChords;
     bool m_useDynamicEvents = false;
 };
 }
