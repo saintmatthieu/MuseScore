@@ -126,82 +126,44 @@ void MuseSamplerSequencer::updateOffStreamEvents(const PlaybackEventsMap& events
     const char* textArticulation_cstr = m_offStreamCache.textArticulation.c_str();
     const char* syllable_cstr = m_offStreamCache.syllable.c_str();
 
-    for (const auto &[tick, eventList] : events) {
-      for (const auto &event : eventList) {
-        if (!std::holds_alternative<mpe::NoteEvent>(event)) {
-          continue;
-        }
+    for (const auto& pair : events) {
+        for (const auto& event : pair.second) {
+            if (!std::holds_alternative<mpe::NoteEvent>(event)) {
+                continue;
+            }
 
             const mpe::NoteEvent& noteEvent = std::get<mpe::NoteEvent>(event);
-        const auto velocity = 1. * noteEvent.expressionCtx().nominalDynamicLevel /
-                              muse::mpe::MAX_DYNAMIC_LEVEL;
             const mpe::ArrangementContext& arrangementCtx = noteEvent.arrangementCtx();
 
             layer_idx_t layerIdx = makeLayerIdx(arrangementCtx.staffLayerIndex, arrangementCtx.voiceLayerIndex);
-        ms_Track track =
-            resolveTrack(layerIdx);
-        IF_ASSERT_FAILED(track) { continue; }
-
-        timestamp_t timestampFrom = noteEvent.arrangementCtx().actualTimestamp;
-
-        int pitch{};
-        int centsOffset{};
-        pitchAndTuning(noteEvent.pitchCtx().nominalPitchLevel, pitch,
-                       centsOffset);
-
-        ms_NoteArticulation articulationFlag = ms_NoteArticulation_None;
-        ms_NoteHead notehead = ms_NoteHead_Normal;
-        parseArticulations(noteEvent.expressionCtx().articulations,
-                           articulationFlag, notehead);
-
-        AuditionStartNoteEvent noteOn;
-        noteOn.msEvent = {
-            pitch,    centsOffset,  articulationFlag,     notehead,
-            velocity, presets_cstr, textArticulation_cstr};
-        noteOn.msTrack = track;
-        m_offStreamEvents[timestampFrom].emplace(std::move(noteOn));
-
-        const auto duration = noteEvent.arrangementCtx().actualDuration;
-        const auto killTime = tick + duration;
-        m_ringingChords[track][killTime].push_back(pitch);
-      }
-
-      for (auto &[track, ringingChords] : m_ringingChords) {
-        auto it = ringingChords.begin();
-        while (it != ringingChords.end() && tick >= it->first) {
-          const auto &pitches = it->second;
-          std::for_each(pitches.begin(), pitches.end(), [&](int pitch) {
-            // If there is a noteon event at m_offStreamEvents[tick] with the
-            // same pitch, don't add a noteoff event.
-            if (m_offStreamEvents.count(tick)) {
-              const auto &set = m_offStreamEvents.at(tick);
-              if (std::any_of(set.begin(), set.end(), [&](const auto &event) {
-                    if (!std::holds_alternative<AuditionStartNoteEvent>(event))
-                      return false;
-                    const auto &noteEvent = std::get<AuditionStartNoteEvent>(event);
-                    return noteEvent.msTrack == track &&
-                           noteEvent.msEvent._pitch == pitch;
-                  }))
-                return;
+            ms_Track track = resolveTrack(layerIdx);
+            IF_ASSERT_FAILED(track) {
+                continue;
             }
-            AuditionStopNoteEvent noteOff;
-            noteOff.msEvent = {pitch};
-            noteOff.msTrack = track;
-            m_offStreamEvents[tick].emplace(std::move(noteOff));
-          });
-          it = ringingChords.erase(it);
-        }
-      }
 
-      for (auto &[_, ringingChords] : m_ringingChords) {
-        const auto firstTimestamp = ringingChords.begin()->first;
-        decltype(ringingChords) newRingingChords;
-        for (const auto &[timestamp, pitches] : ringingChords) {
-          newRingingChords[timestamp - firstTimestamp] = pitches;
+            AuditionStartNoteEvent noteOn;
+            pitchAndTuning(noteEvent.pitchCtx().nominalPitchLevel, noteOn.msEvent._pitch, noteOn.msEvent._offset_cents);
+            parseArticulations(noteEvent.expressionCtx().articulations, noteOn.msEvent._articulation, noteOn.msEvent._notehead);
+            noteOn.msEvent._dynamics = 0.5;
+            noteOn.msEvent._active_presets = presets_cstr;
+            noteOn.msEvent._active_text_articulation = textArticulation_cstr;
+            noteOn.msEvent._active_syllable = syllable_cstr;
+            noteOn.msEvent._articulation_text_starts_at_note = m_offStreamCache.textArticulationStartsAtNote;
+            noteOn.msEvent._syllable_starts_at_note = m_offStreamCache.syllableStartsAtNote;
+            noteOn.msTrack = track;
+
+            timestamp_t timestampFrom = arrangementCtx.actualTimestamp;
+            m_offStreamEvents[arrangementCtx.actualTimestamp].emplace(std::move(noteOn));
+
+            AuditionStopNoteEvent noteOff;
+            noteOff.msEvent = { noteOn.msEvent._pitch };
+            noteOff.msTrack = track;
+
+            timestamp_t timestampTo = timestampFrom + arrangementCtx.actualDuration;
+            m_offStreamEvents[timestampTo].emplace(std::move(noteOff));
         }
-        ringingChords = newRingingChords;
-      }
     }
+
     updateOffSequenceIterator();
 }
 
@@ -220,8 +182,6 @@ void MuseSamplerSequencer::updateMainStreamEvents(const PlaybackEventsMap& event
 
     finalizeAllTracks();
 }
-
-void MuseSamplerSequencer::revokePlayingNotes() { m_ringingChords.clear(); }
 
 void MuseSamplerSequencer::clearAllTracks()
 {

@@ -28,7 +28,6 @@
 
 #include "internal/apitypes.h"
 #include "internal/libhandler.h"
-#include <unordered_map>
 
 typedef typename std::variant<muse::mpe::NoteEvent, muse::musesampler::AuditionStartNoteEvent,
                               muse::musesampler::AuditionStopNoteEvent> MuseSamplerEvent;
@@ -66,8 +65,6 @@ class MuseSamplerSequencer : public muse::audio::AbstractEventSequencer<mpe::Not
 {
 public:
     void init(MuseSamplerLibHandlerPtr samplerLib, ms_MuseSampler sampler, IMuseSamplerTracks* tracks, std::string&& defaultPresetCode);
-
-    void revokePlayingNotes();
 
 private:
     void updateOffStreamEvents(const mpe::PlaybackEventsMap& events, const mpe::PlaybackParamList& params) override;
@@ -127,7 +124,6 @@ private:
 
     std::string m_defaultPresetCode;
     OffStreamParams m_offStreamCache;
-    std::unordered_map<ms_Track, std::map<mpe::timestamp_t, std::vector<int>>> m_ringingChords;
 };
 }
 

@@ -27,7 +27,6 @@
 #include "musesamplerwrapper.h"
 
 #include "serialization/json.h"
-#include "MuseGestureSynthesizer.h"
 
 #include "log.h"
 
@@ -125,10 +124,7 @@ ISynthesizerPtr MuseSamplerResolver::resolveSynth(const TrackId /*trackId*/, con
 {
     InstrumentInfo instrument = findInstrument(m_libHandler, params.resourceMeta);
     if (instrument.isValid()) {
-      auto museSampler = std::make_shared<MuseSamplerWrapper>(
-          m_libHandler, instrument, params, iocContext());
-      return std::make_shared<dgk::MuseGestureSynthesizer>(
-          std::move(museSampler), *m_libHandler, instrument.instrumentId);
+        return std::make_shared<MuseSamplerWrapper>(m_libHandler, instrument, params, iocContext());
     }
 
     return nullptr;
