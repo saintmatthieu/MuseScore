@@ -64,6 +64,7 @@ void SequencePlayer::stop()
 {
     ONLY_AUDIO_WORKER_THREAD;
 
+    audioEngine()->setMode(RenderMode::IdleMode);
     m_clock->stop();
     setAllTracksActive(false);
 }
@@ -72,6 +73,7 @@ void SequencePlayer::pause()
 {
     ONLY_AUDIO_WORKER_THREAD;
 
+    audioEngine()->setMode(RenderMode::IdleMode);
     m_clock->pause();
     setAllTracksActive(false);
 }

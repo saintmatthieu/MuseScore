@@ -56,7 +56,7 @@ Ret AudioEngine::init(AudioBufferPtr bufferPtr, const RenderConstraints& consts)
     m_buffer = std::move(bufferPtr);
     m_renderConsts = consts;
 
-    setMode(RenderMode::RealTimeMode);
+    setMode(RenderMode::IdleMode);
 
     m_inited = true;
 
