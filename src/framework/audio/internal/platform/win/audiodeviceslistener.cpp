@@ -96,8 +96,6 @@ HRESULT AudioDevicesListener::QueryInterface(const IID&, void**)
 
 HRESULT AudioDevicesListener::OnDeviceStateChanged(LPCWSTR, DWORD)
 {
-    m_devicesChanged.notify();
-
     return S_OK;
 }
 

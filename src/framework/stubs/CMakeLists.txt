@@ -66,4 +66,6 @@ if (NOT MUSE_MODULE_VST)
     add_subdirectory(vst)
 endif()
 
-add_subdirectory(workspace)
+if (NOT MUSE_MODULE_WORKSPACE)
+    add_subdirectory(workspace)
+endif()
