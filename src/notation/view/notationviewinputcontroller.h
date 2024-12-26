@@ -36,8 +36,6 @@
 #include "notation/inotationplayback.h"
 #include "notation/inotationconfiguration.h"
 
-#include "OrchestrionSequencer/IOrchestrion.h"
-
 #include "playback/iplaybackcontroller.h"
 
 #include "global/iglobalconfiguration.h"
@@ -93,7 +91,6 @@ public:
     muse::Inject<playback::IPlaybackController> playbackController = { this };
     muse::Inject<context::IGlobalContext> globalContext = { this };
     muse::Inject<muse::IGlobalConfiguration> globalConfiguration = { this };
-    muse::Inject<dgk::IOrchestrion> orchestrion = { this };
 
 public:
     NotationViewInputController(IControlledView* view, const muse::modularity::ContextPtr& iocCtx);
