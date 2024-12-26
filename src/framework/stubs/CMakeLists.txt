@@ -38,9 +38,13 @@ if (NOT MUSE_MODULE_LEARN)
     add_subdirectory(learn)
 endif()
 
-add_subdirectory(midi)
+if (NOT MUSE_MODULE_MIDI)
+    add_subdirectory(midi)
+endif()
 
-add_subdirectory(mpe)
+if (NOT MUSE_MODULE_MPE)
+    add_subdirectory(mpe)
+endif()
 
 if (NOT MUSE_MODULE_MULTIINSTANCES)
     add_subdirectory(multiinstances)

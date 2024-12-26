@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-declare_module(midistub)
+declare_module(muse_midi)
 set(MODULE_ALIAS muse::midi)
 
 set(MODULE_SRC
