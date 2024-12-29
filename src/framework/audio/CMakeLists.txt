@@ -77,9 +77,7 @@ endif()
 set(MODULE_SRC
 
     # Common public
-    ${CMAKE_CURRENT_LIST_DIR}/IGestureSynthesizer.h
-    ${CMAKE_CURRENT_LIST_DIR}/GestureSynthesizer.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/GestureSynthesizer.h
+    ${CMAKE_CURRENT_LIST_DIR}/GestureSynthesizer.cpp # No idea why removing this line causes a build error
     ${CMAKE_CURRENT_LIST_DIR}/audiomodule.cpp
     ${CMAKE_CURRENT_LIST_DIR}/audiomodule.h
     ${CMAKE_CURRENT_LIST_DIR}/audioerrors.h
@@ -94,7 +92,6 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/audioutils.h
     ${CMAKE_CURRENT_LIST_DIR}/iplayer.h
     ${CMAKE_CURRENT_LIST_DIR}/itracks.h
-    ${CMAKE_CURRENT_LIST_DIR}/OrchestrionEventTypes.h
     ${CMAKE_CURRENT_LIST_DIR}/iaudiooutput.h
     ${CMAKE_CURRENT_LIST_DIR}/isynthresolver.h
     ${CMAKE_CURRENT_LIST_DIR}/ifxresolver.h
@@ -203,8 +200,6 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/internal/fx/reverb/reverbprocessor.h
 
     # Synthesizers
-    ${CMAKE_CURRENT_LIST_DIR}/internal/synthesizers/fluidsynth/FluidGestureSynthesizer.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/internal/synthesizers/fluidsynth/FluidGestureSynthesizer.h
     ${CMAKE_CURRENT_LIST_DIR}/internal/synthesizers/fluidsynth/soundmapping.h
     ${CMAKE_CURRENT_LIST_DIR}/internal/synthesizers/fluidsynth/sfcachedloader.h
     ${CMAKE_CURRENT_LIST_DIR}/internal/synthesizers/fluidsynth/fluidsynth.cpp

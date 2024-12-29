@@ -23,7 +23,6 @@
 #include "fluidresolver.h"
 
 #include "internal/audiosanitizer.h"
-#include "FluidGestureSynthesizer.h"
 
 #include "log.h"
 
@@ -57,9 +56,7 @@ ISynthesizerPtr FluidResolver::resolveSynth(const TrackId /*trackId*/, const Aud
     synth->addSoundFonts({ search->second.path });
     synth->setPreset(search->second.preset);
 
-    return std::make_shared<dgk::FluidGestureSynthesizer>(
-        synth, std::vector<muse::io::path_t>{search->second.path},
-        search->second.preset);
+    return synth;
 }
 
 bool FluidResolver::hasCompatibleResources(const PlaybackSetupData& /*setup*/) const

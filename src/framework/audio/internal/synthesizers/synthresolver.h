@@ -25,23 +25,21 @@
 
 #include <map>
 #include <mutex>
-#include <unordered_map>
 
-#include "async/asyncable.h"
 #include "isynthresolver.h"
 
 namespace muse::audio::synth {
-class SynthResolver : public ISynthResolver, public muse::async::Asyncable {
+class SynthResolver : public ISynthResolver
+{
 public:
     void init(const AudioInputParams& defaultInputParams) override;
 
-    ISynthesizerPtr resolveSynth(const TrackId trackId, const AudioInputParams& params, const PlaybackSetupData& setupData) override;
-    ISynthesizerPtr resolveDefaultSynth(const TrackId trackId) override;
+    ISynthesizerPtr resolveSynth(const TrackId trackId, const AudioInputParams& params, const PlaybackSetupData& setupData) const override;
+    ISynthesizerPtr resolveDefaultSynth(const TrackId trackId) const override;
     AudioInputParams resolveDefaultInputParams() const override;
     AudioResourceMetaList resolveAvailableResources() const override;
     SoundPresetList resolveAvailableSoundPresets(const AudioResourceMeta& resourceMeta) const override;
 
-    void postEventVariant(int track, const dgk::EventVariant& variant) override;
     void registerResolver(const AudioSourceType type, IResolverPtr resolver) override;
 
     void clearSources() override;
@@ -53,7 +51,6 @@ private:
 
     std::map<AudioSourceType, IResolverPtr> m_resolvers;
     AudioInputParams m_defaultInputParams;
-    std::unordered_map<TrackId, std::weak_ptr<ISynthesizer>> m_resolvedSynths;
 };
 }
 
