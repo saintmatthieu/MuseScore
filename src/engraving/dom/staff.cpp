@@ -941,7 +941,7 @@ double Staff::spatium(const EngravingItem* e) const
 
 double Staff::staffMag(const StaffType* stt) const
 {
-    return (false /*stt->isSmall()*/ ? style().styleD(Sid::smallStaffMag) : 1.0) * stt->userMag();
+    return (stt->isSmall() ? style().styleD(Sid::smallStaffMag) : 1.0) * stt->userMag();
 }
 
 double Staff::staffMag(const Fraction& tick) const

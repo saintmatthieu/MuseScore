@@ -184,7 +184,6 @@ void StaffSettingsModel::setIsSmallStaff(bool value)
         return;
     }
 
-    m_config.staffType.setMuted(value);
     m_config.staffType.setSmall(value);
     notationParts()->setStaffConfig(m_staffId, m_config);
 
