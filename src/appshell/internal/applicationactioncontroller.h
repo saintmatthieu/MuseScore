@@ -22,6 +22,7 @@
 #ifndef MU_APPSHELL_APPLICATIONCONTROLLER_H
 #define MU_APPSHELL_APPLICATIONCONTROLLER_H
 
+#include <QDragEnterEvent>
 #include <QObject>
 
 #include "modularity/ioc.h"
