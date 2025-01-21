@@ -53,6 +53,7 @@ static const QString METHOD_QUIT_WITH_RESTART_LAST_INSTANCE("METHOD_QUIT_WITH_RE
 static const QString METHOD_QUIT_WITH_RUNING_INSTALLATION("METHOD_QUIT_WITH_RUNING_INSTALLATION");
 static const QString METHOD_QUITED("METHOD_QUITED");
 static const QString METHOD_RESOURCE_CHANGED("RESOURCE_CHANGED");
+static const QString METHOD_GAINED_FOCUS("GAINED_FOCUS");
 
 MultiInstancesProvider::~MultiInstancesProvider()
 {
@@ -161,6 +162,8 @@ void MultiInstancesProvider::onMsg(const Msg& msg)
         m_ipcChannel->response(METHOD_QUITED, { }, msg.srcID);
     } else if (msg.method == METHOD_RESOURCE_CHANGED) {
         resourceChanged().send(msg.args.at(0).toStdString());
+    } else if (msg.method == METHOD_GAINED_FOCUS) {
+        m_otherInstanceGainedFocus.notify();
     }
 }
 
@@ -429,6 +432,19 @@ void MultiInstancesProvider::notifyAboutInstanceWasQuited()
     }
 
     m_ipcChannel->broadcast(METHOD_QUITED);
+}
+
+void MultiInstancesProvider::notifyAboutGainedFocus() {
+    if (!isInited()) {
+        return;
+    }
+
+    m_ipcChannel->broadcast(METHOD_GAINED_FOCUS);
+}
+
+async::Notification MultiInstancesProvider::otherInstanceGainedFocus() const
+{
+    return m_otherInstanceGainedFocus;
 }
 
 void MultiInstancesProvider::quitForAll()

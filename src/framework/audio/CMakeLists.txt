@@ -77,6 +77,7 @@ endif()
 set(MODULE_SRC
 
     # Common public
+    ${CMAKE_CURRENT_LIST_DIR}/GestureSynthesizer.cpp # No idea why removing this line causes a build error
     ${CMAKE_CURRENT_LIST_DIR}/audiomodule.cpp
     ${CMAKE_CURRENT_LIST_DIR}/audiomodule.h
     ${CMAKE_CURRENT_LIST_DIR}/audioerrors.h

@@ -34,7 +34,8 @@ using namespace muse::actions;
 const UiActionList PlaybackUiActions::m_mainActions = {
     UiAction("play",
              mu::context::UiCtxNotationOpened,
-             mu::context::CTX_NOTATION_FOCUSED,
+            //  mu::context::CTX_NOTATION_FOCUSED,
+             mu::context::CTX_NOTATION_OPENED, // saintmatthieu: Because I don't know how to get the context of the notation being focused (TODO figure it out and remove this diff)
              TranslatableString("action", "Play"),
              TranslatableString("action", "Play"),
              IconCode::Code::PLAY
@@ -48,14 +49,14 @@ const UiActionList PlaybackUiActions::m_mainActions = {
              ),
     UiAction("rewind",
              mu::context::UiCtxNotationOpened,
-             mu::context::CTX_NOTATION_FOCUSED,
+             mu::context::CTX_NOTATION_OPENED,
              TranslatableString("action", "Rewind"),
              TranslatableString("action", "Rewind"),
              IconCode::Code::REWIND
              ),
     UiAction("loop",
              mu::context::UiCtxNotationOpened,
-             mu::context::CTX_NOTATION_FOCUSED,
+             mu::context::CTX_NOTATION_OPENED,
              TranslatableString("action", "Loop playback"),
              TranslatableString("action", "Toggle ‘Loop playback’"),
              IconCode::Code::LOOP,

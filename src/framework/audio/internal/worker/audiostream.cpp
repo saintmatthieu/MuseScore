@@ -37,6 +37,7 @@
 #pragma warning(push)
 #pragma warning(disable: 4456) // declaration hides previous local declaration
 #endif
+#include <random> // not including this one before stb_vorbis.c prevents anyone included after audiostream.cpp from including <random>. Don't know what std_vorbis does that causes this.
 #include "thirdparty/stb/stb_vorbis.c"
 #if (defined (_MSCVER) || defined (_MSC_VER))
 #pragma warning(pop)

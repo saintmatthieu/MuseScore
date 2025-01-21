@@ -241,7 +241,7 @@ set(MUSE_APP_BUILD_NUMBER ${CMAKE_BUILD_NUMBER})
 set(MUSE_APP_INSTALL_PREFIX "\"${CMAKE_INSTALL_PREFIX}\"")
 set(MUSE_APP_INSTALL_NAME "\"${Mscore_INSTALL_NAME}\"")
 
-include(${MUSE_FRAMEWORK_SRC_PATH}/cmake/MuseSetupConfiguration.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/src/framework/cmake/MuseSetupConfiguration.cmake)
 
 ###########################################
 # Global definitions

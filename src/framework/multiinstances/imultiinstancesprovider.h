@@ -67,6 +67,8 @@ public:
     virtual async::Notification instancesChanged() const = 0;
 
     virtual void notifyAboutInstanceWasQuited() = 0;
+    virtual void notifyAboutGainedFocus() = 0;
+    virtual async::Notification otherInstanceGainedFocus() const = 0;
 
     // Quit for all
     virtual void quitForAll() = 0;
