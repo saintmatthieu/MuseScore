@@ -127,6 +127,9 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/internal/mscoreerrorscontroller.cpp
     ${CMAKE_CURRENT_LIST_DIR}/internal/mscoreerrorscontroller.h
 
+    ${CMAKE_CURRENT_LIST_DIR}/internal/OrchestrionNotationInteraction.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/internal/OrchestrionNotationInteraction.h
+
     ${CMAKE_CURRENT_LIST_DIR}/view/abstractnotationpaintview.cpp
     ${CMAKE_CURRENT_LIST_DIR}/view/abstractnotationpaintview.h
     ${CMAKE_CURRENT_LIST_DIR}/view/notationpaintview.cpp

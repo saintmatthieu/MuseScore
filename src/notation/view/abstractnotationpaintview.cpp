@@ -650,7 +650,7 @@ void AbstractNotationPaintView::paint(QPainter* qp)
     m_loopInMarker->paint(painter);
     m_loopOutMarker->paint(painter);
 
-    if (notation()->viewMode() == engraving::LayoutMode::LINE) {
+    if (false /* notation()->viewMode() == engraving::LayoutMode::LINE */) {
         ContinuousPanel::NotationViewContext nvCtx;
         nvCtx.xOffset = m_matrix.dx();
         nvCtx.yOffset = m_matrix.dy();

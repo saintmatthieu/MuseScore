@@ -47,8 +47,7 @@ using namespace muse::languages;
 using namespace muse::network;
 
 static const QStringList LANGUAGE_RESOURCE_NAMES = {
-    "musescore",
-    "instruments"
+    "orchestrion"
 };
 
 static const std::string LANGUAGES_RESOURCE_NAME("LANGUAGES");

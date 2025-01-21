@@ -30,7 +30,7 @@ class NotationPaintView : public AbstractNotationPaintView
 public:
     explicit NotationPaintView(QQuickItem* parent = nullptr);
 
-private:
+protected:
     void onLoadNotation(INotationPtr notation) override;
     void onUnloadNotation(INotationPtr notation) override;
 

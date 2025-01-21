@@ -143,7 +143,9 @@ void NotationPainting::paintPageSheet(Painter* painter, const Page* page, const 
     }
 
     if (configuration()->foregroundUseColor()) {
-        painter->fillRect(pageRect, configuration()->foregroundColor());
+        // We don't need the paper at all, don't overdraw our nice background wallpaper.
+        // (Couldn't find a way of doing this without this patch.)
+        // painter->fillRect(pageRect, configuration()->foregroundColor());
     } else {
         const QPixmap& wallpaper = configuration()->foregroundWallpaper();
         if (!wallpaper.isNull()) {

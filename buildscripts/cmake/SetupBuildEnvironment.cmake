@@ -71,6 +71,13 @@ if(CC_IS_MSVC)
     add_compile_options("/MP")
     add_compile_options("/bigobj")
 
+    set(CMAKE_CXX_FLAGS_DEBUG           "/MDd /Zi /Ob0 /Od /RTC1")
+    set(CMAKE_CXX_FLAGS_RELEASE         "/MD /O2 /Ob2")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "/MD /Zi /O2 /Ob1")
+    set(CMAKE_C_FLAGS_DEBUG             "/MDd /Zi /Ob0 /Od /RTC1")
+    set(CMAKE_C_FLAGS_RELEASE           "/MD /O2 /Ob2")
+    set(CMAKE_C_FLAGS_RELWITHDEBINFO    "/MD /Zi /O2 /Ob1")
+
     add_compile_definitions(WIN32 _WINDOWS)
     add_compile_definitions(_UNICODE UNICODE)
     add_compile_definitions(_USE_MATH_DEFINES)

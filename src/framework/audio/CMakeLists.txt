@@ -36,6 +36,7 @@ set(MODULE_SRC
     ${AUDIO_DRIVER_SRC}
 
     # Temporary
+    ${CMAKE_CURRENT_LIST_DIR}/GestureSynthesizer.cpp # No idea why removing this line causes a build error
     ${CMAKE_CURRENT_LIST_DIR}/audiotypes.h
     ${CMAKE_CURRENT_LIST_DIR}/audioerrors.h
 
