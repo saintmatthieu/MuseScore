@@ -333,12 +333,12 @@ EditStyle::EditStyle(QWidget* parent)
         { StyleId::pedalLineStyle,          false, pedalLineStyle,          resetPedalLineStyle },
         { StyleId::pedalDashLineLen,        false, pedalLineStyleDashSize,  resetPedalLineStyleDashSize },
         { StyleId::pedalDashGapLen,         false, pedalLineStyleGapSize,   resetPedalLineStyleGapSize },
-        { StyleId::textLineLineStyle,         false, textLineLineStyle,               resetTextLineLineStyle },
-        { StyleId::textLineDashLineLen,       false, textLineLineStyleDashSize,       resetTextLineLineStyleDashSize },
-        { StyleId::textLineDashGapLen,        false, textLineLineStyleGapSize,        resetTextLineLineStyleGapSize },
-        { StyleId::systemTextLineLineStyle,   false, systemTextLineLineStyle,         resetSystemTextLineLineStyle },
-        { StyleId::systemTextLineDashLineLen, false, systemTextLineLineStyleDashSize, resetSystemTextLineLineStyleDashSize },
-        { StyleId::systemTextLineDashGapLen,  false, systemTextLineLineStyleGapSize,  resetSystemTextLineLineStyleGapSize },
+        // { StyleId::textLineLineStyle,         false, textLineLineStyle,               resetTextLineLineStyle },
+        // { StyleId::textLineDashLineLen,       false, textLineLineStyleDashSize,       resetTextLineLineStyleDashSize },
+        // { StyleId::textLineDashGapLen,        false, textLineLineStyleGapSize,        resetTextLineLineStyleGapSize },
+        // { StyleId::systemTextLineLineStyle,   false, systemTextLineLineStyle,         resetSystemTextLineLineStyle },
+        // { StyleId::systemTextLineDashLineLen, false, systemTextLineLineStyleDashSize, resetSystemTextLineLineStyleDashSize },
+        // { StyleId::systemTextLineDashGapLen,  false, systemTextLineLineStyleGapSize,  resetSystemTextLineLineStyleGapSize },
 
         { StyleId::staffUpperBorder,        false, staffUpperBorder,        resetStaffUpperBorder },
         { StyleId::staffLowerBorder,        false, staffLowerBorder,        resetStaffLowerBorder },
@@ -654,12 +654,12 @@ EditStyle::EditStyle(QWidget* parent)
         { StyleId::textLinePlacement,           false, textLinePlacement,           resetTextLinePlacement },
         { StyleId::textLinePosAbove,            false, textLinePosAbove,            resetTextLinePosAbove },
         { StyleId::textLinePosBelow,            false, textLinePosBelow,            resetTextLinePosBelow },
-        { StyleId::textLineLineWidth,           false, textLineLineWidth,           resetTextLineLineWidth },
+        // { StyleId::textLineLineWidth,           false, textLineLineWidth,           resetTextLineLineWidth },
 
         { StyleId::systemTextLinePlacement,     false, systemTextLinePlacement,     resetSystemTextLinePlacement },
         { StyleId::systemTextLinePosAbove,      false, systemTextLinePosAbove,      resetSystemTextLinePosAbove },
         { StyleId::systemTextLinePosBelow,      false, systemTextLinePosBelow,      resetSystemTextLinePosBelow },
-        { StyleId::systemTextLineLineWidth,     false, systemTextLineLineWidth,     resetSystemTextLineLineWidth },
+        // { StyleId::systemTextLineLineWidth,     false, systemTextLineLineWidth,     resetSystemTextLineLineWidth },
 
         { StyleId::fermataPosAbove,         false, fermataPosAbove,       resetFermataPosAbove },
         { StyleId::fermataPosBelow,         false, fermataPosBelow,       resetFermataPosBelow },
@@ -744,23 +744,23 @@ EditStyle::EditStyle(QWidget* parent)
             resetPedalLineStyleGapSize
         }),
 
-        new LineStyleSelect(this, textLineLineStyle, {
-            label_textLineLine_lineStyle_dashSize,
-            textLineLineStyleDashSize,
-            resetTextLineLineStyleDashSize,
-            label_textLineLine_lineStyle_gapSize,
-            textLineLineStyleGapSize,
-            resetTextLineLineStyleGapSize
-        }),
+        // new LineStyleSelect(this, textLineLineStyle, {
+        //     label_textLineLine_lineStyle_dashSize,
+        //     textLineLineStyleDashSize,
+        //     resetTextLineLineStyleDashSize,
+        //     label_textLineLine_lineStyle_gapSize,
+        //     textLineLineStyleGapSize,
+        //     resetTextLineLineStyleGapSize
+        // }),
 
-        new LineStyleSelect(this, systemTextLineLineStyle, {
-            label_systemTextLineLine_lineStyle_dashSize,
-            systemTextLineLineStyleDashSize,
-            resetSystemTextLineLineStyleDashSize,
-            label_systemTextLineLine_lineStyle_gapSize,
-            systemTextLineLineStyleGapSize,
-            resetSystemTextLineLineStyleGapSize
-        })
+        // new LineStyleSelect(this, systemTextLineLineStyle, {
+        //     label_systemTextLineLine_lineStyle_dashSize,
+        //     systemTextLineLineStyleDashSize,
+        //     resetSystemTextLineLineStyleDashSize,
+        //     label_systemTextLineLine_lineStyle_gapSize,
+        //     systemTextLineLineStyleGapSize,
+        //     resetSystemTextLineLineStyleGapSize
+        // })
     };
 
     for (const LineStyleSelect* lineStyleSelect : m_lineStyleSelects) {

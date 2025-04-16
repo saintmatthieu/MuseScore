@@ -39,8 +39,25 @@ Rectangle {
     implicitHeight: view.implicitHeight
 
     Component.onCompleted: {
+        // Qt.callLater(function() {
         view.init()
+        // })
     }
+
+    onWindowChanged: {
+        window.onXChanged.connect(function() {
+            console.log("Window moved to: ", window.x, window.y)
+        })
+    }
+
+    // QtObject {
+    //     id: view
+    //     property int instanceId: -1
+    //     property string title: "dummy"
+    //     property int implicitWidth: 100
+    //     property int implicitHeight: 100
+    //     function init() {}
+    // }
 
     VstView {
         id: view

@@ -104,7 +104,7 @@ void VstView::init()
 
     m_title = QString::fromStdString(m_instance->name());
     emit titleChanged();
-
+/* 
     m_view = m_instance->createView();
     if (!m_view) {
         return;
@@ -135,7 +135,7 @@ void VstView::init()
 
     updateViewGeometry();
 
-    m_window->show();
+    m_window->show(); */
 }
 
 void VstView::deinit()
@@ -169,7 +169,7 @@ Steinberg::tresult VstView::resizeView(Steinberg::IPlugView* view, Steinberg::Vi
         return Steinberg::kResultFalse;
     }
 
-    view->checkSizeConstraint(requiredSize);
+/*     view->checkSizeConstraint(requiredSize);
 
     int newWidth = requiredSize->getWidth();
     int newHeight = requiredSize->getHeight();
@@ -180,6 +180,9 @@ Steinberg::tresult VstView::resizeView(Steinberg::IPlugView* view, Steinberg::Vi
     newWidth = newWidth / m_screenMetrics.devicePixelRatio;
     newHeight = newHeight / m_screenMetrics.devicePixelRatio;
 #endif
+
+    LOGD() << "screen metrics: " << m_screenMetrics.availableSize.width() << ", " << m_screenMetrics.availableSize.height()
+           << ", devicePixelRatio: " << m_screenMetrics.devicePixelRatio;
 
     newWidth = std::min(newWidth, m_screenMetrics.availableSize.width());
     newHeight = std::min(newHeight, m_screenMetrics.availableSize.height());
@@ -192,7 +195,7 @@ Steinberg::tresult VstView::resizeView(Steinberg::IPlugView* view, Steinberg::Vi
     vstSize.right = m_window->width() * m_screenMetrics.devicePixelRatio;
     vstSize.bottom = m_window->height() * m_screenMetrics.devicePixelRatio;
     view->onSize(&vstSize);
-
+ */
     return Steinberg::kResultTrue;
 }
 
@@ -212,7 +215,7 @@ void VstView::updateViewGeometry()
     Steinberg::ViewRect size;
     m_view->getSize(&size);
 
-    resizeView(m_view, &size);
+    // resizeView(m_view, &size);
 }
 
 int VstView::instanceId() const
