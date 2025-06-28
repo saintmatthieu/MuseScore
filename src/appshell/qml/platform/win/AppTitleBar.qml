@@ -85,7 +85,7 @@ Rectangle {
             textFormat: Text.RichText
             font: ui.theme.defaultFont
 
-            visible: root.windowVisibility !== Window.FullScreen
+            // visible: root.windowVisibility !== Window.FullScreen
 
             TextMetrics {
                 id: titleTextmetrics
@@ -106,7 +106,7 @@ Rectangle {
 
             windowIsMiximized: root.windowVisibility === Window.Maximized
 
-            visible: root.windowVisibility !== Window.FullScreen
+            // visible: root.windowVisibility !== Window.FullScreen
 
             onShowWindowMinimizedRequested: {
                 root.showWindowMinimizedRequested()
