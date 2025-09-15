@@ -23,6 +23,7 @@
 #include "winpopupviewclosecontroller.h"
 
 #include <Windows.h>
+#include <QCursor>
 
 using namespace muse::uicomponents;
 

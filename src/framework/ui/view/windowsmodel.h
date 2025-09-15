@@ -23,6 +23,7 @@
 #pragma once
 
 #include <QObject>
+#include <QRect>
 
 #include "modularity/ioc.h"
 #include "ui/iwindowscontroller.h"

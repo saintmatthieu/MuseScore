@@ -55,14 +55,14 @@ const UiActionList PlaybackUiActions::m_mainActions = {
              IconCode::Code::PAUSE
              ),
     UiAction("rewind",
-             mu::context::UiCtxNotationOpened,
+             mu::context::UiCtxProjectOpened,
              mu::context::CTX_NOTATION_FOCUSED,
              TranslatableString("action", "Rewind"),
              TranslatableString("action", "Rewind"),
              IconCode::Code::REWIND
              ),
     UiAction("loop",
-             mu::context::UiCtxNotationOpened,
+             mu::context::UiCtxProjectOpened,
              mu::context::CTX_NOTATION_FOCUSED,
              TranslatableString("action", "Loop playback"),
              TranslatableString("action", "Toggle ‘Loop playback’"),

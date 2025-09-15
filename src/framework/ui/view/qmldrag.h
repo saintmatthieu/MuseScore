@@ -21,6 +21,7 @@
  */
 #pragma once
 
+#include <QQuickItem>
 #include <QObject>
 #include <QQmlEngine>
 
