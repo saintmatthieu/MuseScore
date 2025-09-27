@@ -82,7 +82,7 @@ RetVal<QByteArray> Workspace::rawData(const DataKey& key) const
 {
     TRACEFUNC;
 
-    IF_ASSERT_FAILED(m_file->isLoaded()) {
+    if (!m_file->isLoaded()) {
         return RetVal<QByteArray>(make_ret(Err::NotLoaded));
     }
 
