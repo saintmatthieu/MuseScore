@@ -1730,8 +1730,8 @@ bool ProjectActionsController::askIfUserAgreesToOpenProjectWithIncompatibleVersi
 void ProjectActionsController::warnFileTooNew(const muse::io::path_t& filepath)
 {
     interactive()->error(muse::qtrc("project", "Cannot read file %1").arg(io::toNativeSeparators(filepath).toQString()).toStdString(),
-                         muse::trc("project", "This file was saved using a newer version of MuseScore Studio. "
-                                              "Please visit <a href=\"https://musescore.org\">musescore.org</a> to obtain the latest version."));
+                         muse::trc("project", "This file MuseScore Studio file is of a recent, yet unsupported version. "
+                                              "Open it first in MuseScore Studio, export it in MusicXML format and open it in Orchestrion."));
 }
 
 bool ProjectActionsController::askIfUserAgreesToOpenCorruptedProject(const String& projectName, const std::string& errorText)
