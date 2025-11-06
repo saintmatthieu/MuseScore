@@ -119,6 +119,9 @@ void SequenceIO::setInputParams(const TrackId id, const AudioInputParams& params
     }
 
     TrackPtr track = m_getTracks->track(id);
+    if (!track) {
+        return;
+    }
     track->setInputParams(params);
 }
 
