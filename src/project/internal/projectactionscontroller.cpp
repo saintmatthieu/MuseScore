@@ -78,13 +78,9 @@ void ProjectActionsController::init()
         }
     });
 
-    // Orchestrion: we don't want the option to save to cloud to appear.
-    // Another way would be to inject our own project module, but that's massive work.
-    // We could also inject our own `OpenSaveProjectScenario` implementation, but this would still require a patch in projectmodule.cpp.
-    dispatcher()->reg(this, "file-save", [this]() { saveProjectLocally("", SaveMode::Save); });
-    dispatcher()->reg(this, "file-save-as", [this]() { saveProjectLocally("", SaveMode::SaveAs); });
-    dispatcher()->reg(this, "file-save-a-copy", [this]() { saveProjectLocally("", SaveMode::SaveCopy); });
-
+    dispatcher()->reg(this, "file-save", [this]() { saveProject(SaveMode::Save); });
+    dispatcher()->reg(this, "file-save-as", [this]() { saveProject(SaveMode::SaveAs); });
+    dispatcher()->reg(this, "file-save-a-copy", [this]() { saveProject(SaveMode::SaveCopy); });
     dispatcher()->reg(this, "file-save-selection", [this]() { saveProject(SaveMode::SaveSelection, SaveLocationType::Local); });
     dispatcher()->reg(this, "file-save-to-cloud", [this]() { saveProject(SaveMode::Save, SaveLocationType::Cloud); });
     dispatcher()->reg(this, "file-save-at", [this](const ActionData& args) { saveProjectAt(args); });
