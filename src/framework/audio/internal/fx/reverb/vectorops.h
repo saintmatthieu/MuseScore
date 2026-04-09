@@ -24,6 +24,7 @@
 #define MUSE_AUDIO_VECTOROPS_H
 
 #include <stdlib.h>
+#include <cstring>
 
 #include <cstdint>
 
