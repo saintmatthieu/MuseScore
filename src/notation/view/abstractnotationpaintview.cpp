@@ -22,6 +22,7 @@
 #include "abstractnotationpaintview.h"
 
 #include <QPainter>
+#include <QCursor>
 #include <QMimeData>
 
 #include "actions/actiontypes.h"
