@@ -103,17 +103,16 @@ protected:
     explicit AbstractInvoker();
     ~AbstractInvoker();
 
-    virtual void deleteCall(int type, void* call) = 0;
     virtual void doInvoke(int type, void* call, const NotifyData& data) = 0;
 
     struct CallBack {
         std::thread::id threadID;
         int type = 0;
         Asyncable* receiver = nullptr;
-        void* call = nullptr;
+        std::shared_ptr<void> call;
         CallBack() = default;
-        CallBack(std::thread::id threadID, int t, Asyncable* cr, void* c)
-            : threadID(threadID), type(t), receiver(cr), call(c) {}
+        CallBack(std::thread::id tid, int t, Asyncable* cr, std::shared_ptr<void> c)
+            : threadID(tid), type(t), receiver(cr), call(std::move(c)) {}
     };
 
     class CallBacks : public std::vector<CallBack>
@@ -128,32 +127,40 @@ protected:
         std::mutex mutex;
         AbstractInvoker* invoker = nullptr;
         int type = -1;
-        CallBack call;
+        Asyncable* receiver = nullptr;
+        std::weak_ptr<void> callWeak;
         NotifyData data;
 
-        QInvoker(AbstractInvoker* i, int t, CallBack c, NotifyData d)
-            : invoker(i), type(t), call(c), data(d)
+        QInvoker(AbstractInvoker* i, int t, Asyncable* r, const std::shared_ptr<void>& c, NotifyData d)
+            : invoker(i), type(t), receiver(r), callWeak(c), data(std::move(d))
         {
             invoker->addQInvoker(this);
         }
 
         ~QInvoker()
         {
-            if (invoker) {
-                invoker->removeQInvoker(this);
+            AbstractInvoker* inv = nullptr;
+            {
+                std::lock_guard<std::mutex> lock(mutex);
+                inv = invoker;
+            }
+            if (inv) {
+                inv->removeQInvoker(this);
             }
         }
 
         void invoke()
         {
             AbstractInvoker* inv = nullptr;
+            std::shared_ptr<void> callStrong;
             {
                 std::lock_guard<std::mutex> lock(mutex);
                 inv = invoker;
+                callStrong = callWeak.lock();
             }
 
-            if (inv) {
-                inv->invokeCallback(type, call, data);
+            if (inv && callStrong) {
+                inv->invokeQueuedCallback(type, receiver, callStrong.get(), data);
             }
         }
 
@@ -161,12 +168,15 @@ protected:
         {
             std::lock_guard<std::mutex> lock(mutex);
             invoker = nullptr;
+            callWeak.reset();
         }
     };
 
     void invokeCallback(int type, const CallBack& c, const NotifyData& data);
+    void invokeQueuedCallback(int type, Asyncable* receiver, void* call, const NotifyData& data);
 
-    void addCallBack(int type, Asyncable* receiver, void* call, Asyncable::AsyncMode mode = Asyncable::AsyncMode::AsyncSetRepeat);
+    void addCallBack(int type, Asyncable* receiver, std::shared_ptr<void> call,
+                     Asyncable::AsyncMode mode = Asyncable::AsyncMode::AsyncSetRepeat);
     void removeCallBack(int type, Asyncable* receiver);
     void removeAllCallBacks();
 
@@ -175,6 +185,7 @@ protected:
 
     bool containsReceiver(Asyncable* receiver) const;
 
+    mutable std::mutex m_callbacksMutex;
     std::map<int /*type*/, CallBacks > m_callbacks;
 
     std::mutex m_qInvokersMutex;

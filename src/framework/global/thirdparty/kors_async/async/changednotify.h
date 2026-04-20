@@ -42,7 +42,8 @@ public:
     template<typename Call>
     void onChanged(Asyncable* caller, Call f, Asyncable::AsyncMode mode = Asyncable::AsyncMode::AsyncSetOnce)
     {
-        ptr()->addCallBack(Changed, caller, new ChangedCall<Call>(f), mode);
+        ptr()->addCallBack(Changed, caller,
+                           std::static_pointer_cast<void>(std::make_shared<ChangedCall<Call> >(f)), mode);
     }
 
     void resetOnChanged(Asyncable* caller)
@@ -53,7 +54,8 @@ public:
     template<typename Call>
     void onItemChanged(Asyncable* caller, Call f, Asyncable::AsyncMode mode = Asyncable::AsyncMode::AsyncSetOnce)
     {
-        ptr()->addCallBack(ItemChanged, caller, new ItemChangedCallT<Call, T>(f), mode);
+        ptr()->addCallBack(ItemChanged, caller,
+                           std::static_pointer_cast<void>(std::make_shared<ItemChangedCallT<Call, T> >(f)), mode);
     }
 
     void resetOnItemChanged(Asyncable* caller)
@@ -64,7 +66,8 @@ public:
     template<typename Call>
     void onItemAdded(Asyncable* caller, Call f, Asyncable::AsyncMode mode = Asyncable::AsyncMode::AsyncSetOnce)
     {
-        ptr()->addCallBack(ItemAdded, caller, new ItemAddedCallT<Call, T>(f), mode);
+        ptr()->addCallBack(ItemAdded, caller,
+                           std::static_pointer_cast<void>(std::make_shared<ItemAddedCallT<Call, T> >(f)), mode);
     }
 
     void resetOnItemAdded(Asyncable* caller)
@@ -75,7 +78,8 @@ public:
     template<typename Call>
     void onItemRemoved(Asyncable* caller, Call f, Asyncable::AsyncMode mode = Asyncable::AsyncMode::AsyncSetOnce)
     {
-        ptr()->addCallBack(ItemRemoved, caller, new ItemRemovedCallT<Call, T>(f), mode);
+        ptr()->addCallBack(ItemRemoved, caller,
+                           std::static_pointer_cast<void>(std::make_shared<ItemRemovedCallT<Call, T> >(f)), mode);
     }
 
     void resetOnItemRemoved(Asyncable* caller)
@@ -86,7 +90,8 @@ public:
     template<typename Call>
     void onItemReplaced(Asyncable* caller, Call f, Asyncable::AsyncMode mode = Asyncable::AsyncMode::AsyncSetOnce)
     {
-        ptr()->addCallBack(ItemReplaced, caller, new ItemReplacedCallT<Call, T>(f), mode);
+        ptr()->addCallBack(ItemReplaced, caller,
+                           std::static_pointer_cast<void>(std::make_shared<ItemReplacedCallT<Call, T> >(f)), mode);
     }
 
     void resetOnItemReplaced(Asyncable* caller)
@@ -179,29 +184,6 @@ private:
         ~ChangedInvoker()
         {
             removeAllCallBacks();
-        }
-
-        void deleteCall(int _type, void* call) override
-        {
-            CallType type = static_cast<CallType>(_type);
-            switch (type) {
-            case Undefined: {} break;
-            case Changed:     {
-                delete static_cast<IChanged*>(call);
-            } break;
-            case ItemChanged:   {
-                delete static_cast<IItemChanged*>(call);
-            } break;
-            case ItemAdded:   {
-                delete static_cast<IItemAdded*>(call);
-            } break;
-            case ItemRemoved: {
-                delete static_cast<IItemRemoved*>(call);
-            } break;
-            case ItemReplaced: {
-                delete static_cast<IItemReplaced*>(call);
-            } break;
-            }
         }
 
         void doInvoke(int callKey, void* call, const NotifyData& d) override

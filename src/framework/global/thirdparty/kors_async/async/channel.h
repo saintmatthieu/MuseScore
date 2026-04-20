@@ -57,7 +57,9 @@ public:
     template<typename Func>
     void onReceive(const Asyncable* receiver, Func f, Asyncable::AsyncMode mode = Asyncable::AsyncMode::AsyncSetOnce)
     {
-        ptr()->addCallBack(Receive, const_cast<Asyncable*>(receiver), new ReceiveCall<Func, T...>(f), mode);
+        ptr()->addCallBack(Receive, const_cast<Asyncable*>(receiver),
+                           std::static_pointer_cast<void>(std::make_shared<ReceiveCall<Func, T...> >(f)),
+                           mode);
     }
 
     void resetOnReceive(const Asyncable* receiver)
@@ -73,7 +75,9 @@ public:
     template<typename Func>
     void onClose(const Asyncable* receiver, Func f, Asyncable::AsyncMode mode = Asyncable::AsyncMode::AsyncSetOnce)
     {
-        ptr()->addCallBack(Close, const_cast<Asyncable*>(receiver), new CloseCall<Func>(f), mode);
+        ptr()->addCallBack(Close, const_cast<Asyncable*>(receiver),
+                           std::static_pointer_cast<void>(std::make_shared<CloseCall<Func> >(f)),
+                           mode);
     }
 
     bool isConnected() const
@@ -123,20 +127,6 @@ private:
         ~ChannelInvoker()
         {
             removeAllCallBacks();
-        }
-
-        void deleteCall(int _type, void* call) override
-        {
-            CallType type = static_cast<CallType>(_type);
-            switch (type) {
-            case Undefined: {} break;
-            case Receive: {
-                delete static_cast<IReceive*>(call);
-            } break;
-            case Close: {
-                delete static_cast<IClose*>(call);
-            } break;
-            }
         }
 
         void doInvoke(int callKey, void* call, const NotifyData& d) override
