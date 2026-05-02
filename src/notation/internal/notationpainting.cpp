@@ -161,6 +161,12 @@ void NotationPainting::paintPageSheet(Painter* painter, const Page* page, const 
         return;
     }
 
+    // Orchestrion: when the page paper is fully transparent (no sheet drawn),
+    // outlining it just leaves a stray rectangle floating over the wallpaper.
+    if (configuration()->foregroundUseColor() && configuration()->foregroundColor().alpha() == 0) {
+        return;
+    }
+
     painter->setBrush(BrushStyle::NoBrush);
     painter->setPen(Pen(configuration()->borderColor(), configuration()->borderWidth()));
     painter->drawRect(pageRect);

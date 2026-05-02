@@ -258,6 +258,11 @@ private:
     INotationPtr m_notation;
     muse::draw::Transform m_matrix;
 
+    // Orchestrion: cached wallpaper scaled to the current view size, so the gradient
+    // backdrop fits the viewport instead of being cropped/tiled at native resolution.
+    QPixmap m_scaledWallpaper;
+    QSize m_scaledWallpaperSourceSize;
+
     std::unique_ptr<NotationViewInputController> m_inputController;
     std::unique_ptr<PlaybackCursor> m_playbackCursor;
     std::unique_ptr<NoteInputCursor> m_noteInputCursor;

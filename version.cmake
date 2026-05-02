@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
-# MuseScore-Studio-CLA-applies
+# Orchestrion-CLA-applies
 #
-# MuseScore Studio
+# Orchestrion
 # Music Composition & Notation
 #
 # Copyright (C) 2024 MuseScore Limited
@@ -18,13 +18,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 
-set(MUSE_APP_NAME_HUMAN_READABLE "MuseScore Studio")
-set(MUSE_APP_NAME_MACHINE_READABLE "MuseScoreStudio")
+set(MUSE_APP_NAME_HUMAN_READABLE "Orchestrion")
+set(MUSE_APP_NAME_MACHINE_READABLE "Orchestrion")
 
-set(MUSE_APP_NAME_HUMAN_READABLE_COMPAT "MuseScore")
-set(MUSE_APP_NAME_MACHINE_READABLE_COMPAT "MuseScore")
+set(MUSE_APP_NAME_HUMAN_READABLE_COMPAT "Orchestrion")
+set(MUSE_APP_NAME_MACHINE_READABLE_COMPAT "Orchestrion")
 
-set(MUSE_APP_GUI_IDENTIFIER org.musescore.${MUSE_APP_NAME_MACHINE_READABLE_COMPAT})
+set(MUSE_APP_GUI_IDENTIFIER org.orchestrion.${MUSE_APP_NAME_MACHINE_READABLE_COMPAT})
 
 set(MUSE_APP_VERSION_MAJOR "4")
 set(MUSE_APP_VERSION_MINOR "4")

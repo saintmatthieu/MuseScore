@@ -651,7 +651,17 @@ void AbstractNotationPaintView::paintBackground(const RectF& rect, muse::draw::P
     if (configuration()->backgroundUseColor() || wallpaper.isNull()) {
         painter->fillRect(rect, configuration()->backgroundColor());
     } else {
-        painter->drawTiledPixmap(rect, wallpaper, rect.topLeft() - PointF(m_matrix.m31(), m_matrix.m32()));
+        // Orchestrion: stretch the wallpaper to fill the viewport (cached) so the
+        // gradient backdrop is always fully visible regardless of window size, and
+        // stays anchored to the viewport rather than the scrolling notation.
+        const QSize viewSize(static_cast<int>(width()), static_cast<int>(height()));
+        if (!viewSize.isEmpty()
+            && (m_scaledWallpaper.size() != viewSize
+                || m_scaledWallpaperSourceSize != wallpaper.size())) {
+            m_scaledWallpaper = wallpaper.scaled(viewSize, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+            m_scaledWallpaperSourceSize = wallpaper.size();
+        }
+        painter->drawTiledPixmap(rect, m_scaledWallpaper, rect.topLeft());
     }
 }
 
