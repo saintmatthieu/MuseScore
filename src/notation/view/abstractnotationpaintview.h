@@ -178,6 +178,12 @@ protected:
     // Draw
     void paint(QPainter* painter) override;
 
+    //! Orchestrion hook: paint content between the background and the notation
+    //! (i.e. behind the score). Called from paint() once the painter is set to
+    //! the score's world transform, so override implementations draw in logical
+    //! (score) coordinates. Default: no-op.
+    virtual void paintNotationUnderlay(QPainter* painter) {}
+
     virtual void onNotationSetup();
 
     virtual void onLoadNotation(INotationPtr notation);

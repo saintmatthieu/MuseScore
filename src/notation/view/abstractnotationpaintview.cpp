@@ -594,6 +594,10 @@ void AbstractNotationPaintView::paint(QPainter* qp)
 
     painter->setWorldTransform(m_matrix * guiScalingCompensation);
 
+    // Orchestrion: let subclasses draw behind the notation (between background
+    // and score). The transform is now the score's, so qp is in logical coords.
+    paintNotationUnderlay(qp);
+
     bool isPrinting = publishMode() || m_inputController->readonly();
     notation()->painting()->paintView(painter, toLogical(rect), isPrinting);
 
