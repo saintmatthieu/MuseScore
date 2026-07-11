@@ -411,6 +411,22 @@ void AbstractNotationPaintView::updateLoopMarkers()
     scheduleRedraw();
 }
 
+void AbstractNotationPaintView::paintLoopMarkers(muse::draw::Painter* painter)
+{
+    m_loopInMarker->paint(painter);
+    m_loopOutMarker->paint(painter);
+}
+
+RectF AbstractNotationPaintView::loopInMarkerRect() const
+{
+    return m_loopInMarker ? m_loopInMarker->rect() : RectF();
+}
+
+RectF AbstractNotationPaintView::loopOutMarkerRect() const
+{
+    return m_loopOutMarker ? m_loopOutMarker->rect() : RectF();
+}
+
 INotationPtr AbstractNotationPaintView::notation() const
 {
     return m_notation;
@@ -602,8 +618,7 @@ void AbstractNotationPaintView::paint(QPainter* qp)
     notation()->painting()->paintView(painter, toLogical(rect), isPrinting);
 
     m_noteInputCursor->paint(painter);
-    m_loopInMarker->paint(painter);
-    m_loopOutMarker->paint(painter);
+    paintLoopMarkers(painter);
 
     if (false /* notation()->viewMode() == engraving::LayoutMode::LINE */) {
         ContinuousPanel::NotationViewContext ctx;

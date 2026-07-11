@@ -175,6 +175,11 @@ protected:
 
     muse::RectF notationContentRect() const override;
 
+    //! Orchestrion: loop-marker bounds in canvas coordinates, for hit-testing
+    //! flag dragging in the score view. Empty when no notation is loaded.
+    muse::RectF loopInMarkerRect() const;
+    muse::RectF loopOutMarkerRect() const;
+
     // Draw
     void paint(QPainter* painter) override;
 
@@ -183,6 +188,11 @@ protected:
     //! the score's world transform, so override implementations draw in logical
     //! (score) coordinates. Default: no-op.
     virtual void paintNotationUnderlay(QPainter* painter) {}
+
+    //! Orchestrion hook: paint the loop-boundary markers. Called after the
+    //! notation is drawn, with the score's world transform active. Default:
+    //! MuseScore's orange flags.
+    virtual void paintLoopMarkers(muse::draw::Painter* painter);
 
     virtual void onNotationSetup();
 
