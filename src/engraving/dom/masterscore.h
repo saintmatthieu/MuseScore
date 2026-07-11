@@ -193,6 +193,17 @@ public:
     void setWidthOfSegmentCell(double val) { m_widthOfSegmentCell = val; }
     double widthOfSegmentCell() const { return m_widthOfSegmentCell; }
 
+    // Orchestrion fork extension: an optional warp of the horizontal-fixed
+    // (time-proportional) layout's tick axis. When set, a chord-rest cell's
+    // width is proportional to warpedTicks(end) - warpedTicks(begin) instead
+    // of its notated duration, so the layout can depict a performance's
+    // fitted tempo curve. The table maps score ticks to warped ticks,
+    // piecewise linearly; entries must be sorted by tick with non-decreasing
+    // warped values. Empty = identity.
+    void setLayoutTickWarp(std::vector<std::pair<int, double> > table) { m_layoutTickWarp = std::move(table); }
+    bool hasLayoutTickWarp() const { return !m_layoutTickWarp.empty(); }
+    double layoutWarpedTicks(double tick) const;
+
 private:
 
     void reorderMidiMapping();
@@ -237,6 +248,7 @@ private:
     bool m_isSimpleMidiMapping = false;                 // midi mapping is simple if all ports and channels
     // don't decrease and don't have gaps
     double m_widthOfSegmentCell = 3;
+    std::vector<std::pair<int, double> > m_layoutTickWarp;
 
     std::weak_ptr<EngravingProject> m_project;
 
