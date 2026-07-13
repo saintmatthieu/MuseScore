@@ -177,4 +177,67 @@ MasterScore* MasterScore::unrollRepeats()
 
     return score;
 }
+
+//---------------------------------------------------------
+//   unrollRepeatsInPlace
+//    unroll all the repeats into this score itself, so the score object the
+//    rest of the application already holds shows every pass as its own
+//    engraved measures. No-op when the score has no repeats. Excerpts are
+//    dropped, not re-created.
+//---------------------------------------------------------
+
+void MasterScore::unrollRepeatsInPlace()
+{
+    setExpandRepeats(true);
+    if (repeatList().size() == 1) {
+        return;
+    }
+
+    // a pristine copy: the source of the passes to append (and of the repeat
+    // structure, which mutating this score invalidates)
+    MasterScore* original = clone();
+    original->setExpandRepeats(true);
+
+    const std::vector<Excerpt*> excerptsCopy = excerpts();
+    for (Excerpt* e : excerptsCopy) {
+        deleteExcerpt(e);
+    }
+
+    // deleteMeasures / appendMeasuresFromScore / deleteItem are editing
+    // operations built on undo commands: without an active command they
+    // half-apply and leave the score inconsistent (dangling spanners).
+    startCmd();
+
+    bool first = true;
+    for (const RepeatSegment* rs : original->repeatList()) {
+        Fraction startTick = Fraction::fromTicks(rs->tick);
+        Fraction endTick   = Fraction::fromTicks(rs->tick + rs->len());
+
+        // first segment kept, everything past that removed
+        if (first) {
+            if (endTick <= lastMeasure()->tick()) {
+                deleteMeasures(tick2measure(endTick), lastMeasure());
+            }
+            first = false;
+        } else {  // append this section from the pristine copy
+            appendMeasuresFromScore(original, startTick, endTick);
+        }
+    }
+
+    removeRepeatMarkings(this);
+
+    setUpTempoMap();
+
+    endCmd();
+
+    setLayoutAll();
+    doLayout();
+
+    // Deliberately NOT deleted: measures cloned off it keep references back
+    // into it — deleting it leaves a freed spanner reachable from this
+    // score's layout (observed as a SIGSEGV sorting the spanner map in
+    // SystemLayout::layoutSystemElements). One leaked source score per
+    // unrolled load is the price.
+    (void)original;
+}
 }

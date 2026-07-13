@@ -174,6 +174,7 @@ public:
     const InstrChannel* playbackChannel(const InstrChannel* c) const { return m_midiMapping[c->channel()].articulation(); }
 
     MasterScore* unrollRepeats();
+    void unrollRepeatsInPlace();
 
     void splitMeasure(const Fraction&);
     void joinMeasure(const Fraction&, const Fraction&);
