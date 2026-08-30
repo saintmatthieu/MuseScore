@@ -20,6 +20,8 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "audiobuffer.h"
+#include "internal/perftraceprobe.h"
+#include <cstdio>
 
 #include "audiosanitizer.h"
 #include "log.h"
@@ -182,7 +184,17 @@ void AudioBuffer::forward()
             }
         }
 
-        m_source->process(m_data.data() + nextWriteIdx, renderStep);
+        {
+            // One render step of the mixer: what the worker thread costs per
+            // block of audio, against the real time that block lasts.
+            const long long startUs = PerfTraceProbe::nowUs();
+            m_source->process(m_data.data() + nextWriteIdx, renderStep);
+            if (PerfTraceProbe::enabled()) {
+                char extra[32];
+                std::snprintf(extra, sizeof extra, "frames=%u", static_cast<unsigned>(renderStep));
+                PerfTraceProbe::event("worker", "process", PerfTraceProbe::nowUs() - startUs, extra);
+            }
+        }
 
         nextWriteIdx += samplesToRender;
         if (nextWriteIdx >= DEFAULT_SIZE) {
@@ -198,8 +210,18 @@ void AudioBuffer::pop(float* dest, size_t sampleCount)
     const auto currentReadIdx = m_readIndex.load(std::memory_order_relaxed);
     const auto currentWriteIdx = m_writeIndex.load(std::memory_order_acquire);
     if (currentReadIdx == currentWriteIdx) { // empty queue
+        // Nothing rendered in time: the device gets silence.
+        PerfTraceProbe::event("audio", "pop_empty", static_cast<long long>(sampleCount));
         std::memcpy(dest, SILENT_FRAMES.data(), sampleCount * sizeof(float) * m_audioChannelsCount);
         return;
+    }
+    if (PerfTraceProbe::enabled()) {
+        const size_t reserved = reservedFrames(currentWriteIdx, currentReadIdx);
+        if (reserved < sampleCount * m_audioChannelsCount) {
+            // Fewer samples rendered than the device takes: the rest of this
+            // block is stale — audible as a glitch.
+            PerfTraceProbe::event("audio", "pop_short", static_cast<long long>(sampleCount * m_audioChannelsCount - reserved));
+        }
     }
 
 #ifdef DEBUG_AUDIO

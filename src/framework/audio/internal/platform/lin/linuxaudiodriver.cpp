@@ -20,6 +20,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #include "linuxaudiodriver.h"
+#include "internal/perftraceprobe.h"
 
 #define ALSA_PCM_NEW_HW_PARAMS_API
 #include <alsa/asoundlib.h>
@@ -70,11 +71,21 @@ static void* alsaThread(void* aParam)
         uint8_t* stream = (uint8_t*)data->buffer;
         int len = data->samples * data->channels * sizeof(float);
 
+        const long long callbackStartUs = PerfTraceProbe::nowUs();
         data->callback(data->userdata, stream, len);
+        const long long writeStartUs = PerfTraceProbe::nowUs();
+        if (PerfTraceProbe::enabled()) {
+            PerfTraceProbe::event("audio", "callback", writeStartUs - callbackStartUs);
+        }
 
         snd_pcm_sframes_t pcm = snd_pcm_writei(data->alsaDeviceHandle, data->buffer, data->samples);
+        if (PerfTraceProbe::enabled()) {
+            PerfTraceProbe::event("audio", "writei", PerfTraceProbe::nowUs() - writeStartUs);
+        }
         if (pcm != -EPIPE) {
         } else {
+            // The device ran dry: an audible dropout.
+            PerfTraceProbe::event("audio", "xrun", 0);
             snd_pcm_prepare(data->alsaDeviceHandle);
         }
     }
