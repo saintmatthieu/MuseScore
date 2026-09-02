@@ -148,7 +148,9 @@ void NotationPainting::paintPageSheet(Painter* painter, const Page* page, const 
     }
 
     if (configuration()->foregroundUseColor()) {
-        painter->fillRect(pageRect, configuration()->foregroundColor());
+        // Orchestrion: we don't need the paper at all, don't overdraw our nice
+        // background wallpaper. (Couldn't find a way of doing this without this patch.)
+        // painter->fillRect(pageRect, configuration()->foregroundColor());
     } else {
         const QPixmap& wallpaper = configuration()->foregroundWallpaper();
         if (!wallpaper.isNull()) {
@@ -161,6 +163,12 @@ void NotationPainting::paintPageSheet(Painter* painter, const Page* page, const 
     }
 
     if (!isPaintPageBorder()) {
+        return;
+    }
+
+    // Orchestrion: when the page paper is fully transparent (no sheet drawn),
+    // outlining it just leaves a stray rectangle floating over the wallpaper.
+    if (configuration()->foregroundUseColor() && configuration()->foregroundColor().alpha() == 0) {
         return;
     }
 

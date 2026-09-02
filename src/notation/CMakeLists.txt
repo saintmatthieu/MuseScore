@@ -87,6 +87,8 @@ target_sources(notation PRIVATE
     internal/notationelements.h
     internal/notationinteraction.cpp
     internal/notationinteraction.h
+    internal/OrchestrionNotationInteraction.cpp
+    internal/OrchestrionNotationInteraction.h
     internal/notationmidiinput.cpp
     internal/notationmidiinput.h
     internal/notationnoteinput.cpp
