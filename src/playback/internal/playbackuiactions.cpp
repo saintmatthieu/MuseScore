@@ -40,7 +40,7 @@ static const ActionCode CLEAR_ONLINE_SOUNDS_CACHE_CODE("clear-online-sounds-cach
 const UiActionList PlaybackUiActions::s_mainActions = {
     UiAction("play",
              mu::context::UiCtxProjectOpened,
-             mu::context::CTX_NOTATION_FOCUSED,
+             mu::context::CTX_NOTATION_OPENED, // Orchestrion: the notation view is never keyboard-focused in the Orchestrion shell
              TranslatableString("action", "Play"),
              TranslatableString("action", "Play"),
              IconCode::Code::PLAY
@@ -75,14 +75,14 @@ const UiActionList PlaybackUiActions::s_mainActions = {
              ),
     UiAction("rewind",
              mu::context::UiCtxProjectOpened,
-             mu::context::CTX_NOTATION_FOCUSED,
+             mu::context::CTX_NOTATION_OPENED, // Orchestrion: the notation view is never keyboard-focused in the Orchestrion shell
              TranslatableString("action", "Rewind"),
              TranslatableString("action", "Rewind"),
              IconCode::Code::REWIND
              ),
     UiAction("loop",
              mu::context::UiCtxProjectOpened,
-             mu::context::CTX_NOTATION_FOCUSED,
+             mu::context::CTX_NOTATION_OPENED, // Orchestrion: the notation view is never keyboard-focused in the Orchestrion shell
              TranslatableString("action", "Loop playback"),
              TranslatableString("action", "Toggle ‘Loop playback’"),
              IconCode::Code::LOOP,

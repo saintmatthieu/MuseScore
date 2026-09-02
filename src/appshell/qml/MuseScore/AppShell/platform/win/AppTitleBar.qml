@@ -87,7 +87,8 @@ Rectangle {
             textFormat: Text.RichText
             font: ui.theme.bodyFont
 
-            visible: root.windowVisibility !== Window.FullScreen
+            // Orchestrion: keep the title and min/max buttons visible in full screen
+            // visible: root.windowVisibility !== Window.FullScreen
 
             TextMetrics {
                 id: titleTextmetrics
@@ -109,7 +110,8 @@ Rectangle {
 
             windowIsMiximized: root.windowVisibility === Window.Maximized
 
-            visible: root.windowVisibility !== Window.FullScreen
+            // Orchestrion: keep the title and min/max buttons visible in full screen
+            // visible: root.windowVisibility !== Window.FullScreen
 
             onShowWindowMinimizedRequested: {
                 root.showWindowMinimizedRequested()
