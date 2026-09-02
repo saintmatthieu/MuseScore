@@ -126,6 +126,10 @@ public:
     bool canUndo() const { return m_currentIndex > 0; }
     bool canRedo() const { return m_currentIndex < m_transactions.size(); }
     bool isClean() const { return m_cleanState == m_states[m_currentIndex]; }
+    /// Orchestrion fork extension: consider the current state the saved one,
+    /// e.g. after an in-place transformation of the loaded score (unrolling
+    /// the repeats) that is not a modification of the user's document.
+    void markClean() { m_cleanState = m_states[m_currentIndex]; }
 
     size_t size() const { return m_transactions.size(); }
     size_t currentIndex() const { return m_currentIndex; }

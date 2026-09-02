@@ -28,6 +28,7 @@
 #include "types/translatablestring.h"
 #include "../editing/editexcerpt.h"
 #include "../editing/transaction/transaction.h"
+#include "../editing/transaction/undostack.h"
 
 #include "barline.h"
 #include "engravingitem.h"
@@ -222,6 +223,9 @@ void MasterScore::unrollRepeatsInPlace()
     updateTicksAndTimeSigMap();
 
     endCmd();
+
+    // Not a modification of the user's document: don't leave the score dirty.
+    undoStack()->markClean();
 
     setLayoutAll();
     doLayout();
