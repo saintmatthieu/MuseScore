@@ -859,3 +859,29 @@ MeasureBase* MasterScore::insertMeasure(MeasureBase* beforeMeasure, const Insert
 
     return masterMeasure;
 }
+
+// Orchestrion fork extension: evaluate the layout tick warp (see the header).
+double mu::engraving::MasterScore::layoutWarpedTicks(double tick) const
+{
+    if (m_layoutTickWarp.empty()) {
+        return tick;
+    }
+    const auto& table = m_layoutTickWarp;
+    if (table.size() == 1) {
+        return tick - table.front().first + table.front().second;
+    }
+    // Find the segment [i, i+1] containing the tick; extrapolate at the ends
+    // with the edge segments' slopes.
+    size_t i = 0;
+    while (i + 2 < table.size() && tick >= table[i + 1].first) {
+        ++i;
+    }
+    const double t0 = table[i].first;
+    const double t1 = table[i + 1].first;
+    const double w0 = table[i].second;
+    const double w1 = table[i + 1].second;
+    if (t1 <= t0) {
+        return w0;
+    }
+    return w0 + (tick - t0) / (t1 - t0) * (w1 - w0);
+}
