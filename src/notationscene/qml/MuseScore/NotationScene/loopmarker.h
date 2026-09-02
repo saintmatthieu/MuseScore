@@ -45,6 +45,12 @@ public:
 
     void paint(muse::draw::Painter* painter);
 
+    /**
+     * Orchestrion: marker bounds in canvas coordinates, for hit-testing
+     * flag dragging in the score view.
+     */
+    const muse::RectF& rect() const { return m_rect; }
+
 private:
     muse::RectF resolveMarkerRectByTick(engraving::Fraction tick) const;
 
