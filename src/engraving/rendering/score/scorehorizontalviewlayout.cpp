@@ -21,6 +21,8 @@
  */
 #include "scorehorizontalviewlayout.h"
 
+#include <algorithm>
+
 #include "containers.h"
 
 #include "dom/durationelement.h"
@@ -468,9 +470,21 @@ std::pair<double, double> ScoreHorizontalViewLayout::computeCellWidth(const Segm
 
     Fraction quantum = calculateQuantumCell(s->measure(), visibleParts);
 
-    auto calculateWidth = [quantum, sc = s->score()->masterScore()](ChordRest* cr) {
+    auto calculateWidth = [quantum, s, sc = s->score()->masterScore()](ChordRest* cr) {
         //! width of a segment cell, in spatiums per quantum unit
         static constexpr double WIDTH_OF_SEGMENT_CELL = 3;
+        // Orchestrion fork change: with a layout tick warp set (a performance's
+        // fitted tempo curve), the cell spans the *warped* tick interval
+        // instead of the notated duration, so the layout depicts performed
+        // time. Clamped to a sliver so extreme compression stays renderable.
+        if (sc->hasLayoutTickWarp()) {
+            const double tick = s->tick().ticks();
+            const double durTicks = cr->globalTicks().ticks();
+            const double quantumTicks = quantum.ticks();
+            const double warped = sc->layoutWarpedTicks(tick + durTicks) - sc->layoutWarpedTicks(tick);
+            return WIDTH_OF_SEGMENT_CELL * sc->style().spatium()
+                   * std::max(warped, 0.1 * durTicks) / quantumTicks;
+        }
         return WIDTH_OF_SEGMENT_CELL
                * sc->style().spatium()
                * cr->globalTicks().numerator() / cr->globalTicks().denominator()
@@ -568,16 +582,12 @@ ChordRest* ScoreHorizontalViewLayout::chordRestWithMinDuration(const Segment* se
     return chordRestWithMinDuration;
 }
 
-Fraction ScoreHorizontalViewLayout::calculateQuantumCell(const Measure* m, const std::vector<int>& visibleParts)
+Fraction ScoreHorizontalViewLayout::calculateQuantumCell(const Measure*, const std::vector<int>&)
 {
-    Fraction quantum = { 1, 16 };
-    for (const Segment& s : m->segments()) {
-        ChordRest* cr = chordRestWithMinDuration(&s, visibleParts);
-
-        if (cr && cr->actualTicks() < quantum) {
-            quantum = cr->actualTicks();
-        }
-    }
-
-    return quantum;
+    // Orchestrion fork change: a fixed global quantum instead of the
+    // per-measure shortest duration, so that segment width ∝ duration holds
+    // across the whole score (equal horizontal distance = equal musical
+    // time), not just within each measure. Trade-off: chords shorter than the
+    // quantum get less than one cell of width.
+    return { 1, 16 };
 }

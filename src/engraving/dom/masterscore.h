@@ -186,6 +186,7 @@ public:
     const InstrChannel* playbackChannel(const InstrChannel* c) const { return m_midiMapping[c->channel()].articulation(); }
 
     MasterScore* unrollRepeats();
+    void unrollRepeatsInPlace();
 
     MeasureBase* insertMeasure(MeasureBase* beforeMeasure = nullptr, const InsertMeasureOptions& options = InsertMeasureOptions());
 
@@ -195,6 +196,17 @@ public:
     String name() const override;
 
     muse::Ret sanityCheck();
+
+    // Orchestrion fork extension: an optional warp of the horizontal-fixed
+    // (time-proportional) layout's tick axis. When set, a chord-rest cell's
+    // width is proportional to warpedTicks(end) - warpedTicks(begin) instead
+    // of its notated duration, so the layout can depict a performance's
+    // fitted tempo curve. The table maps score ticks to warped ticks,
+    // piecewise linearly; entries must be sorted by tick with non-decreasing
+    // warped values. Empty = identity.
+    void setLayoutTickWarp(std::vector<std::pair<int, double> > table) { m_layoutTickWarp = std::move(table); }
+    bool hasLayoutTickWarp() const { return !m_layoutTickWarp.empty(); }
+    double layoutWarpedTicks(double tick) const;
 
 private:
     void update(bool resetCmdState, bool layoutAllParts = false);
@@ -250,6 +262,7 @@ private:
     // don't decrease and don't have gaps
 
     std::weak_ptr<EngravingProject> m_project;
+    std::vector<std::pair<int, double> > m_layoutTickWarp;
 
     // FIXME: Move to EngravingProject
     // We can't yet, because m_project is not set on every MasterScore
