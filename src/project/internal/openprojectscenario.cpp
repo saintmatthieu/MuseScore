@@ -834,8 +834,9 @@ Promise<bool> OpenProjectScenario::askIfUserAgreesToOpenProjectWithIncompatibleV
 void OpenProjectScenario::warnFileTooNew(const muse::io::path_t& filepath)
 {
     interactive()->error(muse::qtrc("project", "Cannot read file %1").arg(io::toNativeSeparators(filepath).toQString()).toStdString(),
-                         muse::mtrc("project", "This file was saved using a newer version of MuseScore Studio. "
-                                               "Please visit <a href=\"%1\">MuseScore.org</a> to obtain the latest version.")
+                         muse::mtrc("project", "This MuseScore Studio file is of a recent, yet unsupported version. "
+                                               "Open it first in MuseScore Studio (<a href=\"%1\">MuseScore.org</a>), "
+                                               "export it in MusicXML format and open it in Orchestrion.")
                          .arg(u"https://musescore.org").toStdString());
 }
 
