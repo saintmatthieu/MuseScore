@@ -74,12 +74,15 @@ set(MUSE_APP_ICON_WIN "${PROJECT_SOURCE_DIR}/share/icons/AppIcon/MS4_AppIcon.ico
 ###########################################
 # Setup paths
 ###########################################
-if (OS_IS_MAC)
-    set(MUSE_APP_INSTALL_RESOURCES_LOCATION "mscore.app/Contents/Resources")
-elseif (OS_IS_WIN)
-    set(MUSE_APP_INSTALL_RESOURCES_LOCATION ".")
-else()
-    set(MUSE_APP_INSTALL_RESOURCES_LOCATION "share/mscore${MUSE_APP_INSTALL_SUFFIX}-${MUSE_APP_VERSION_MAJ_MIN}")
+# Orchestrion: allow the embedding project to preset the resources location
+if (NOT DEFINED MUSE_APP_INSTALL_RESOURCES_LOCATION)
+    if (OS_IS_MAC)
+        set(MUSE_APP_INSTALL_RESOURCES_LOCATION "mscore.app/Contents/Resources")
+    elseif (OS_IS_WIN)
+        set(MUSE_APP_INSTALL_RESOURCES_LOCATION ".")
+    else()
+        set(MUSE_APP_INSTALL_RESOURCES_LOCATION "share/mscore${MUSE_APP_INSTALL_SUFFIX}-${MUSE_APP_VERSION_MAJ_MIN}")
+    endif()
 endif()
 
 ###########################################
