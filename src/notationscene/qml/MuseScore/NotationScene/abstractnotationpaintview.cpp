@@ -514,6 +514,22 @@ void AbstractNotationPaintView::onViewSizeChanged()
     onPlaybackCursorRectChanged();
 }
 
+void AbstractNotationPaintView::paintLoopMarkers(muse::draw::Painter* painter)
+{
+    m_loopInMarker->paint(painter);
+    m_loopOutMarker->paint(painter);
+}
+
+RectF AbstractNotationPaintView::loopInMarkerRect() const
+{
+    return m_loopInMarker ? m_loopInMarker->rect() : RectF();
+}
+
+RectF AbstractNotationPaintView::loopOutMarkerRect() const
+{
+    return m_loopOutMarker ? m_loopOutMarker->rect() : RectF();
+}
+
 void AbstractNotationPaintView::updateLoopMarkers()
 {
     TRACEFUNC;
@@ -742,6 +758,10 @@ void AbstractNotationPaintView::paint(QPainter* qp)
 
     painter->setWorldTransform(m_matrix * guiScalingCompensation);
 
+    // Orchestrion: let subclasses draw behind the notation (between background
+    // and score). The transform is now the score's, so qp is in logical coords.
+    paintNotationUnderlay(qp);
+
     const bool isPrinting = publishMode() || m_inputController->readonly();
     const bool isAutomation = automationMode();
     notation()->painting()->paintView(painter, toLogical(rect), isPrinting, isAutomation);
@@ -756,10 +776,10 @@ void AbstractNotationPaintView::paint(QPainter* qp)
         }
     }
 
-    m_loopInMarker->paint(painter);
-    m_loopOutMarker->paint(painter);
+    paintLoopMarkers(painter);
 
-    if (notation()->viewMode() == engraving::LayoutMode::LINE) {
+    // Orchestrion: no continuous panel (the pinned clef/key/time header) in line mode.
+    if (false /* notation()->viewMode() == engraving::LayoutMode::LINE */) {
         ContinuousPanel::NotationViewContext nvCtx;
         nvCtx.xOffset = m_matrix.dx();
         nvCtx.yOffset = m_matrix.dy();
@@ -824,7 +844,17 @@ void AbstractNotationPaintView::paintBackground(const RectF& rect, muse::draw::P
     if (notationConfiguration()->backgroundUseColor() || wallpaper.isNull()) {
         painter->fillRect(rect, notationConfiguration()->backgroundColor());
     } else {
-        painter->drawTiledPixmap(rect, wallpaper, rect.topLeft() - PointF(m_matrix.m31(), m_matrix.m32()));
+        // Orchestrion: stretch the wallpaper to fill the viewport (cached) so the
+        // gradient backdrop is always fully visible regardless of window size, and
+        // stays anchored to the viewport rather than the scrolling notation.
+        const QSize viewSize(static_cast<int>(width()), static_cast<int>(height()));
+        if (!viewSize.isEmpty()
+            && (m_scaledWallpaper.size() != viewSize
+                || m_scaledWallpaperSourceSize != wallpaper.size())) {
+            m_scaledWallpaper = wallpaper.scaled(viewSize, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+            m_scaledWallpaperSourceSize = wallpaper.size();
+        }
+        painter->drawTiledPixmap(rect, m_scaledWallpaper, rect.topLeft());
     }
 }
 

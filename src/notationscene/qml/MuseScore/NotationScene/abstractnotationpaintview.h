@@ -197,8 +197,30 @@ protected:
 
     muse::RectF notationContentRect() const override;
 
+    /**
+     * Orchestrion: loop-marker bounds in canvas coordinates, for hit-testing
+     * flag dragging in the score view. Empty when no notation is loaded.
+     */
+    muse::RectF loopInMarkerRect() const;
+    muse::RectF loopOutMarkerRect() const;
+
     // Draw
     void paint(QPainter* painter) override;
+
+    /**
+     * Orchestrion hook: paint content between the background and the notation
+     * (i.e. behind the score). Called from paint() once the painter is set to
+     * the score's world transform, so override implementations draw in logical
+     * (score) coordinates. Default: no-op.
+     */
+    virtual void paintNotationUnderlay(QPainter* painter) { (void)painter; }
+
+    /**
+     * Orchestrion hook: paint the loop-boundary markers. Called after the
+     * notation is drawn, with the score's world transform active. Default:
+     * MuseScore's orange flags.
+     */
+    virtual void paintLoopMarkers(muse::draw::Painter* painter);
 
     virtual void onNotationSetup();
 
@@ -283,6 +305,11 @@ private:
 
     INotationPtr m_notation;
     muse::draw::Transform m_matrix;
+
+    // Orchestrion: cached wallpaper scaled to the current view size, so the gradient
+    // backdrop fits the viewport instead of being cropped/tiled at native resolution.
+    QPixmap m_scaledWallpaper;
+    QSize m_scaledWallpaperSourceSize;
 
     bool m_loadCalled = false;
     std::unique_ptr<NotationViewInputController> m_inputController;
