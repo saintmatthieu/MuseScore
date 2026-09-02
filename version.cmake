@@ -18,12 +18,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 
-set(MUSE_APP_NAME_HUMAN_READABLE "MuseScore Studio")
-set(MUSE_APP_NAME_MACHINE_READABLE "MuseScoreStudio")
+set(MUSE_APP_NAME_HUMAN_READABLE "Orchestrion")
+set(MUSE_APP_NAME_MACHINE_READABLE "Orchestrion")
 
-set(MUSE_APP_VERSION_MAJOR "5")
-set(MUSE_APP_VERSION_MINOR "0")
-set(MUSE_APP_VERSION_PATCH "0")
+# Orchestrion: the app version comes from the Orchestrion build (ORCHESTRION_VERSION, x.y.z).
+if (ORCHESTRION_VERSION MATCHES "^([0-9]+)\\.([0-9]+)\\.([0-9]+)$")
+    set(MUSE_APP_VERSION_MAJOR "${CMAKE_MATCH_1}")
+    set(MUSE_APP_VERSION_MINOR "${CMAKE_MATCH_2}")
+    set(MUSE_APP_VERSION_PATCH "${CMAKE_MATCH_3}")
+else()
+    set(MUSE_APP_VERSION_MAJOR "0")
+    set(MUSE_APP_VERSION_MINOR "0")
+    set(MUSE_APP_VERSION_PATCH "0")
+endif()
 set(MUSE_APP_VERSION_MAJ_MIN "${MUSE_APP_VERSION_MAJOR}.${MUSE_APP_VERSION_MINOR}")
 set(MUSE_APP_VERSION "${MUSE_APP_VERSION_MAJ_MIN}.${MUSE_APP_VERSION_PATCH}")
 
@@ -33,7 +40,7 @@ if (NOT CMAKE_BUILD_NUMBER)
     set(CMAKE_BUILD_NUMBER "0")
 endif()
 
-set(MUSE_APP_GUI_IDENTIFIER org.musescore.${MUSE_APP_NAME_MACHINE_READABLE}${MUSE_APP_VERSION_MAJOR})
+set(MUSE_APP_GUI_IDENTIFIER org.orchestrion.${MUSE_APP_NAME_MACHINE_READABLE})
 
 set(MUSE_APP_UNSTABLE ON)
 set(MUSE_APP_IS_PRERELEASE ON)
