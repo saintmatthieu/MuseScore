@@ -42,6 +42,11 @@ void GlobalContext::setCurrentProject(const INotationProjectPtr& project)
         return;
     }
 
+    //! NOTE Keep the previous project alive until its replacement has been
+    //! notified: this may be its last reference (e.g. when the context is
+    //! torn down with a project still open), and subscribers access it
+    //! through the master notation while detaching from it.
+    const INotationProjectPtr previousProject = m_currentProject;
     m_currentProject = project;
 
     INotationPtr notation = project ? project->masterNotation()->notation() : nullptr;
