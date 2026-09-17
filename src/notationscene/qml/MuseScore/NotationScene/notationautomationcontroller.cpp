@@ -752,6 +752,16 @@ void NotationAutomationController::updatePolylinesGeometry()
 
 void NotationAutomationController::updatePolylinesColors()
 {
+    if (!automation() || !automation()->isAutomationModeEnabled()) {
+        //! NOTE: While the automation lane is hidden, a structural score change only
+        //! marks a full reset as pending (see mergePendingScoreChanges) instead of
+        //! rebuilding, so the keys below still point at Systems that the relayout has
+        //! freed. Recolouring would follow those dangling pointers -- and there is
+        //! nothing on screen to recolour anyway. Enabling the lane again rebuilds, and
+        //! a rebuilt polyline is coloured on creation (applyPolylineStyle).
+        return;
+    }
+
     for (const auto& [key, polylines] : m_stavesToLinesMap) {
         IF_ASSERT_FAILED(key.isValid() && !polylines.empty()) {
             continue;
