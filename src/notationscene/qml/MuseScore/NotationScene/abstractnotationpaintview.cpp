@@ -850,9 +850,9 @@ void AbstractNotationPaintView::paintBackground(const RectF& rect, muse::draw::P
         const QSize viewSize(static_cast<int>(width()), static_cast<int>(height()));
         if (!viewSize.isEmpty()
             && (m_scaledWallpaper.size() != viewSize
-                || m_scaledWallpaperSourceSize != wallpaper.size())) {
+                || m_scaledWallpaperSourceKey != wallpaper.cacheKey())) {
             m_scaledWallpaper = wallpaper.scaled(viewSize, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-            m_scaledWallpaperSourceSize = wallpaper.size();
+            m_scaledWallpaperSourceKey = wallpaper.cacheKey();
         }
         painter->drawTiledPixmap(rect, m_scaledWallpaper, rect.topLeft());
     }

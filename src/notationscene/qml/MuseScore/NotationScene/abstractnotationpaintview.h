@@ -309,7 +309,9 @@ private:
     // Orchestrion: cached wallpaper scaled to the current view size, so the gradient
     // backdrop fits the viewport instead of being cropped/tiled at native resolution.
     QPixmap m_scaledWallpaper;
-    QSize m_scaledWallpaperSourceSize;
+    //! Identity, not size, of the pixmap m_scaledWallpaper was scaled from:
+    //! Orchestrion swaps between same-sized backdrops when the theme changes.
+    qint64 m_scaledWallpaperSourceKey = 0;
 
     bool m_loadCalled = false;
     std::unique_ptr<NotationViewInputController> m_inputController;
