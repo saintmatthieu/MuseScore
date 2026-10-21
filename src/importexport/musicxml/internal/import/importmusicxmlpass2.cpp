@@ -2306,6 +2306,13 @@ void MusicXmlParserPass2::part()
 
     if (configuration()->inferTextType()) {
         for (Hairpin* hp : m_inferredHairpins) {
+            // A line that no dynamic ended within reach would have no length: it lasts to the end of its measure.
+            if (hp->ticks() <= Fraction(0, 1)) {
+                if (const Measure* startMeasure = hp->score()->tick2measure(hp->tick())) {
+                    hp->setTrack2(hp->track());
+                    hp->setTick2(startMeasure->endTick());
+                }
+            }
             hp->score()->addElement(hp);
         }
         for (GradualTempoChange* line : m_inferredTempoLines) {
@@ -3415,8 +3422,10 @@ static void terminateInferredLine(const std::vector<TextLineBase*> lines, const 
         static const Fraction MAX_INFERRED_LINE_LEN = Fraction(24, 4);
         for (TextLineBase* line : lines) {
             Fraction diff = tick - line->tick();
+            // Only a marking after the line's start can end it: a staff's voices are read one after the other, so a
+            // marking read later in another voice may well come before the line.
             if (line && line->staffIdx() == track2staff(track)
-                && line->ticks() == Fraction(0, 1) && diff <= MAX_INFERRED_LINE_LEN) {
+                && line->ticks() == Fraction(0, 1) && diff > Fraction(0, 1) && diff <= MAX_INFERRED_LINE_LEN) {
                 line->setTrack2(track);
                 line->setTick2(tick);
             }
@@ -4570,7 +4579,7 @@ void MusicXmlParserDirection::addInferredHairpin(const Fraction& tick, const boo
     }
 
     m_inferredHairpinStart->setTrack(m_track);
-    m_inferredHairpinStart->setTick(tick + m_offset);
+    m_inferredHairpinStart->setTick(tick); // the caller already added m_offset
 
     String spannerPlacement = m_placement;
     if (m_placement.empty()) {
@@ -4588,7 +4597,7 @@ void MusicXmlParserDirection::addInferredTempoLine(const Fraction& tick)
     }
 
     m_inferredTempoLineStart->setTrack(m_track);
-    m_inferredTempoLineStart->setTick(tick + m_offset);
+    m_inferredTempoLineStart->setTick(tick); // the caller already added m_offset
 
     String spannerPlacement = placement();
 
@@ -5233,7 +5242,18 @@ void MusicXmlParserDirection::dashes(const String& type, const int number,
             m_e.skipCurrentElement();
             return;
         }
-        TextLineBase* b = spdesc.isStopped ? toTextLineBase(spdesc.sp) : Factory::createTextLine(m_score->dummy());
+        TextLineBase* b = nullptr;
+        if (spdesc.isStopped) {
+            b = toTextLineBase(spdesc.sp);
+        } else if (m_inferredHairpinStart) {
+            // The words before the dashes said "cresc." or "dim.": the dashes are that crescendo or diminuendo line,
+            // with the extent they give it, rather than a bare line next to one inferred from the words.
+            b = m_inferredHairpinStart;
+            b->setProperty(Pid::LINE_VISIBLE, true);
+            m_inferredHairpinStart = nullptr;
+        } else {
+            b = Factory::createTextLine(m_score->dummy());
+        }
         // if (placement.empty()) placement = "above";  // TODO ? set default
 
         // hack: combine with a previous words element
