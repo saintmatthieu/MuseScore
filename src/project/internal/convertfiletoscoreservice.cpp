@@ -138,13 +138,16 @@ void ConvertFileToScoreService::init()
     m_config.audio2score.link.allowedSources = LinkSource::YouTube | LinkSource::AudioCom;
 
     //! NOTE: prefetch and cache convert config
-    museScoreComService()->convert()->fetchConfig().onResolve(this, [this](const RetVal<ConvertConfig>& config) {
-        if (!config.ret) {
-            LOGE() << "Could not prefetch convert config: " << config.ret.toString();
-        } else {
-            m_config = config.val;
-        }
-    });
+    //! (the cloud module's stub doesn't provide the service)
+    if (museScoreComService()) {
+        museScoreComService()->convert()->fetchConfig().onResolve(this, [this](const RetVal<ConvertConfig>& config) {
+            if (!config.ret) {
+                LOGE() << "Could not prefetch convert config: " << config.ret.toString();
+            } else {
+                m_config = config.val;
+            }
+        });
+    }
 
     multiwindowsProvider()->resourceChanged().onReceive(this, [this](const std::string& resourceName) {
         if (resourceName == WATCHED_CONVERTS_RESOURCE_NAME && !m_isSaving) {
