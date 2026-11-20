@@ -2518,6 +2518,9 @@ void TWrite::write(const Note* item, XmlWriter& xml, WriteContext& ctx)
                     Pid::GHOST, Pid::DEAD, Pid::HEAD_TYPE, Pid::FIXED, Pid::FIXED_LINE }) {
         writeProperty(item, xml, id);
     }
+    if (!item->sourceId().isEmpty()) {
+        xml.tag("sourceId", item->sourceId());
+    }
 
     for (Spanner* e : item->spannerBack()) {
         TWrite::writeItem(e, xml, ctx);

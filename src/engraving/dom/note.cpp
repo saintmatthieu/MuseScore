@@ -727,6 +727,7 @@ Note::Note(const Note& n, bool link)
     m_tuning            = n.m_tuning;
     m_veloType          = n.m_veloType;
     m_userVelocity      = n.m_userVelocity;
+    m_sourceId          = n.m_sourceId;
     m_headScheme        = n.m_headScheme;
     m_headGroup         = n.m_headGroup;
     m_headType          = n.m_headType;

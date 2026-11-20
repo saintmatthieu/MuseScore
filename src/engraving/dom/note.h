@@ -330,6 +330,11 @@ public:
     int userVelocity() const { return m_userVelocity; }
     void setUserVelocity(int v) { m_userVelocity = v; }
 
+    // The id the note has in the file it was imported from (a MusicXML
+    // note's id attribute). Kept when saved.
+    const String& sourceId() const { return m_sourceId; }
+    void setSourceId(const String& id) { m_sourceId = id; }
+
     void setOnTimeOffset(int v);
     void setOffTimeOffset(int v);
 
@@ -539,6 +544,7 @@ private:
     mutable double m_centOffset = 0.0; // Pitch offset in cents (100 cents = 1 semitone)
 
     int m_userVelocity = 0;     // velocity user offset in percent, or absolute velocity for this note
+    String m_sourceId;
     int m_fixedLine = 0;        // fixed line number if _fixed == true
     double m_tuning = 0.0;      // pitch offset in cent, playable only by internal synthesizer
 

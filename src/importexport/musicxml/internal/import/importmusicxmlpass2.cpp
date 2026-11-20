@@ -7040,6 +7040,7 @@ Note* MusicXmlParserPass2::note(const String& partId,
     NoteHeadGroup headGroup = NoteHeadGroup::HEAD_NORMAL;
     NoteHeadScheme headScheme = NoteHeadScheme::HEAD_AUTO;
     const Color noteColor = Color::fromString(m_e.asciiAttribute("color").ascii());
+    const String sourceId = m_e.attribute("id");
     Color noteheadColor;
     Color stemColor;
     Color beamColor;
@@ -7292,6 +7293,7 @@ Note* MusicXmlParserPass2::note(const String& partId,
             }
         }
         note = Factory::createNote(c);
+        note->setSourceId(sourceId);
         const staff_idx_t ottavaStaff = (msTrack - m_pass1.trackForPart(partId)) / VOICES;
         const int octaveShift = m_pass1.octaveShift(partId, ottavaStaff, noteStartTime);
         const Staff* st = c->staff();

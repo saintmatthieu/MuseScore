@@ -3290,6 +3290,8 @@ bool TRead::readProperties(Note* n, XmlReader& e, ReadContext& ctx)
         n->add(a);
     } else if (tag == "tpc2") {
         n->setTpc2(e.readInt());
+    } else if (tag == "sourceId") {
+        n->setSourceId(e.readText());
     } else if (tag == "small") {
         n->setSmall(e.readInt());
     } else if (tag == "mirror") {
